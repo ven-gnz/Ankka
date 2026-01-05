@@ -16,10 +16,13 @@ target_include_directories(Ankka
 	PRIVATE 
 		${CMAKE_SOURCE_DIR}/includes)
 
+find_package(Vulkan REQUIRED)
+
 target_link_libraries(Ankka 
 	PRIVATE 
 	glfw
-	glad)
+	glad
+	Vulkan::Vulkan)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Ankka PROPERTY CXX_STANDARD 20)
