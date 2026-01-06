@@ -16,6 +16,7 @@ public:
 
 private:
 	void handleWindowCloseEvents();
+	void handleMouseButtonEvents(int butotn, int action, int mods);
 	GLFWwindow* mWindow = nullptr;
 	std::string mApplicationName;
 	VkInstance mInstance{};
