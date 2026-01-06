@@ -1,6 +1,37 @@
 #include "Ankka/Window.h"
 #include <iostream>
 
+void Window::handleWindowCloseEvents()
+{
+	
+	Logger::log(1, "%s : Window close event fired \n", __FUNCTION__);
+	cleanup();
+	
+}
+
+void Window::handleKeyEvents(int key, int scancode, int action, int mods)
+{
+	std::string actionName;
+	switch (action)
+	{
+	case GLFW_PRESS:
+		actionName = "pressed";
+		break;
+	case GLFW_RELEASE:
+		actionName = "released";
+		break;
+	case GLFW_REPEAT:
+		actionName = "repeated";
+		break;
+	default:
+		actionName = "invalid";
+		break;
+	}
+	const char* keyName = glfwGetKeyName(key, 0);
+Logger::log(1, "%s : key %s (key %i, scancode %i) %s\n", __FUNCTION__,
+	keyName, key, scancode, actionName.c_str());
+}
+
 bool Window::init(unsigned int width, unsigned int height, std::string title)
 {
 	if (!glfwInit())
@@ -40,6 +71,25 @@ bool Window::init(unsigned int width, unsigned int height, std::string title)
 		glfwTerminate();
 		return false;
 	}
+
+	glfwSetWindowUserPointer(mWindow, this);
+
+
+
+
+
+	glfwSetKeyCallback(mWindow, [](GLFWwindow* win, int key, int scancode, int action, int mods)
+		{
+			auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
+			thisWindow->handleKeyEvents(key, scancode, action, mods);
+		});
+
+	glfwSetWindowCloseCallback(mWindow, [](GLFWwindow* win)
+		{
+			auto thisWindow = static_cast<Window*>(
+				glfwGetWindowUserPointer(win));
+			thisWindow->handleWindowCloseEvents();
+		});
 	
 
 	Logger::log(1, "%s: Window succesfully initialized\n",
@@ -54,14 +104,17 @@ void Window::mainLoop()
 	float color = 0.0f;
 	while (!glfwWindowShouldClose(mWindow)) {
 
-		color >= 1 ? color = 0.0f : color += 0.01f;
-		glClearColor(color, color, color, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		
+		//color >= 1 ? color = 0.0f : color += 0.01f;
+		//glClearColor(color, color, color, 1.0f);
+		//glClear(GL_COLOR_BUFFER_BIT);
 
 		glfwSwapBuffers(mWindow);
-
 		glfwPollEvents();
+
+		
 	}
+	
 }
 
 void Window::cleanup()

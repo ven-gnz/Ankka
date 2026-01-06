@@ -12,8 +12,10 @@ public:
 	bool initVulkan();
 	void mainLoop();
 	void cleanup();
+	void handleKeyEvents(int key, int scancode, int action, int mods);
 
 private:
+	void handleWindowCloseEvents();
 	GLFWwindow* mWindow = nullptr;
 	std::string mApplicationName;
 	VkInstance mInstance{};
