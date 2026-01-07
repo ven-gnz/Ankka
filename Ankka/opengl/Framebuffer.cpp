@@ -66,3 +66,20 @@ void Framebuffer::unbind()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
+
+void Framebuffer::cleanup()
+{
+	unbind();
+	glDeleteTextures(1, &mColorTex);
+	glDeleteRenderbuffers(1, &mDepthBuffer);
+	glDeleteFramebuffers(1, &mBuffer);
+}
+
+void Framebuffer::drawToScreen()
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, mBuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBlitFramebuffer(0, 0, mBufferWidth, mBufferHeight,
+		0, 0, mBufferWidth, mBufferHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+}
