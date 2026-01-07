@@ -31,3 +31,38 @@ bool Framebuffer::init(unsigned int width, unsigned int height)
 	return checkComplete();
 }
 
+bool Framebuffer::checkComplete()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, mBuffer);
+	GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (result != GL_FRAMEBUFFER_COMPLETE)
+	{
+		return false;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return true;
+
+}
+
+bool Framebuffer::resize(unsigned int newWidth, unsigned int newHeight)
+{
+	mBufferWidth = newWidth;
+	mBufferHeight = newHeight;
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glDeleteTextures(1, &mColorTex);
+	glDeleteRenderbuffers(1, &mDepthBuffer);
+	glDeleteFramebuffers(1, &mBuffer);
+
+	return init(newWidth, newHeight);
+}
+
+void Framebuffer::bind()
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, mBuffer);
+}
+
+void Framebuffer::unbind()
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
