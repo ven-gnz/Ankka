@@ -439,5 +439,8 @@ external/**/*.cppm
 external/imgui/
 
 
+
 external/**/copying.txt
 !external/**/CMakeLists.txt
+
+includes/STB
