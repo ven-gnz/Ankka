@@ -65,12 +65,6 @@ if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
 
 }
 
-void Window::handleWindowResize(GLFWwindow* w, int width, int height)
-{
-
-	glViewport(0, 0, width, height);
-}
-
 void Window::handleMouseButtonEvents(int button, int action, int mods)
 {
 	std::string actionName;
@@ -116,18 +110,20 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 		return false;
 	}
 
-	if (!glfwVulkanSupported())
-	{
-		glfwTerminate();
-		Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
-		return false;
-	}
+	//if (!glfwVulkanSupported())
+	//{
+	//	glfwTerminate();
+	//	Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
+	//	return false;
+	//}
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	mApplicationName = title;
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	mWindow = glfwCreateWindow(width, height, mApplicationName.c_str(), nullptr, nullptr);
 
 	if (!mWindow)
@@ -139,15 +135,23 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 		return false;
 	}
 
-	if (!initVulkan())
-	{
-		Logger::log(1, "%s : could not init Vulkan\n", __FUNCTION__);
+	//if (!initVulkan())
+	//{
+	//	Logger::log(1, "%s : could not init Vulkan\n", __FUNCTION__);
 
+	//	glfwTerminate();
+	//	return false;
+	//}
+
+
+	mRenderer = std::make_unique<OGLRenderer>();
+	if (!mRenderer->init(width, height))
+	{
 		glfwTerminate();
 		return false;
 	}
 
-	glfwSetWindowUserPointer(mWindow, this);
+	glfwSetWindowUserPointer(mWindow, mRenderer.get());
 
 
 
@@ -176,12 +180,12 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 
 	glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* win, int width, int height)
 		{
-			auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
-				thisWindow->handleWindowResize(win, width, height);
+			auto renderer = static_cast<OGLRenderer*>(glfwGetWindowUserPointer(win));
+				renderer->setSize(width, height);
 				
 		});
-	
 
+	
 	Logger::log(1, "%s: Window succesfully initialized\n",
 		__FUNCTION__);
 	return true;

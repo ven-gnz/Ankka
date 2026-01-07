@@ -3,8 +3,11 @@
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <memory>
 
 #include <Ankka/Logger.h>
+#include "opengl/OGLRenderer.h"
+#include "Model.h"
 
 class Window {
 public:
@@ -18,7 +21,6 @@ private:
 	
 	void handleWindowCloseEvents();
 	void handleMouseButtonEvents(int button, int action, int mods);
-	void handleWindowResize(GLFWwindow* w, int width, int height);
 	GLFWwindow* mWindow = nullptr;
 	std::string mApplicationName;
 	VkInstance mInstance{};
@@ -26,4 +28,6 @@ private:
 	bool editTitle = false;
 	std::string title;
 	std::string newTitle;
+	std::unique_ptr<OGLRenderer> mRenderer;
+	std::unique_ptr<Model> mModel;
 };
