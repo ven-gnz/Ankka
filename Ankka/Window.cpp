@@ -44,8 +44,6 @@ void Window::handleKeyEvents(int key, int scancode, int action, int mods)
 		}
 	}
 	
-
-
 if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
 {
 	editTitle = !editTitle;
@@ -59,9 +57,6 @@ if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
 	
 	return;
 	}
-
-
-	
 
 }
 
@@ -185,6 +180,9 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 				
 		});
 
+	mModel = std::make_unique<Model>();
+	mModel->init();
+
 	
 	Logger::log(1, "%s: Window succesfully initialized\n",
 		__FUNCTION__);
@@ -198,11 +196,8 @@ void Window::mainLoop()
 	float color = 0.0f;
 	while (!glfwWindowShouldClose(mWindow)) {
 
-		
-		//color >= 1 ? color = 0.0f : color += 0.01f;
-		//glClearColor(color, color, color, 1.0f);
-		//glClear(GL_COLOR_BUFFER_BIT);
 
+		mRenderer->draw();
 		glfwSwapBuffers(mWindow);
 		glfwPollEvents();
 
