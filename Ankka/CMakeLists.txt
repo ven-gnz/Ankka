@@ -8,7 +8,7 @@ add_executable (Ankka
 	"Ankka.cpp"
 	"../includes/Ankka/Ankka.h"
 	"../includes/Ankka/Window.h"
-	"Window.cpp" "Logger.cpp" "opengl/OGLRenderer.h" "opengl/Framebuffer.h" "opengl/VertexBuffer.h" "opengl/Texture.h" "opengl/Shader.h" "opengl/OGLRenderData.h" "opengl/OGLRenderer.cpp" "opengl/Framebuffer.cpp" "opengl/VertexBuffer.cpp")
+	"Window.cpp" "Logger.cpp" "opengl/OGLRenderer.h" "opengl/Framebuffer.h" "opengl/VertexBuffer.h" "opengl/Texture.h" "opengl/Shader.h" "opengl/OGLRenderData.h" "opengl/OGLRenderer.cpp" "opengl/Framebuffer.cpp" "opengl/VertexBuffer.cpp" "opengl/Texture.cpp")
 
 
 
