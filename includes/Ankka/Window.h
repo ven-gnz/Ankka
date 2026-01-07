@@ -15,10 +15,15 @@ public:
 	void handleKeyEvents(int key, int scancode, int action, int mods);
 
 private:
+	
 	void handleWindowCloseEvents();
-	void handleMouseButtonEvents(int butotn, int action, int mods);
+	void handleMouseButtonEvents(int button, int action, int mods);
+	void handleWindowResize(GLFWwindow* w, int width, int height);
 	GLFWwindow* mWindow = nullptr;
 	std::string mApplicationName;
 	VkInstance mInstance{};
 	VkSurfaceKHR mSurface{};
+	bool editTitle = false;
+	std::string title;
+	std::string newTitle;
 };

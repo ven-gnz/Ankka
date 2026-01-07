@@ -28,8 +28,47 @@ void Window::handleKeyEvents(int key, int scancode, int action, int mods)
 		break;
 	}
 	const char* keyName = glfwGetKeyName(key, 0);
-Logger::log(1, "%s : key %s (key %i, scancode %i) %s\n", __FUNCTION__,
-	keyName, key, scancode, actionName.c_str());
+
+	if (!editTitle)
+	{
+		
+		Logger::log(1, "%s : key %s (key %i, scancode %i) %s\n", __FUNCTION__,
+		keyName, key, scancode, actionName.c_str());
+	}
+
+	else
+	{
+		if (editTitle && keyName != nullptr && action == GLFW_PRESS)
+		{
+			newTitle.append(keyName);
+		}
+	}
+	
+
+
+if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+{
+	editTitle = !editTitle;
+	if (!editTitle)
+	{
+		title = newTitle;
+		glfwSetWindowTitle(mWindow, title.c_str());
+		Logger::log(1, "New title of app : %s\n", title.c_str());
+		newTitle.clear();
+	}
+	
+	return;
+	}
+
+
+	
+
+}
+
+void Window::handleWindowResize(GLFWwindow* w, int width, int height)
+{
+
+	glViewport(0, 0, width, height);
 }
 
 void Window::handleMouseButtonEvents(int button, int action, int mods)
@@ -65,8 +104,11 @@ void Window::handleMouseButtonEvents(int button, int action, int mods)
 
 }
 
-bool Window::init(unsigned int width, unsigned int height, std::string title)
+bool Window::init(unsigned int width, unsigned int height, std::string title_initial)
 {
+	title = title_initial;
+	newTitle = "";
+
 	if (!glfwInit())
 	{
 		Logger::log(1, "%s: glfwInit() error\n",
@@ -81,7 +123,7 @@ bool Window::init(unsigned int width, unsigned int height, std::string title)
 		return false;
 	}
 
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	mApplicationName = title;
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -129,7 +171,14 @@ bool Window::init(unsigned int width, unsigned int height, std::string title)
 			auto thisWindow = static_cast<Window*>(
 				glfwGetWindowUserPointer(win));
 			thisWindow->handleMouseButtonEvents(button, action, mods);
-		
+
+		});
+
+	glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* win, int width, int height)
+		{
+			auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
+				thisWindow->handleWindowResize(win, width, height);
+				
 		});
 	
 
