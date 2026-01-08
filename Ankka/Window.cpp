@@ -36,28 +36,6 @@ void Window::handleKeyEvents(int key, int scancode, int action, int mods)
 		keyName, key, scancode, actionName.c_str());
 	}
 
-	else
-	{
-		if (editTitle && keyName != nullptr && action == GLFW_PRESS)
-		{
-			newTitle.append(keyName);
-		}
-	}
-	
-if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
-{
-	editTitle = !editTitle;
-	if (!editTitle)
-	{
-		title = newTitle;
-		glfwSetWindowTitle(mWindow, title.c_str());
-		Logger::log(1, "New title of app : %s\n", title.c_str());
-		newTitle.clear();
-	}
-	
-	return;
-	}
-
 }
 
 void Window::handleMouseButtonEvents(int button, int action, int mods)
@@ -105,12 +83,6 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 		return false;
 	}
 
-	//if (!glfwVulkanSupported())
-	//{
-	//	glfwTerminate();
-	//	Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
-	//	return false;
-	//}
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	mApplicationName = title;
@@ -132,15 +104,6 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 	}
 	glfwMakeContextCurrent(mWindow);
 
-	//if (!initVulkan())
-	//{
-	//	Logger::log(1, "%s : could not init Vulkan\n", __FUNCTION__);
-
-	//	glfwTerminate();
-	//	return false;
-	//}
-
-
 	mRenderer = std::make_unique<OGLRenderer>();
 	if (!mRenderer->init(width, height))
 	{
@@ -150,30 +113,6 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 
 	glfwSetWindowUserPointer(mWindow, mRenderer.get());
 
-
-
-
-
-	//glfwSetKeyCallback(mWindow, [](GLFWwindow* win, int key, int scancode, int action, int mods)
-	//	{
-	//		auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
-	//		thisWindow->handleKeyEvents(key, scancode, action, mods);
-	//	});
-
-	//glfwSetWindowCloseCallback(mWindow, [](GLFWwindow* win)
-	//	{
-	//		auto thisWindow = static_cast<Window*>(
-	//			glfwGetWindowUserPointer(win));
-	//		thisWindow->handleWindowCloseEvents();
-	//	});
-
-	//glfwSetMouseButtonCallback(mWindow, [](GLFWwindow* win, int button, int action, int mods)
-	//	{
-	//		auto thisWindow = static_cast<Window*>(
-	//			glfwGetWindowUserPointer(win));
-	//		thisWindow->handleMouseButtonEvents(button, action, mods);
-
-	//	});
 
 	glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* win, int width, int height)
 		{
@@ -222,6 +161,16 @@ void Window::cleanup()
 // not spock pls, with K
 bool Window::initVulkan()
 {
+	//if (!glfwVulkanSupported())
+	//{
+	//	glfwTerminate();
+	//	Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
+	//	return false;
+	//}
+
+
+
+
 
 	VkResult result = VK_ERROR_UNKNOWN;
 
