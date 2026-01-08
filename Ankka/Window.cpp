@@ -71,10 +71,11 @@ void Window::handleMouseButtonEvents(int button, int action, int mods)
 
 }
 
-bool Window::init(unsigned int width, unsigned int height, std::string title_initial)
+bool Window::init(unsigned int width, unsigned int height, std::string title_initial, bool vulkan)
 {
 	title = title_initial;
 	newTitle = "";
+	isVulkan = vulkan;
 
 	if (!glfwInit())
 	{
@@ -83,14 +84,30 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 		return false;
 	}
 
+	if (isVulkan)
+	{	
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		if (!glfwVulkanSupported())
+		{
+			glfwTerminate();
+			Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
+			return false;
+		}
+	}
 
-	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-	mApplicationName = title;
+	else
+	{
+		glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+		mApplicationName = title;
 
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	}
+
+
+
 	mWindow = glfwCreateWindow(width, height, mApplicationName.c_str(), nullptr, nullptr);
 	
 
@@ -98,37 +115,44 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 	{
 		Logger::log(1, "%s: could not create window\n",
 			__FUNCTION__);
-
 		glfwTerminate();
 		return false;
 	}
-	glfwMakeContextCurrent(mWindow);
-
-	mRenderer = std::make_unique<OGLRenderer>();
-	if (!mRenderer->init(width, height))
+	if (!isVulkan)
 	{
-		glfwTerminate();
-		return false;
+		glfwMakeContextCurrent(mWindow);
+		mRenderer = std::make_unique<OGLRenderer>();
+		if (!mRenderer->init(width, height))
+		{
+			glfwTerminate();
+			return false;
+		}
+		glfwSetWindowUserPointer(mWindow, mRenderer.get());
+		glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* win, int width, int height)
+			{
+				auto renderer = static_cast<OGLRenderer*>(glfwGetWindowUserPointer(win));
+				renderer->setSize(width, height);
+			});
+
+		mModel = std::make_unique<Model>();
+		mModel->init();
+
+		Logger::log(1, "%s: mockup model data loaded\n", __FUNCTION__);
+		Logger::log(1, "%s: Window succesfully initialized\n",
+			__FUNCTION__);
+		return true;
 	}
 
-	glfwSetWindowUserPointer(mWindow, mRenderer.get());
-
-
-	glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* win, int width, int height)
+	if (isVulkan)
+	{
+		if (!initVulkan())
 		{
-			auto renderer = static_cast<OGLRenderer*>(glfwGetWindowUserPointer(win));
-				renderer->setSize(width, height);
-				
-		});
-
-	mModel = std::make_unique<Model>();
-	mModel->init();
-
-	Logger::log(1, "%s: mockup model data loaded\n", __FUNCTION__);
+			return false;
+		}
+		
+	}
 	
-	Logger::log(1, "%s: Window succesfully initialized\n",
-		__FUNCTION__);
-	return true;
+
 }
 
 
@@ -136,14 +160,12 @@ void Window::mainLoop()
 {
 	glfwSwapInterval(1);
 	float color = 0.0f;
-	mRenderer->uploadData(mModel->getVertexData());
+	if(!isVulkan) mRenderer->uploadData(mModel->getVertexData());
 	while (!glfwWindowShouldClose(mWindow)) {
 
-
-		mRenderer->draw();
-		glfwSwapBuffers(mWindow);
+		if(!isVulkan) mRenderer->draw();
+		if(!isVulkan) glfwSwapBuffers(mWindow);
 		glfwPollEvents();
-
 		
 	}
 	
@@ -151,8 +173,12 @@ void Window::mainLoop()
 
 void Window::cleanup()
 {
-	//vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
-	//vkDestroyInstance(mInstance, nullptr);
+	if (isVulkan)
+	{
+		vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
+		vkDestroyInstance(mInstance, nullptr);
+	}
+	
 	glfwDestroyWindow(mWindow);
 	glfwTerminate();
 
@@ -161,14 +187,6 @@ void Window::cleanup()
 // not spock pls, with K
 bool Window::initVulkan()
 {
-	//if (!glfwVulkanSupported())
-	//{
-	//	glfwTerminate();
-	//	Logger::log(1, "%s: Vulkan is not supported\n", __FUNCTION__);
-	//	return false;
-	//}
-
-
 
 
 

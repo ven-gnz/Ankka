@@ -12,7 +12,7 @@
 
 class Window {
 public:
-	bool init(unsigned int width, unsigned int height, std::string title);
+	bool init(unsigned int width, unsigned int height, std::string title, bool vulkan);
 	bool initVulkan();
 	void mainLoop();
 	void cleanup();
@@ -31,4 +31,5 @@ private:
 	std::string newTitle;
 	std::unique_ptr<OGLRenderer> mRenderer;
 	std::unique_ptr<Model> mModel;
+	bool isVulkan;
 };
