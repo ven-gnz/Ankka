@@ -1,10 +1,13 @@
 #include "opengl/VertexBuffer.h"
-
+#include "Ankka/Logger.h"
 
 void VertexBuffer::init()
 {
 	glGenVertexArrays(1, &mVAO);
 	glGenBuffers(1, &mVertexVBO);
+
+	glBindVertexArray(mVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(OGLVertex), (void*)offsetof(OGLVertex, position));
@@ -13,7 +16,7 @@ void VertexBuffer::init()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-	
+	Logger::log(1, "%s: VAO and VBO initialized\n", __FUNCTION__);
 }
 
 void VertexBuffer::cleanup()
