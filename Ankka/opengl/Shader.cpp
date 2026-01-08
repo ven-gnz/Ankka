@@ -70,7 +70,11 @@ GLuint Shader::readShader(std::string shaderFileName, GLuint shaderType)
 
 	GLint isShaderCompiled;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &isShaderCompiled);
-	if (!isShaderCompiled) return 0;
+	if (!isShaderCompiled)
+	{
+		Logger::log(1, "%s: Shader compilation error", __FUNCTION__);
+		return 0;
+	}
 
 	return shader;
 }

@@ -185,6 +185,7 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 	mModel = std::make_unique<Model>();
 	mModel->init();
 
+	Logger::log(1, "%s: mockup model data loaded\n", __FUNCTION__);
 	
 	Logger::log(1, "%s: Window succesfully initialized\n",
 		__FUNCTION__);
@@ -196,6 +197,7 @@ void Window::mainLoop()
 {
 	glfwSwapInterval(1);
 	float color = 0.0f;
+	mRenderer->uploadData(mModel->getVertexData());
 	while (!glfwWindowShouldClose(mWindow)) {
 
 

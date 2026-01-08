@@ -1,6 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <STB/stb_image.h>
 #include "opengl/Texture.h"
+#include "Ankka/Logger.h"
 
 bool Texture::loadTexture(std::string textureFilename)
 {
@@ -11,6 +12,7 @@ bool Texture::loadTexture(std::string textureFilename)
 	if (!textureData)
 	{
 		stbi_image_free(textureData);
+		Logger::log(1, "s%: No texture data found!", __FUNCTION__);
 		return false;
 	}
 
@@ -22,7 +24,7 @@ bool Texture::loadTexture(std::string textureFilename)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mTexWidth, mTexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, mTexWidth, mTexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);

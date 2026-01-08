@@ -54,13 +54,14 @@ void OGLRenderer::draw()
 {
 	mFramebuffer.bind();
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	glClearDepth(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_CULL_FACE);
-
+	glEnable(GL_DEPTH_TEST);
 	mShader.use();
 	mTex.bind();
 	mVertexBuffer.bind();
-	mVertexBuffer.draw(GL_TRIANGLES, 0, mTriangleCount);
+	mVertexBuffer.draw(GL_TRIANGLES, 0, mTriangleCount * 3);
 	mVertexBuffer.unbind();
 	mTex.unbind();
 	mFramebuffer.unbind();

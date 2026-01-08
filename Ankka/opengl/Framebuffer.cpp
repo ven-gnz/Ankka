@@ -1,4 +1,5 @@
 #include "opengl/Framebuffer.h"
+#include "Ankka/Logger.h"
 
 bool Framebuffer::init(unsigned int width, unsigned int height)
 {
@@ -10,7 +11,7 @@ bool Framebuffer::init(unsigned int width, unsigned int height)
 
 	glGenTextures(1, &mColorTex);
 	glBindTexture(GL_TEXTURE_2D, mColorTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -19,6 +20,7 @@ bool Framebuffer::init(unsigned int width, unsigned int height)
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, mColorTex, 0);
+	
 
 	glGenRenderbuffers(1, &mDepthBuffer);
 	glBindRenderbuffer(GL_RENDERBUFFER, mDepthBuffer);
@@ -37,8 +39,10 @@ bool Framebuffer::checkComplete()
 	GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (result != GL_FRAMEBUFFER_COMPLETE)
 	{
+		Logger::log(1, "%s: framebuffer is incomplete!\n", __FUNCTION__);
 		return false;
 	}
+	Logger::log(1, "%s: framebuffer is complete\n", __FUNCTION__);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return true;
 
