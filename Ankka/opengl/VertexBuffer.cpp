@@ -1,4 +1,4 @@
-#include "VertexBuffer.h"
+#include "opengl/VertexBuffer.h"
 
 
 void VertexBuffer::init()

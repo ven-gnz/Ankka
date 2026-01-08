@@ -14,6 +14,6 @@ int main(int argc, char *argv[])
 	}
 
 	w->mainLoop(); // hazaah its working!
-
+	w->cleanup();
 	return 0;
 }

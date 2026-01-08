@@ -6,10 +6,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "Framebuffer.h"
-#include "VertexBuffer.h"
-#include "Texture.h"
-#include "Shader.h"
+#include "opengl/Framebuffer.h"
+#include "opengl/VertexBuffer.h"
+#include "opengl/Texture.h"
+#include "opengl/Shader.h"
 
 #include "OGLRenderData.h"
 

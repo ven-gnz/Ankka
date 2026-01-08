@@ -1,4 +1,4 @@
-#include "Framebuffer.h"
+#include "opengl/Framebuffer.h"
 
 bool Framebuffer::init(unsigned int width, unsigned int height)
 {

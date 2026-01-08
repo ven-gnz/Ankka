@@ -1,4 +1,9 @@
-#include "OGLRenderer.h"
+#include "opengl/OGLRenderer.h"
+#include "Ankka/Logger.h"
+#include <iostream>
+#include <filesystem>
+#include <string>
+#include <ostream>
 
 bool OGLRenderer::init(unsigned int width, unsigned int height)
 {
@@ -13,14 +18,18 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
-	if (!mTex.loadTexture("textures/crate.png")) {
+	
+	if (!mTex.loadTexture("tex/crate.png")) {
+		Logger::log(1, "%s: cannot find texture", __FUNCTION__);
 		return false;
 	}
 
 	mVertexBuffer.init();
 
-	if (!mShader.loadShader("shader/basic.vert", "shader/basic.frag"))
+	if (!mShader.loadShaders("shaders/basic.vert", "shaders/basic.frag"))
 	{
+		Logger::log(1, "%s: cannot find shaders\n",
+			__FUNCTION__);
 		return false;
 	}
 

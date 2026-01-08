@@ -115,11 +115,12 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	mApplicationName = title;
 
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	mWindow = glfwCreateWindow(width, height, mApplicationName.c_str(), nullptr, nullptr);
+	
 
 	if (!mWindow)
 	{
@@ -129,6 +130,7 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 		glfwTerminate();
 		return false;
 	}
+	glfwMakeContextCurrent(mWindow);
 
 	//if (!initVulkan())
 	//{
@@ -152,26 +154,26 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 
 
 
-	glfwSetKeyCallback(mWindow, [](GLFWwindow* win, int key, int scancode, int action, int mods)
-		{
-			auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
-			thisWindow->handleKeyEvents(key, scancode, action, mods);
-		});
+	//glfwSetKeyCallback(mWindow, [](GLFWwindow* win, int key, int scancode, int action, int mods)
+	//	{
+	//		auto thisWindow = static_cast<Window*>(glfwGetWindowUserPointer(win));
+	//		thisWindow->handleKeyEvents(key, scancode, action, mods);
+	//	});
 
-	glfwSetWindowCloseCallback(mWindow, [](GLFWwindow* win)
-		{
-			auto thisWindow = static_cast<Window*>(
-				glfwGetWindowUserPointer(win));
-			thisWindow->handleWindowCloseEvents();
-		});
+	//glfwSetWindowCloseCallback(mWindow, [](GLFWwindow* win)
+	//	{
+	//		auto thisWindow = static_cast<Window*>(
+	//			glfwGetWindowUserPointer(win));
+	//		thisWindow->handleWindowCloseEvents();
+	//	});
 
-	glfwSetMouseButtonCallback(mWindow, [](GLFWwindow* win, int button, int action, int mods)
-		{
-			auto thisWindow = static_cast<Window*>(
-				glfwGetWindowUserPointer(win));
-			thisWindow->handleMouseButtonEvents(button, action, mods);
+	//glfwSetMouseButtonCallback(mWindow, [](GLFWwindow* win, int button, int action, int mods)
+	//	{
+	//		auto thisWindow = static_cast<Window*>(
+	//			glfwGetWindowUserPointer(win));
+	//		thisWindow->handleMouseButtonEvents(button, action, mods);
 
-		});
+	//	});
 
 	glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* win, int width, int height)
 		{
@@ -208,8 +210,8 @@ void Window::mainLoop()
 
 void Window::cleanup()
 {
-	vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
-	vkDestroyInstance(mInstance, nullptr);
+	//vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
+	//vkDestroyInstance(mInstance, nullptr);
 	glfwDestroyWindow(mWindow);
 	glfwTerminate();
 

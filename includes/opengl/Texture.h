@@ -5,6 +5,7 @@
 
 class Texture
 {
+public:
 	bool loadTexture(std::string filename);
 	void bind();
 	void unbind();

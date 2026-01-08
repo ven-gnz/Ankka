@@ -1,5 +1,6 @@
 #include <fstream>
-#include "Shader.h"
+#include "opengl/Shader.h"
+#include "Ankka/Logger.h"
 
 bool Shader::loadShaders(std::string vertexShaderFileName, std::string fragmentShaderFileName)
 {
@@ -52,6 +53,7 @@ GLuint Shader::readShader(std::string shaderFileName, GLuint shaderType)
 		inFile.close();
 	}
 	else {
+		Logger::log(1, "Could not open file", __FUNCTION__);
 		return 0;
 	}
 	if (inFile.bad() || inFile.fail())
@@ -62,7 +64,7 @@ GLuint Shader::readShader(std::string shaderFileName, GLuint shaderType)
 	inFile.close();
 	const char* shaderSource = shaderAsText.c_str();
 
-	GLuint shader = glCreateShader(shaderType);
+	shader = glCreateShader(shaderType);
 	glShaderSource(shader, 1, (const GLchar**)&shaderSource, 0);
 	glCompileShader(shader);
 

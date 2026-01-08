@@ -8,8 +8,10 @@ add_executable (Ankka
 	"Ankka.cpp"
 	"../includes/Ankka/Ankka.h"
 	"../includes/Ankka/Window.h"
-	"Window.cpp" "Logger.cpp" "opengl/OGLRenderer.h" "opengl/Framebuffer.h" "opengl/VertexBuffer.h" "opengl/Texture.h" "opengl/Shader.h" "opengl/OGLRenderData.h" "opengl/OGLRenderer.cpp" "opengl/Framebuffer.cpp" "opengl/VertexBuffer.cpp" "opengl/Texture.cpp" "opengl/Shader.cpp")
+	"Window.cpp" "Logger.cpp" "../includes/opengl/OGLRenderer.h" "../includes/opengl/Framebuffer.h" "../includes/opengl/VertexBuffer.h" "../includes/opengl/Texture.h" "../includes/opengl/Shader.h" "../includes/opengl/OGLRenderData.h" "opengl/OGLRenderer.cpp" "opengl/Framebuffer.cpp" "opengl/VertexBuffer.cpp" "opengl/Texture.cpp" "opengl/Shader.cpp" "Model.cpp")
 
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tex DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 
 target_include_directories(Ankka
@@ -23,6 +25,7 @@ target_link_libraries(Ankka
 	glfw
 	glad
 	Vulkan::Vulkan)
+
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Ankka PROPERTY CXX_STANDARD 20)

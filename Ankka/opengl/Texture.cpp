@@ -1,6 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <STB/stb_image.h>
-#include "Texture.h"
+#include "opengl/Texture.h"
 
 bool Texture::loadTexture(std::string textureFilename)
 {
