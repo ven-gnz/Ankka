@@ -24,6 +24,7 @@ target_link_libraries(Ankka
 	PRIVATE 
 	glfw
 	glad
+	vk-bootstrap
 	Vulkan::Vulkan)
 
 
