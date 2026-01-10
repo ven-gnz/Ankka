@@ -8,6 +8,7 @@
 
 #include <Ankka/Logger.h>
 #include "opengl/OGLRenderer.h"
+#include "vulkan/VkRenderer.h"
 #include "Model.h"
 
 class Window {
@@ -29,7 +30,8 @@ private:
 	bool editTitle = false;
 	std::string title;
 	std::string newTitle;
-	std::unique_ptr<OGLRenderer> mRenderer;
+	std::unique_ptr<OGLRenderer> mOGLRenderer;
+	std::unique_ptr<VkRenderer> mVkRenderer;
 	std::unique_ptr<Model> mModel;
 	bool isVulkan;
 };

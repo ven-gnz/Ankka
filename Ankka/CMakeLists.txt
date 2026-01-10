@@ -8,7 +8,7 @@ add_executable (Ankka
 	"Ankka.cpp"
 	"../includes/Ankka/Ankka.h"
 	"../includes/Ankka/Window.h"
-	"Window.cpp" "Logger.cpp" "../includes/opengl/OGLRenderer.h" "../includes/opengl/Framebuffer.h" "../includes/opengl/VertexBuffer.h" "../includes/opengl/Texture.h" "../includes/opengl/Shader.h" "../includes/opengl/OGLRenderData.h" "opengl/OGLRenderer.cpp" "opengl/Framebuffer.cpp" "opengl/VertexBuffer.cpp" "opengl/Texture.cpp" "opengl/Shader.cpp" "Model.cpp")
+	"Window.cpp" "Logger.cpp" "../includes/opengl/OGLRenderer.h" "../includes/opengl/Framebuffer.h" "../includes/opengl/VertexBuffer.h" "../includes/opengl/Texture.h" "../includes/opengl/Shader.h" "../includes/opengl/OGLRenderData.h" "opengl/OGLRenderer.cpp" "opengl/Framebuffer.cpp" "opengl/VertexBuffer.cpp" "opengl/Texture.cpp" "opengl/Shader.cpp" "Model.cpp" "../includes/vulkan/VkRenderer.h" "vulkan/VkRenderer.cpp")
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tex DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

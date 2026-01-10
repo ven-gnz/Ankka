@@ -121,13 +121,13 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 	if (!isVulkan)
 	{
 		glfwMakeContextCurrent(mWindow);
-		mRenderer = std::make_unique<OGLRenderer>();
-		if (!mRenderer->init(width, height))
+		mOGLRenderer = std::make_unique<OGLRenderer>();
+		if (!mOGLRenderer->init(width, height))
 		{
 			glfwTerminate();
 			return false;
 		}
-		glfwSetWindowUserPointer(mWindow, mRenderer.get());
+		glfwSetWindowUserPointer(mWindow, mOGLRenderer.get());
 		glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* win, int width, int height)
 			{
 				auto renderer = static_cast<OGLRenderer*>(glfwGetWindowUserPointer(win));
@@ -149,6 +149,7 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 		{
 			return false;
 		}
+		mVkRenderer = std::make_unique<VkRenderer>();
 		
 	}
 	
@@ -160,11 +161,22 @@ void Window::mainLoop()
 {
 	glfwSwapInterval(1);
 	float color = 0.0f;
-	if(!isVulkan) mRenderer->uploadData(mModel->getVertexData());
+	if(!isVulkan) mOGLRenderer->uploadData(mModel->getVertexData());
 	while (!glfwWindowShouldClose(mWindow)) {
 
-		if(!isVulkan) mRenderer->draw();
-		if(!isVulkan) glfwSwapBuffers(mWindow);
+		if (!isVulkan)
+		{
+			mOGLRenderer->draw();
+			glfwSwapBuffers(mWindow);
+		}
+		else
+		{
+			if (!mVkRenderer->draw())
+			{
+				break;
+			}
+		}
+		
 		glfwPollEvents();
 		
 	}
