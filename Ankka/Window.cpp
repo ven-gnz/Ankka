@@ -164,18 +164,8 @@ void Window::mainLoop()
 	if(!isVulkan) mOGLRenderer->uploadData(mModel->getVertexData());
 	while (!glfwWindowShouldClose(mWindow)) {
 
-		if (!isVulkan)
-		{
-			mOGLRenderer->draw();
-			glfwSwapBuffers(mWindow);
-		}
-		else
-		{
-			if (!mVkRenderer->draw())
-			{
-				break;
-			}
-		}
+		mOGLRenderer->draw();
+		glfwSwapBuffers(mWindow);
 		
 		glfwPollEvents();
 		

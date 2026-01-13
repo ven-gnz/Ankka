@@ -1,5 +1,7 @@
 #version 460 core
-in vec2 texCoord;
+
+layout (location = 0) in vec4 texColor;
+layout (location = 1) in vec2 texCoord;
 
 out vec4 FragColor;
 
@@ -16,6 +18,6 @@ vec3 sRGB(vec3 c) {
 }
 
 void main() {
-  FragColor = texture(Tex, texCoord);
+  FragColor = texture(Tex, texCoord) * texColor;
   FragColor.rgb = sRGB(FragColor.rgb);
 }
