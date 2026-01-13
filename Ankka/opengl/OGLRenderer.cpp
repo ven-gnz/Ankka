@@ -5,6 +5,19 @@
 #include <string>
 #include <ostream>
 
+OGLRenderer::OGLRenderer(GLFWwindow* window) {
+	mWindow = window;
+}
+
+void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
+{
+	if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		mUseChangedShader = !mUseChangedShader;
+		Logger::log(1, "%s : use changed shader\n", __FUNCTION__);
+	}
+}
+
 bool OGLRenderer::init(unsigned int width, unsigned int height)
 {
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -26,10 +39,16 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mVertexBuffer.init();
 
-	if (!mShader.loadShaders("shaders/basic.vert", "shaders/basic.frag"))
+	if (!mBasicShader.loadShaders("shaders/basic.vert", "shaders/basic.frag"))
 	{
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);
+		return false;
+	}
+
+	if (!mChangedShader.loadShaders("shaders/changed.vert", "shaders/changed.frag"))
+	{
+		Logger::log(1, "% s: cannot find shaders\n", __FUNCTION__);
 		return false;
 	}
 
@@ -58,7 +77,16 @@ void OGLRenderer::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-	mShader.use();
+
+	if (mUseChangedShader)
+	{
+		mChangedShader.use();
+	}
+	else
+	{
+		mBasicShader.use();
+	}
+	
 	mTex.bind();
 	mVertexBuffer.bind();
 	mVertexBuffer.draw(GL_TRIANGLES, 0, mTriangleCount * 3);
@@ -67,4 +95,11 @@ void OGLRenderer::draw()
 	mFramebuffer.unbind();
 
 	mFramebuffer.drawToScreen();
+}
+
+void OGLRenderer::cleanup()
+{
+	mBasicShader.cleanup();
+	mChangedShader.cleanup();
+
 }

@@ -27,9 +27,6 @@ private:
 	std::string mApplicationName;
 	VkInstance mInstance{};
 	VkSurfaceKHR mSurface{};
-	bool editTitle = false;
-	std::string title;
-	std::string newTitle;
 	std::unique_ptr<OGLRenderer> mOGLRenderer;
 	std::unique_ptr<VkRenderer> mVkRenderer;
 	std::unique_ptr<Model> mModel;

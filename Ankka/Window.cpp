@@ -9,34 +9,8 @@ void Window::handleWindowCloseEvents()
 	
 }
 
-void Window::handleKeyEvents(int key, int scancode, int action, int mods)
-{
-	std::string actionName;
-	switch (action)
-	{
-	case GLFW_PRESS:
-		actionName = "pressed";
-		break;
-	case GLFW_RELEASE:
-		actionName = "released";
-		break;
-	case GLFW_REPEAT:
-		actionName = "repeated";
-		break;
-	default:
-		actionName = "invalid";
-		break;
-	}
-	const char* keyName = glfwGetKeyName(key, 0);
-
-	if (!editTitle)
-	{
-		
-		Logger::log(1, "%s : key %s (key %i, scancode %i) %s\n", __FUNCTION__,
-		keyName, key, scancode, actionName.c_str());
-	}
-
-}
+// to be deprecated?
+void Window::handleKeyEvents(int key, int scancode, int action, int mods) {}
 
 void Window::handleMouseButtonEvents(int button, int action, int mods)
 {
@@ -71,10 +45,9 @@ void Window::handleMouseButtonEvents(int button, int action, int mods)
 
 }
 
-bool Window::init(unsigned int width, unsigned int height, std::string title_initial, bool vulkan)
+bool Window::init(unsigned int width, unsigned int height, std::string title, bool vulkan)
 {
-	title = title_initial;
-	newTitle = "";
+
 	isVulkan = vulkan;
 
 	if (!glfwInit())
@@ -121,7 +94,7 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 	if (!isVulkan)
 	{
 		glfwMakeContextCurrent(mWindow);
-		mOGLRenderer = std::make_unique<OGLRenderer>();
+		mOGLRenderer = std::make_unique<OGLRenderer>(mWindow);
 		if (!mOGLRenderer->init(width, height))
 		{
 			glfwTerminate();
@@ -132,6 +105,12 @@ bool Window::init(unsigned int width, unsigned int height, std::string title_ini
 			{
 				auto renderer = static_cast<OGLRenderer*>(glfwGetWindowUserPointer(win));
 				renderer->setSize(width, height);
+			});
+
+		glfwSetKeyCallback(mWindow, [](GLFWwindow* win, int key, int scancode, int action, int mods)
+			{
+				auto renderer = static_cast<OGLRenderer*>(glfwGetWindowUserPointer(win));
+				renderer->handleKeyEvents(key, scancode, action, mods);
 			});
 
 		mModel = std::make_unique<Model>();
