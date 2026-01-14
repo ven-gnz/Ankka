@@ -9,6 +9,10 @@ OGLRenderer::OGLRenderer(GLFWwindow* window) {
 	mWindow = window;
 	mViewMatrix = glm::mat4(1.0f);
 	mProjectionMatrix = glm::mat4(1.0f);
+
+	cameraPosition = glm::vec3(0.4f, 0.3f, 1.0f);
+	cameraLookAtPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+	cameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
 void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
@@ -55,6 +59,11 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	}
 
 	mUniformBuffer.init();
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+
+	mWidth = width;
+	mHeight = height;
 
 	return true;
 
@@ -79,21 +88,27 @@ void OGLRenderer::draw()
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	glClearDepth(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+
+	mProjectionMatrix = glm::perspective(glm::radians(90.0f),
+		static_cast<float>(mWidth) / static_cast<float>(mHeight),
+		0.1f,
+		100.0f);
 
 	float t = glfwGetTime();
 
+	glm::mat4 view = glm::mat4(1.0f);
+	
 	if (mUseChangedShader)
 	{	
 		mChangedShader.use();
-		mViewMatrix = glm::rotate(glm::mat4(1.0f), -t, glm::vec3(0.0f, 0.0f, 1.0f));
+		view = glm::rotate(glm::mat4(1.0f), -t, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
 	else
 	{
 		mBasicShader.use();
-		mViewMatrix = glm::rotate(glm::mat4(1.0f), t, glm::vec3(0.0f, 0.0f, 1.0f));
+		view = glm::rotate(glm::mat4(1.0f), t, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+	mViewMatrix = glm::lookAt(cameraPosition, cameraLookAtPosition, cameraUpVector) * view;
 	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
 	
 	mTex.bind();

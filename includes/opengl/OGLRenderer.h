@@ -37,6 +37,13 @@ private:
 	bool mUseChangedShader = false;
 	GLFWwindow* mWindow = nullptr;
 
+	glm::vec3 cameraPosition;
+	glm::vec3 cameraLookAtPosition;
+	glm::vec3 cameraUpVector;
+
+	int mWidth = 0;
+	int mHeight = 0;
+
 	glm::mat4 mViewMatrix;
 	glm::mat4 mProjectionMatrix;
 
