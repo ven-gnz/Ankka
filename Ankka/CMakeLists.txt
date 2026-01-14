@@ -29,7 +29,8 @@ add_dependencies(Ankka refresh_shaders)
 
 target_include_directories(Ankka
 	PRIVATE 
-		${CMAKE_SOURCE_DIR}/includes)
+		${CMAKE_SOURCE_DIR}/includes
+		${CMAKE_SOURCE_DIR}/external/imgui)
 
 find_package(Vulkan REQUIRED)
 
@@ -38,7 +39,8 @@ target_link_libraries(Ankka
 	glfw
 	glad
 	vk-bootstrap
-	Vulkan::Vulkan)
+	Vulkan::Vulkan
+	imgui)
 
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
