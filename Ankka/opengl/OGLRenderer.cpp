@@ -7,6 +7,8 @@
 
 OGLRenderer::OGLRenderer(GLFWwindow* window) {
 	mWindow = window;
+	mViewMatrix = glm::mat4(1.0f);
+	mProjectionMatrix = glm::mat4(1.0f);
 }
 
 void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
@@ -52,6 +54,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
+	mUniformBuffer.init();
+
 	return true;
 
 }
@@ -78,14 +82,19 @@ void OGLRenderer::draw()
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
+	float t = glfwGetTime();
+
 	if (mUseChangedShader)
-	{
+	{	
 		mChangedShader.use();
+		mViewMatrix = glm::rotate(glm::mat4(1.0f), -t, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
 	else
 	{
 		mBasicShader.use();
+		mViewMatrix = glm::rotate(glm::mat4(1.0f), t, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
 	
 	mTex.bind();
 	mVertexBuffer.bind();

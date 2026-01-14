@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -10,6 +11,7 @@
 #include "opengl/VertexBuffer.h"
 #include "opengl/Texture.h"
 #include "opengl/Shader.h"
+#include "opengl/UniformBuffer.h"
 
 #include "OGLRenderData.h"
 
@@ -29,9 +31,13 @@ private:
 	Shader mChangedShader{};
 	Framebuffer mFramebuffer{};
 	VertexBuffer mVertexBuffer{};
+	UniformBuffer mUniformBuffer;
 	Texture mTex{};
 	int mTriangleCount = 0;
 	bool mUseChangedShader = false;
 	GLFWwindow* mWindow = nullptr;
+
+	glm::mat4 mViewMatrix;
+	glm::mat4 mProjectionMatrix;
 
 };

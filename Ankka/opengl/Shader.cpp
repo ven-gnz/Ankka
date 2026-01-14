@@ -27,6 +27,8 @@ bool Shader::loadShaders(std::string vertexShaderFileName, std::string fragmentS
 		return false;
 	}
 
+	GLuint uboIndex = glGetUniformBlockIndex(mShaderProgram, "Matrices");
+	glUniformBlockBinding(mShaderProgram, uboIndex, 0);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 	return true;
