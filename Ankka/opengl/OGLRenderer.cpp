@@ -127,9 +127,10 @@ void OGLRenderer::draw()
 	mFramebuffer.unbind();
 
 	mFramebuffer.drawToScreen();
+	mUIGenerateTimer.start();
 	mUserInterface.createFrame(mRenderData);
 	mUserInterface.render();
-
+	mRenderData.rdUIGenerateTime = mUIGenerateTimer.stop();
 	mRenderData.rdFrameTime = frameStartTime - prevFrameStartTime;
 	prevFrameStartTime = frameStartTime;
 }

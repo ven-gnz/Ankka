@@ -12,6 +12,7 @@ struct OGLRenderData
 	unsigned int rdHeight = 0;
 	unsigned int rdTriangelCount = 0;
 	float rdFrameTime = 0.0f;
+	float rdUIGenerateTime = 0.0f;
 };
 
 struct OGLVertex

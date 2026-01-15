@@ -64,6 +64,12 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 	ImGui::SameLine();
 	ImGui::Text(imgWindowPos.c_str());
 
+	ImGui::Text("UI Generation time:");
+	ImGui::SameLine();
+	ImGui::Text(std::to_string(renderData.rdUIGenerateTime).c_str());
+	ImGui::SameLine();
+	ImGui::Text("ms");
+
 	ImGui::End();
 }
 

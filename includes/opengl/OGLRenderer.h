@@ -19,6 +19,8 @@
 
 #include "Ankka/UserInterface.h"
 
+#include "Ankka/tools/Timer.h"
+
 #include "OGLRenderData.h"
 
 class OGLRenderer
@@ -54,5 +56,7 @@ private:
 	glm::mat4 mProjectionMatrix;
 
 	UserInterface mUserInterface{};
+
+	Timer mUIGenerateTimer{};
 
 };
