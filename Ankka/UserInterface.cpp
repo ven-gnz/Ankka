@@ -50,3 +50,9 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 
 	ImGui::End();
 }
+
+void UserInterface::render()
+{
+	ImGui::Render();
+	ImGui_ImplOpenGl3_RenderDrawData(ImGui::GetDrawData());
+}
