@@ -3,6 +3,11 @@
 
 class UserInterface
 {
+
+private:
+	float framesPerSecond = 0.0f;
+	float averagingAlpha = 0.96f;
+
 public:
 	void init(OGLRenderData& renderData);
 	void createFrame(OGLRenderData& renderData);

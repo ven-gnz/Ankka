@@ -30,6 +30,22 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 	ImGui::SetNextWindowBgAlpha(0.8f);
 	ImGui::Begin("Control", nullptr, imguiWindowFlags);
 
+	static float newFps = 0.0f;
+	if (renderData.rdFrameTime > 0.0)
+	{
+		newFps = 1.0f / renderData.rdFrameTime;
+	}
+
+	framesPerSecond = (averagingAlpha * framesPerSecond) + (1.0f - averagingAlpha) * newFps;
+
+	ImGui::Text("FPS:");
+	ImGui::SameLine();
+	std::string frame_str = std::to_string(framesPerSecond);
+	std::string trimString = frame_str.substr(0, frame_str.length() - 4);
+
+	ImGui::Text(trimString.c_str());
+	ImGui::Separator();
+
 	ImGui::Text("Triangles:");
 	ImGui::SameLine();
 	ImGui::Text(std::to_string(renderData.rdTriangelCount).c_str());

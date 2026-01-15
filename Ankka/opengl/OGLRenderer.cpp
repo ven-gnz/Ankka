@@ -89,6 +89,9 @@ void OGLRenderer::uploadData(OGLMesh vertexData)
 
 void OGLRenderer::draw()
 {
+	static float prevFrameStartTime = 0.0f;
+	float frameStartTime = glfwGetTime();
+
 	mFramebuffer.bind();
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	glClearDepth(1.0f);
@@ -126,6 +129,9 @@ void OGLRenderer::draw()
 	mFramebuffer.drawToScreen();
 	mUserInterface.createFrame(mRenderData);
 	mUserInterface.render();
+
+	mRenderData.rdFrameTime = frameStartTime - prevFrameStartTime;
+	prevFrameStartTime = frameStartTime;
 }
 
 void OGLRenderer::cleanup()
