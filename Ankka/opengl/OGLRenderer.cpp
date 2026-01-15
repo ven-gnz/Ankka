@@ -21,7 +21,9 @@ void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
 		mUseChangedShader = !mUseChangedShader;
-		Logger::log(1, "%s : use changed shader\n", __FUNCTION__);
+		Logger::log(1, "using shader : %s\n",
+			mUseChangedShader ? "changed" : "normal",
+			__FUNCTION__);
 	}
 }
 
