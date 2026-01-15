@@ -26,7 +26,7 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ImGuiWindowFlags = 0;
+	ImGuiWindowFlags imguiWindowFlags  = 0;
 	ImGui::SetNextWindowBgAlpha(0.8f);
 	ImGui::Begin("Control", nullptr, imguiWindowFlags);
 
@@ -40,13 +40,13 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 	ImGui::SameLine();
 	ImGui::Text(windowDims.c_str());
 
-	std::string imgWindowPOs
+	std::string imgWindowPos
 		= std::to_string(static_cast<int>(ImGui::GetWindowPos().x)) + "/"
 		+ std::to_string(static_cast<int>(ImGui::GetWindowPos().y));
 
 	ImGui::Text("ImGui Window Position :");
 	ImGui::SameLine();
-	ImGui::Text(imgWindowPos.c_str();
+	ImGui::Text(imgWindowPos.c_str());
 
 	ImGui::End();
 }
@@ -54,5 +54,6 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 void UserInterface::render()
 {
 	ImGui::Render();
-	ImGui_ImplOpenGl3_RenderDrawData(ImGui::GetDrawData());
+
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

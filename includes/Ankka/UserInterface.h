@@ -1,5 +1,5 @@
 #pragma once
-#include "OGLRenderData.h"
+#include "opengl/OGLRenderData.h"
 
 class UserInterface
 {

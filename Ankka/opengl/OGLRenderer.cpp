@@ -68,6 +68,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mRenderData.rdWidth = width;
 	mRenderData.rdHeight = height;
 
+	mUserInterface.init(mRenderData);
+
 	return true;
 
 }
@@ -122,10 +124,13 @@ void OGLRenderer::draw()
 	mFramebuffer.unbind();
 
 	mFramebuffer.drawToScreen();
+	mUserInterface.createFrame(mRenderData);
+	mUserInterface.render();
 }
 
 void OGLRenderer::cleanup()
 {
+	mUserInterface.cleanup();
 	mBasicShader.cleanup();
 	mChangedShader.cleanup();
 

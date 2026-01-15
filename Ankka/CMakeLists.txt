@@ -7,8 +7,29 @@
 add_executable (Ankka
 	"Ankka.cpp"
 	"../includes/Ankka/Ankka.h"
+	"../includes/Ankka/Logger.h"
+	"../includes/Ankka/Model.h"
+	"../includes/Ankka/UserInterface.h"
 	"../includes/Ankka/Window.h"
-	"Window.cpp" "Logger.cpp" "../includes/opengl/OGLRenderer.h" "../includes/opengl/Framebuffer.h" "../includes/opengl/VertexBuffer.h" "../includes/opengl/Texture.h" "../includes/opengl/Shader.h" "../includes/opengl/OGLRenderData.h" "opengl/OGLRenderer.cpp" "opengl/Framebuffer.cpp" "opengl/VertexBuffer.cpp" "opengl/Texture.cpp" "opengl/Shader.cpp" "Model.cpp" "../includes/vulkan/VkRenderer.h" "vulkan/VkRenderer.cpp" "opengl/UniformBuffer.cpp")
+	"Window.cpp"
+	"Logger.cpp"
+	"Model.cpp" 
+	"UserInterface.cpp"
+	"../includes/opengl/OGLRenderer.h"
+	"../includes/opengl/Framebuffer.h"
+	"../includes/opengl/VertexBuffer.h"
+	"../includes/opengl/Texture.h"
+	"../includes/opengl/Shader.h" 
+	"../includes/opengl/OGLRenderData.h" 
+	"opengl/OGLRenderer.cpp" 
+	"opengl/Framebuffer.cpp" 
+	"opengl/VertexBuffer.cpp" 
+	"opengl/Texture.cpp" 
+	"opengl/Shader.cpp" 
+	"opengl/UniformBuffer.cpp"
+	
+	"../includes/vulkan/VkRenderer.h" 
+	"vulkan/VkRenderer.cpp" )
 
 # Resource management
 

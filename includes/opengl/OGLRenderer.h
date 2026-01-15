@@ -17,6 +17,8 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 
+#include "Ankka/UserInterface.h"
+
 #include "OGLRenderData.h"
 
 class OGLRenderer
@@ -50,5 +52,7 @@ private:
 
 	glm::mat4 mViewMatrix;
 	glm::mat4 mProjectionMatrix;
+
+	UserInterface mUserInterface{};
 
 };
