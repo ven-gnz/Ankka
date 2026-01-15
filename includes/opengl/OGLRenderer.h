@@ -15,6 +15,7 @@
 
 
 #include "imgui_impl_opengl3.h"
+#include "imgui_impl_glfw.h"
 
 #include "OGLRenderData.h"
 
@@ -30,22 +31,22 @@ public:
 	void handleKeyEvents(int key, int scancode, int action, int mods);
 
 private:
+
 	Shader mBasicShader{};
 	Shader mChangedShader{};
 	Framebuffer mFramebuffer{};
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer;
 	Texture mTex{};
-	int mTriangleCount = 0;
 	bool mUseChangedShader = false;
-	GLFWwindow* mWindow = nullptr;
+
+
+	OGLRenderData mRenderData{};
 
 	glm::vec3 cameraPosition;
 	glm::vec3 cameraLookAtPosition;
 	glm::vec3 cameraUpVector;
 
-	int mWidth = 0;
-	int mHeight = 0;
 
 	glm::mat4 mViewMatrix;
 	glm::mat4 mProjectionMatrix;

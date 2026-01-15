@@ -6,7 +6,8 @@
 #include <ostream>
 
 OGLRenderer::OGLRenderer(GLFWwindow* window) {
-	mWindow = window;
+
+	mRenderData.rdWindow = window;
 	mViewMatrix = glm::mat4(1.0f);
 	mProjectionMatrix = glm::mat4(1.0f);
 
@@ -17,7 +18,7 @@ OGLRenderer::OGLRenderer(GLFWwindow* window) {
 
 void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 {
-	if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
 		mUseChangedShader = !mUseChangedShader;
 		Logger::log(1, "%s : use changed shader\n", __FUNCTION__);
@@ -62,8 +63,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
-	mWidth = width;
-	mHeight = height;
+	mRenderData.rdWidth = width;
+	mRenderData.rdHeight = height;
 
 	return true;
 
@@ -77,7 +78,7 @@ void OGLRenderer::setSize(unsigned int width, unsigned int height)
 
 void OGLRenderer::uploadData(OGLMesh vertexData)
 {
-	mTriangleCount = vertexData.vertices.size();
+	mRenderData.rdTriangelCount = vertexData.vertices.size();
 	mVertexBuffer.uploadData(vertexData);
 }
 
@@ -90,7 +91,7 @@ void OGLRenderer::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mProjectionMatrix = glm::perspective(glm::radians(90.0f),
-		static_cast<float>(mWidth) / static_cast<float>(mHeight),
+		static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
 		0.1f,
 		100.0f);
 
@@ -113,7 +114,7 @@ void OGLRenderer::draw()
 	
 	mTex.bind();
 	mVertexBuffer.bind();
-	mVertexBuffer.draw(GL_TRIANGLES, 0, mTriangleCount * 3);
+	mVertexBuffer.draw(GL_TRIANGLES, 0, mRenderData.rdTriangelCount * 3);
 	mVertexBuffer.unbind();
 	mTex.unbind();
 	mFramebuffer.unbind();
