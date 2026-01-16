@@ -70,6 +70,28 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 	ImGui::SameLine();
 	ImGui::Text("ms");
 
+	ImGui::Checkbox("Check Me", &checkBoxChecked);
+
+	if (checkBoxChecked)
+	{
+		ImGui::SameLine();
+		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 2550, 2, 255));
+		ImGui::Text("Yes");
+		ImGui::PopStyleColor();
+	}
+
+	if (ImGui::Button("Toggle Shader"))
+	{
+		renderData.rdUseChangedShader = !renderData.rdUseChangedShader;
+	}
+	ImGui::SameLine();
+	std::string shader_string = renderData.rdUseChangedShader ? "Changed Shader" : "Basic Shader";
+	ImGui::Text(shader_string.c_str());
+
+	ImGui::Text("Field of view");
+	ImGui::SameLine();
+	ImGui::SliderInt("##FOX", &renderData.rdFielfOfView, 40, 150);
+
 	ImGui::End();
 }
 

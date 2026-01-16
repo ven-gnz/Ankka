@@ -42,7 +42,6 @@ private:
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer;
 	Texture mTex{};
-	bool mUseChangedShader = false;
 
 
 	OGLRenderData mRenderData{};

@@ -20,9 +20,9 @@ void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 {
 	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
-		mUseChangedShader = !mUseChangedShader;
+		mRenderData.rdUseChangedShader = !mRenderData.rdUseChangedShader;
 		Logger::log(1, "using shader : %s\n",
-			mUseChangedShader ? "changed" : "normal",
+			mRenderData.rdUseChangedShader ? "changed" : "normal",
 			__FUNCTION__);
 	}
 }
@@ -97,7 +97,8 @@ void OGLRenderer::draw()
 	glClearDepth(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	mProjectionMatrix = glm::perspective(glm::radians(90.0f),
+	mProjectionMatrix = glm::perspective(
+		static_cast<float>(mRenderData.rdFielfOfView),
 		static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
 		0.1f,
 		100.0f);
@@ -106,7 +107,7 @@ void OGLRenderer::draw()
 
 	glm::mat4 view = glm::mat4(1.0f);
 	
-	if (mUseChangedShader)
+	if (mRenderData.rdUseChangedShader)
 	{	
 		mChangedShader.use();
 		view = glm::rotate(glm::mat4(1.0f), -t, glm::vec3(0.0f, 0.0f, 1.0f));
