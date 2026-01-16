@@ -70,15 +70,17 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 	ImGui::SameLine();
 	ImGui::Text("ms");
 
-	ImGui::Checkbox("Check Me", &checkBoxChecked);
+	ImGui::Checkbox("Vsync", &renderData.isVSYNC);
 
 	if (checkBoxChecked)
 	{
 		ImGui::SameLine();
 		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 2550, 2, 255));
-		ImGui::Text("Yes");
+		ImGui::Text("VSYNC is on");
 		ImGui::PopStyleColor();
+		renderData.isVSYNC = !renderData.isVSYNC;
 	}
+	
 
 	if (ImGui::Button("Toggle Shader"))
 	{

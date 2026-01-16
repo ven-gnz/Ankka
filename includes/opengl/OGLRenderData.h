@@ -9,6 +9,7 @@ struct OGLRenderData
 {
 	GLFWwindow *rdWindow = nullptr;
 	bool rdUseChangedShader = false;
+	bool isVSYNC = true;
 	int rdFielfOfView = 90;
 	unsigned int rdWidth = 0;
 	unsigned int rdHeight = 0;

@@ -5,6 +5,14 @@
 #include <string>
 #include <ostream>
 
+
+void OGLRenderer::toggleVsync()
+{
+	int bool_Vsync = mRenderData.isVSYNC ? 1 : 0;
+	glfwSwapInterval(bool_Vsync);
+	old_VSync = bool_Vsync;
+}
+
 OGLRenderer::OGLRenderer(GLFWwindow* window) {
 
 	mRenderData.rdWindow = window;
@@ -91,6 +99,11 @@ void OGLRenderer::draw()
 {
 	static float prevFrameStartTime = 0.0f;
 	float frameStartTime = glfwGetTime();
+
+	if (mRenderData.isVSYNC != old_VSync)
+	{
+		toggleVsync();
+	}
 
 	mFramebuffer.bind();
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);

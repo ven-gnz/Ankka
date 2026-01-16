@@ -34,6 +34,8 @@ public:
 	void draw();
 	void handleKeyEvents(int key, int scancode, int action, int mods);
 
+	void toggleVsync();
+
 private:
 
 	Shader mBasicShader{};
@@ -42,7 +44,7 @@ private:
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer;
 	Texture mTex{};
-
+	bool old_VSync = true;
 
 	OGLRenderData mRenderData{};
 
