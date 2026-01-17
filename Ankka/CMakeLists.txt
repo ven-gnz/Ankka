@@ -29,7 +29,7 @@ add_executable (Ankka
 	"opengl/UniformBuffer.cpp"
 	
 	"../includes/vulkan/VkRenderer.h" 
-	"vulkan/VkRenderer.cpp"  "tools/Timer.cpp")
+	"vulkan/VkRenderer.cpp"  "tools/Timer.cpp" "tools/Camera.cpp")
 
 # Resource management
 

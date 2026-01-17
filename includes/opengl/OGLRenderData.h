@@ -16,6 +16,9 @@ struct OGLRenderData
 	unsigned int rdTriangelCount = 0;
 	float rdFrameTime = 0.0f;
 	float rdUIGenerateTime = 0.0f;
+
+	float rdViewAzimuth = 320.0f;
+	float rdViewElevation = -15.0f;
 };
 
 struct OGLVertex
