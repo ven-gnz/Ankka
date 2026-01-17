@@ -20,6 +20,7 @@
 #include "Ankka/UserInterface.h"
 
 #include "Ankka/tools/Timer.h"
+#include "Ankka/tools/Camera.h"
 
 #include "OGLRenderData.h"
 
@@ -34,9 +35,18 @@ public:
 	void draw();
 	void handleKeyEvents(int key, int scancode, int action, int mods);
 
+	void handleMouseButtonEvents(int button, int action, int mods);
+	void handleMousePositionEvents(double xPos, double yPos);
+
 	void toggleVsync();
 
 private:
+
+	Camera mCamera{};
+
+	bool mMouseLock = false;
+	int mMouseXPos = 0;
+	int mMouseYPos = 0;
 
 	Shader mBasicShader{};
 	Shader mChangedShader{};

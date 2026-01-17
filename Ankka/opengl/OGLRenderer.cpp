@@ -5,6 +5,50 @@
 #include <string>
 #include <ostream>
 
+void OGLRenderer::handleMouseButtonEvents(int button, int action, int mods)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (button >= 0 && button < ImGuiMouseButton_COUNT)
+	{
+		io.AddMouseButtonEvent(button, action == GLFW_PRESS);
+	}
+	if (io.WantCaptureMouse) return;
+
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		mMouseLock = !mMouseLock;
+	}
+
+	if (mMouseLock) glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	else glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	
+}
+
+void OGLRenderer::handleMousePositionEvents(double xPos, double yPos)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMousePosEvent((float)xPos, (float)yPos);
+	if (io.WantCaptureMouse) return;
+
+	int mouseMoveRelX = static_cast<int>(xPos) - mMouseXPos;
+	int mouseMoveRelY = static_cast<int>(yPos) - mMouseYPos;
+
+	if (mMouseLock)
+	{
+		mRenderData.rdViewAzimuth += mouseMoveRelX / 10.0f;
+		if (mRenderData.rdViewAzimuth < 0.0) mRenderData.rdViewAzimuth += 360.0;
+		if (mRenderData.rdViewAzimuth >= 360.0) mRenderData.rdViewAzimuth -= 360.0;
+
+		mRenderData.rdViewElevation -= mouseMoveRelY / 10.0;
+		if (mRenderData.rdViewElevation > 89.0) mRenderData.rdViewElevation = 89.0;
+		if (mRenderData.rdViewElevation < -89.0) mRenderData.rdViewElevation = -89.0;
+	}
+
+	mMouseXPos = static_cast<int>(xPos);
+	mMouseYPos = static_cast<int>(yPos);
+
+}
+
 
 void OGLRenderer::toggleVsync()
 {
@@ -113,24 +157,25 @@ void OGLRenderer::draw()
 	mProjectionMatrix = glm::perspective(
 		static_cast<float>(mRenderData.rdFielfOfView),
 		static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
-		0.1f,
+		0.01f,
 		100.0f);
 
 	float t = glfwGetTime();
 
-	glm::mat4 view = glm::mat4(1.0f);
+	//glm::mat4 view = glm::mat4(1.0f);
+	glm::mat4 model = glm::mat4(1.0f);
 	
 	if (mRenderData.rdUseChangedShader)
 	{	
 		mChangedShader.use();
-		view = glm::rotate(glm::mat4(1.0f), -t, glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(glm::mat4(1.0f), -t, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
 	else
 	{
 		mBasicShader.use();
-		view = glm::rotate(glm::mat4(1.0f), t, glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(glm::mat4(1.0f), t, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
-	mViewMatrix = glm::lookAt(cameraPosition, cameraLookAtPosition, cameraUpVector) * view;
+	mViewMatrix = mCamera.getViewMatrix(mRenderData) * model;
 	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
 	
 	mTex.bind();

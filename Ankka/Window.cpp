@@ -113,6 +113,19 @@ bool Window::init(unsigned int width, unsigned int height, std::string title, bo
 				renderer->handleKeyEvents(key, scancode, action, mods);
 			});
 
+		glfwSetMouseButtonCallback(mWindow, [](GLFWwindow* win, int button, int action, int mods)
+			{
+				auto renderer = static_cast<OGLRenderer*>
+					(glfwGetWindowUserPointer(win));
+				renderer->handleMouseButtonEvents(button, action, mods);
+			});
+		glfwSetCursorPosCallback(mWindow, [](GLFWwindow* win, double xpos, double ypos)
+			{
+				auto renderer = static_cast<OGLRenderer*>
+					(glfwGetWindowUserPointer(win));
+				renderer->handleMousePositionEvents(xpos, ypos);
+			});
+
 		mModel = std::make_unique<Model>();
 		mModel->init();
 
