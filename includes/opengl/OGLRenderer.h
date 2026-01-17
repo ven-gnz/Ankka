@@ -48,6 +48,10 @@ private:
 	int mMouseXPos = 0;
 	int mMouseYPos = 0;
 
+	double lastTickTime = 0.0;
+
+	void handleMovementKeys();
+
 	Shader mBasicShader{};
 	Shader mChangedShader{};
 	Framebuffer mFramebuffer{};

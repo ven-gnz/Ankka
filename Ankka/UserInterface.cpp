@@ -1,7 +1,9 @@
 #include <string>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-
+#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 #include "Ankka/UserInterface.h"
 
 void UserInterface::init(OGLRenderData& renderData)
@@ -93,6 +95,19 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 	ImGui::Text("Field of view");
 	ImGui::SameLine();
 	ImGui::SliderInt("##FOX", &renderData.rdFielfOfView, 40, 150);
+
+	ImGui::Text("View azi:");
+	ImGui::SameLine();
+	ImGui::Text("%s", std::to_string(renderData.rdViewAzimuth).c_str());
+
+	ImGui::Text("View elev::");
+	ImGui::SameLine();
+	ImGui::Text("%s", std::to_string(renderData.rdViewElevation).c_str());
+	ImGui::Separator();
+
+	ImGui::Text("Camera Position");
+	ImGui::SameLine();
+	ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());
 
 	ImGui::End();
 }

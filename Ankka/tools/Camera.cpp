@@ -19,7 +19,11 @@ glm::mat4 Camera::getViewMatrix(OGLRenderData& renderData)
 			sinElev,
 			-cosAzim * cosElev));
 
-	return glm::lookAt(mWorldPos,
-		mWorldPos + mViewDirection,
-		mWroldUpVector);
+	mRightDirection = glm::normalize(glm::cross(mViewDirection, mWorldUpVector));
+	mUpDirection = glm::normalize(glm::cross(mRightDirection, mViewDirection));
+
+	return glm::lookAt(renderData.rdCameraWorldPosition,
+		renderData.rdCameraWorldPosition + mViewDirection,
+		mWorldUpVector);
+
 }

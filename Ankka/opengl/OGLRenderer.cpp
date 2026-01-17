@@ -5,6 +5,37 @@
 #include <string>
 #include <ostream>
 
+void OGLRenderer::handleMovementKeys()
+{
+	mRenderData.rdMoveForward = 0;
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_W == GLFW_PRESS))
+	{
+		mRenderData.rdMoveForward += 1;
+	}
+	
+	mRenderData.rdMoveRight = 0;
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_A == GLFW_PRESS))
+	{
+		mRenderData.rdMoveRight += 1;
+	}
+
+	mRenderData.rdMoveUp = 0;
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_E == GLFW_PRESS))
+	{
+		mRenderData.rdMoveUp += 1;
+	}
+
+	mRenderData.rdMoveUp = 0;
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Q == GLFW_PRESS))
+	{
+		mRenderData.rdMoveUp -= 1;
+	}
+
+
+	
+
+}
+
 void OGLRenderer::handleMouseButtonEvents(int button, int action, int mods)
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -141,6 +172,9 @@ void OGLRenderer::uploadData(OGLMesh vertexData)
 
 void OGLRenderer::draw()
 {
+	double ticktime = glfwGetTime();
+	mRenderData.rdTickDiff = ticktime - lastTickTime;
+
 	static float prevFrameStartTime = 0.0f;
 	float frameStartTime = glfwGetTime();
 
@@ -158,7 +192,7 @@ void OGLRenderer::draw()
 		static_cast<float>(mRenderData.rdFielfOfView),
 		static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
 		0.01f,
-		100.0f);
+		120.0f);
 
 	float t = glfwGetTime();
 
@@ -187,11 +221,16 @@ void OGLRenderer::draw()
 
 	mFramebuffer.drawToScreen();
 	mUIGenerateTimer.start();
+
+	handleMovementKeys();
+
 	mUserInterface.createFrame(mRenderData);
 	mUserInterface.render();
 	mRenderData.rdUIGenerateTime = mUIGenerateTimer.stop();
 	mRenderData.rdFrameTime = frameStartTime - prevFrameStartTime;
 	prevFrameStartTime = frameStartTime;
+
+	lastTickTime = ticktime;
 }
 
 void OGLRenderer::cleanup()
