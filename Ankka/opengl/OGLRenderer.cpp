@@ -94,6 +94,7 @@ void OGLRenderer::reorient_camera()
 	mRenderData.rdViewAzimuth = 315.0f;
 	mRenderData.rdViewElevation = -25;
 	mRenderData.rdFielfOfView = 90;
+	Logger::log(1, " re-oriented camera ");
 }
 
 OGLRenderer::OGLRenderer(GLFWwindow* window) {
@@ -102,9 +103,6 @@ OGLRenderer::OGLRenderer(GLFWwindow* window) {
 	mViewMatrix = glm::mat4(1.0f);
 	mProjectionMatrix = glm::mat4(1.0f);
 
-	cameraPosition = glm::vec3(-0.5, 1.25, -1.25);
-	cameraLookAtPosition = glm::vec3(0.0f, 0.0f, 0.0f);
-	cameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
 void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)

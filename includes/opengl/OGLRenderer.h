@@ -64,11 +64,6 @@ private:
 
 	void reorient_camera();
 
-	glm::vec3 cameraPosition;
-	glm::vec3 cameraLookAtPosition;
-	glm::vec3 cameraUpVector;
-
-
 	glm::mat4 mViewMatrix;
 	glm::mat4 mProjectionMatrix;
 
