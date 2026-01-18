@@ -1,50 +1,6 @@
 #include "Ankka/Window.h"
 #include <iostream>
 
-void Window::handleWindowCloseEvents()
-{
-	
-	Logger::log(1, "%s : Window close event fired \n", __FUNCTION__);
-	cleanup();
-	
-}
-
-// to be deprecated?
-void Window::handleKeyEvents(int key, int scancode, int action, int mods) {}
-
-void Window::handleMouseButtonEvents(int button, int action, int mods)
-{
-	std::string actionName;
-	switch (action)
-	{
-	case GLFW_PRESS:
-		actionName = "pressed";
-		break;
-	case GLFW_RELEASE:
-		actionName = "released";
-		break;
-	default:
-		actionName = "invalid";
-		break;
-	}
-	std::string mouseButtonName;
-	switch (button)
-	{
-	case GLFW_MOUSE_BUTTON_LEFT:
-		mouseButtonName = "left";
-		break;
-	case GLFW_MOUSE_BUTTON_MIDDLE:
-		mouseButtonName = "middle";
-		break;
-	case GLFW_MOUSE_BUTTON_RIGHT:
-		mouseButtonName = "right";
-		break;
-	}
-
-	Logger::log(1, "%s: %s mouse button (%i) %s\n", __FUNCTION__, mouseButtonName.c_str(), button, actionName.c_str());
-
-}
-
 bool Window::init(unsigned int width, unsigned int height, std::string title, bool vulkan)
 {
 
@@ -162,6 +118,7 @@ void Window::mainLoop()
 		glfwPollEvents();
 		
 	}
+	cleanup();
 	
 }
 
@@ -172,17 +129,13 @@ void Window::cleanup()
 		vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
 		vkDestroyInstance(mInstance, nullptr);
 	}
-	
 	glfwDestroyWindow(mWindow);
 	glfwTerminate();
-
 }
 
 // not spock pls, with K
 bool Window::initVulkan()
 {
-
-
 
 	VkResult result = VK_ERROR_UNKNOWN;
 
