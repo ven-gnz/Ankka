@@ -22,6 +22,12 @@ void UserInterface::cleanup()
 	ImGui::DestroyContext();
 }
 
+static std::string trim_float(float f, int l)
+{
+	std::string s = std::to_string(f);
+	return s.substr(0, s.length() - l);
+}
+
 void UserInterface::createFrame(OGLRenderData& renderData)
 {
 	ImGui_ImplOpenGL3_NewFrame();
@@ -42,10 +48,7 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 
 	ImGui::Text("FPS:");
 	ImGui::SameLine();
-	std::string frame_str = std::to_string(framesPerSecond);
-	std::string trimString = frame_str.substr(0, frame_str.length() - 4);
-
-	ImGui::Text(trimString.c_str());
+	ImGui::Text(trim_float(framesPerSecond, 4).c_str());
 	ImGui::Separator();
 
 	ImGui::Text("Triangles:");
@@ -68,7 +71,7 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 
 	ImGui::Text("UI Generation time:");
 	ImGui::SameLine();
-	ImGui::Text(std::to_string(renderData.rdUIGenerateTime).c_str());
+	ImGui::Text(trim_float(renderData.rdUIGenerateTime, 4).c_str());
 	ImGui::SameLine();
 	ImGui::Text("ms");
 
@@ -98,11 +101,11 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 
 	ImGui::Text("View azi:");
 	ImGui::SameLine();
-	ImGui::Text("%s", std::to_string(renderData.rdViewAzimuth).c_str());
+	ImGui::Text("%s", trim_float(renderData.rdViewAzimuth, 4).c_str());
 
 	ImGui::Text("View elev::");
 	ImGui::SameLine();
-	ImGui::Text("%s", std::to_string(renderData.rdViewElevation).c_str());
+	ImGui::Text("%s", trim_float(renderData.rdViewElevation, 4).c_str());
 	ImGui::Separator();
 
 	ImGui::Text("Camera Position");
