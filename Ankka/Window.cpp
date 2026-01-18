@@ -114,11 +114,10 @@ void Window::mainLoop()
 
 		mOGLRenderer->draw();
 		glfwSwapBuffers(mWindow);
-		
+	
 		glfwPollEvents();
 		
 	}
-	cleanup();
 	
 }
 
