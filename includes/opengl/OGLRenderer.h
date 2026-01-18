@@ -62,6 +62,8 @@ private:
 
 	OGLRenderData mRenderData{};
 
+	void reorient_camera();
+
 	glm::vec3 cameraPosition;
 	glm::vec3 cameraLookAtPosition;
 	glm::vec3 cameraUpVector;

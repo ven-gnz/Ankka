@@ -25,7 +25,7 @@ struct OGLRenderData
 	int rdMoveUp = 0;
 
 	float rdTickDiff = 0.0f;
-	glm::vec3 rdCameraWorldPosition = glm::vec3(0.5f, 0.25f, 1.0f);
+	glm::vec3 rdCameraWorldPosition = glm::vec3(-0.5, 1.25, -1.25);
 };
 
 struct OGLVertex

@@ -8,26 +8,26 @@
 void OGLRenderer::handleMovementKeys()
 {
 	mRenderData.rdMoveForward = 0;
-	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_W == GLFW_PRESS))
-	{
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_W) == GLFW_PRESS) {
 		mRenderData.rdMoveForward += 1;
 	}
-	
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_S) == GLFW_PRESS) {
+		mRenderData.rdMoveForward -= 1;
+	}
+
 	mRenderData.rdMoveRight = 0;
-	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_A == GLFW_PRESS))
-	{
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_A) == GLFW_PRESS) {
+		mRenderData.rdMoveRight -= 1;
+	}
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_D) == GLFW_PRESS) {
 		mRenderData.rdMoveRight += 1;
 	}
 
 	mRenderData.rdMoveUp = 0;
-	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_E == GLFW_PRESS))
-	{
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_E) == GLFW_PRESS) {
 		mRenderData.rdMoveUp += 1;
 	}
-
-	mRenderData.rdMoveUp = 0;
-	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Q == GLFW_PRESS))
-	{
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_Q) == GLFW_PRESS) {
 		mRenderData.rdMoveUp -= 1;
 	}
 
@@ -88,13 +88,21 @@ void OGLRenderer::toggleVsync()
 	old_VSync = bool_Vsync;
 }
 
+void OGLRenderer::reorient_camera()
+{
+	mRenderData.rdCameraWorldPosition = glm::vec3(-0.5, 1.25, -1.25);
+	mRenderData.rdViewAzimuth = 315.0f;
+	mRenderData.rdViewElevation = -25;
+	mRenderData.rdFielfOfView = 90;
+}
+
 OGLRenderer::OGLRenderer(GLFWwindow* window) {
 
 	mRenderData.rdWindow = window;
 	mViewMatrix = glm::mat4(1.0f);
 	mProjectionMatrix = glm::mat4(1.0f);
 
-	cameraPosition = glm::vec3(0.4f, 0.3f, 1.0f);
+	cameraPosition = glm::vec3(-0.5, 1.25, -1.25);
 	cameraLookAtPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	cameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
 }
@@ -107,6 +115,11 @@ void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 		Logger::log(1, "using shader : %s\n",
 			mRenderData.rdUseChangedShader ? "changed" : "normal",
 			__FUNCTION__);
+	}
+
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_ENTER) == GLFW_PRESS)
+	{
+		reorient_camera();
 	}
 }
 
