@@ -443,4 +443,6 @@ external/imgui/
 external/**/copying.txt
 !external/**/CMakeLists.txt
 
+assets/*
+
 includes/STB
