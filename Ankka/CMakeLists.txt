@@ -48,6 +48,7 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tex DESTINATION ${CMAKE_CURRENT_BINARY_DIR
 
 add_dependencies(Ankka refresh_shaders)
 
+
 # Source codde
 
 target_include_directories(Ankka
@@ -73,3 +74,9 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 
+
+add_custom_command(TARGET Ankka POST_BUILD 
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+				"${CMAKE_CURRENT_SOURCE_DIR}/assets"
+				"$<TARGET_FILE_DIR:Ankka>/assets"
+		)
