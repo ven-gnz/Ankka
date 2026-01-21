@@ -1,7 +1,7 @@
-#define STB_IMAGE_IMPLEMENTATION
-#include <STB/stb_image.h>
+
 #include "opengl/Texture.h"
 #include "Ankka/Logger.h"
+#include <../external/tinygltf/stb_image.h>
 
 bool Texture::loadTexture(std::string textureFilename)
 {

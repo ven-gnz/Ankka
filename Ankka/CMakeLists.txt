@@ -20,7 +20,7 @@ add_executable (Ankka
 	"../includes/opengl/VertexBuffer.h"
 	"../includes/opengl/Texture.h"
 	"../includes/opengl/Shader.h" 
-	"../includes/opengl/OGLRenderData.h" 
+	"../includes/opengl/OGLRenderData.h"
 	"opengl/OGLRenderer.cpp" 
 	"opengl/Framebuffer.cpp" 
 	"opengl/VertexBuffer.cpp" 
@@ -29,7 +29,9 @@ add_executable (Ankka
 	"opengl/UniformBuffer.cpp"
 	
 	"../includes/vulkan/VkRenderer.h" 
-	"vulkan/VkRenderer.cpp"  "tools/Timer.cpp" "tools/Camera.cpp")
+	"vulkan/VkRenderer.cpp"
+	"tools/Timer.cpp"
+	"tools/Camera.cpp")
 
 # Resource management
 
@@ -51,7 +53,8 @@ add_dependencies(Ankka refresh_shaders)
 target_include_directories(Ankka
 	PRIVATE 
 		${CMAKE_SOURCE_DIR}/includes
-		${CMAKE_SOURCE_DIR}/external/imgui)
+		${CMAKE_SOURCE_DIR}/external/imgui
+		${CMAKE_SOURCE_DIR}/external/)
 
 find_package(Vulkan REQUIRED)
 
@@ -61,7 +64,8 @@ target_link_libraries(Ankka
 	glad
 	vk-bootstrap
 	Vulkan::Vulkan
-	imgui)
+	imgui
+	tinygltf)
 
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
