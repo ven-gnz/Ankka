@@ -438,11 +438,12 @@ external/**/*.inl
 external/**/*.cppm
 external/imgui/
 
-
+assets/*
+Ankka/assets/*
 
 external/**/copying.txt
 !external/**/CMakeLists.txt
 
-assets/*
+
 
 includes/STB
