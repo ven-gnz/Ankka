@@ -31,7 +31,7 @@ add_executable (Ankka
 	"../includes/vulkan/VkRenderer.h" 
 	"vulkan/VkRenderer.cpp"
 	"tools/Timer.cpp"
-	"tools/Camera.cpp")
+	"tools/Camera.cpp" "GltfModel.cpp")
 
 # Resource management
 
