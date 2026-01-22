@@ -155,6 +155,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
+	if (!mGltfShader.loadShaders("shaders/gltf.vert", "shaders/gltf.frag"))
+	{
+		Logger::log(1, "%s: cannot find shaders\n",
+			__FUNCTION__);
+		return false;
+	}
+
 	mUniformBuffer.init();
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
@@ -164,6 +171,17 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mUserInterface.init(mRenderData);
 
+	mGltfModel = std::make_shared<GltfModel>();
+	std::string modelFilename = "assets/Woman.gltf";
+	std::string modelTexFilename = "tex/Woman.png";
+
+	if (!mGltfModel->loadModel(mRenderData, modelFilename, modelTexFilename))
+	{
+		return false;
+	}
+	mGltfModel->uploadIndexBuffer();
+
+	mGltfModel->uploadVertexBuffers();
 	return true;
 
 }
@@ -227,6 +245,11 @@ void OGLRenderer::draw()
 	mVertexBuffer.bind();
 	mVertexBuffer.draw(GL_TRIANGLES, 0, mRenderData.rdTriangelCount * 3);
 	mVertexBuffer.unbind();
+	
+	mViewMatrix = mCamera.getViewMatrix(mRenderData) * glm::mat4(1.0f);
+	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
+	mGltfShader.use();
+	mGltfModel->draw();
 	mTex.unbind();
 	mFramebuffer.unbind();
 
@@ -249,5 +272,9 @@ void OGLRenderer::cleanup()
 	mUserInterface.cleanup();
 	mBasicShader.cleanup();
 	mChangedShader.cleanup();
+
+	mGltfModel->cleanup();
+	mGltfModel.reset();
+	mGltfShader.cleanup();
 
 }

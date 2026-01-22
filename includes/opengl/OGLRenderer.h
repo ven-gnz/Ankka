@@ -13,6 +13,8 @@
 #include "opengl/Shader.h"
 #include "opengl/UniformBuffer.h"
 
+#include "Ankka/GltfModel.h"
+
 
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
@@ -70,5 +72,8 @@ private:
 	UserInterface mUserInterface{};
 
 	Timer mUIGenerateTimer{};
+
+	Shader mGltfShader{};
+	std::shared_ptr<GltfModel> mGltfModel = nullptr;
 
 };
