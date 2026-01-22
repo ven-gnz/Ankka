@@ -440,6 +440,7 @@ external/imgui/
 
 assets/*
 Ankka/assets/*
+Ankka/tex/*
 
 external/**/copying.txt
 !external/**/CMakeLists.txt
