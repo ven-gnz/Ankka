@@ -3,10 +3,10 @@
 #include "Ankka/Logger.h"
 #include <../external/tinygltf/stb_image.h>
 
-bool Texture::loadTexture(std::string textureFilename)
+bool Texture::loadTexture(std::string textureFilename, bool flipImage)
 {
 	int mTexWidth, mTexHeight, mNumberOfChannels;
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(flipImage);
 	unsigned char* textureData = stbi_load(textureFilename.c_str(), &mTexWidth, &mTexHeight, &mNumberOfChannels, 0);
 
 	if (!textureData)

@@ -135,7 +135,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	}
 
 	
-	if (!mTex.loadTexture("tex/crate.png")) {
+	if (!mTex.loadTexture("tex/crate.png", true)) {
 		Logger::log(1, "%s: cannot find texture", __FUNCTION__);
 		return false;
 	}

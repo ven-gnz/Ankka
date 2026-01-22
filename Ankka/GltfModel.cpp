@@ -111,7 +111,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string modelFileName,
 	std::string textureFileName)
 {
-	if (!mTex.loadTexture(textureFileName), false)
+	if (!mTex.loadTexture(textureFileName, false), false)
 	{
 		return false;
 	}
