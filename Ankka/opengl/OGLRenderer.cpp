@@ -90,9 +90,9 @@ void OGLRenderer::toggleVsync()
 
 void OGLRenderer::reorient_camera()
 {
-	mRenderData.rdCameraWorldPosition = glm::vec3(-0.5, 1.25, -1.25);
-	mRenderData.rdViewAzimuth = 315.0f;
-	mRenderData.rdViewElevation = -25;
+	mRenderData.rdCameraWorldPosition = glm::vec3(3.5, 2.5, 2.5);
+	mRenderData.rdViewAzimuth = 300.0f;
+	mRenderData.rdViewElevation = -15.0f;
 	mRenderData.rdFielfOfView = 90;
 	Logger::log(1, " re-oriented camera ");
 }

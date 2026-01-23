@@ -19,7 +19,7 @@ struct OGLRenderData
 	float rdFrameTime = 0.0f;
 	float rdUIGenerateTime = 0.0f;
 
-	float rdViewAzimuth = 320.0f;
+	float rdViewAzimuth = 300.0f;
 	float rdViewElevation = -15.0f;
 
 	int rdMoveForward = 0;
@@ -27,7 +27,7 @@ struct OGLRenderData
 	int rdMoveUp = 0;
 
 	float rdTickDiff = 0.0f;
-	glm::vec3 rdCameraWorldPosition = glm::vec3(-0.5, 1.25, -1.25);
+	glm::vec3 rdCameraWorldPosition = glm::vec3(3.5, 2.5, 2.5);
 };
 
 struct OGLVertex

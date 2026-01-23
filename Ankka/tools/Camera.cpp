@@ -11,7 +11,7 @@ glm::mat4 Camera::getViewMatrix(OGLRenderData& renderData)
 	float cosAzim = glm::cos(azimRad);
 
 	float sinElev = glm::sin(elevRad);
-	float cosElev = glm::sin(elevRad);
+	float cosElev = glm::cos(elevRad);
 
 	mViewDirection = glm::normalize(
 		glm::vec3(
