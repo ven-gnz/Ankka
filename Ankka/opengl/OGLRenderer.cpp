@@ -232,14 +232,17 @@ void OGLRenderer::draw()
 	{	
 		mChangedShader.use();
 		model = glm::rotate(glm::mat4(1.0f), -t, glm::vec3(0.0f, 0.0f, 1.0f));
+		mChangedShader.setM4_Uniform("model", model);
 	}
 	else
 	{
 		mBasicShader.use();
 		model = glm::rotate(glm::mat4(1.0f), t, glm::vec3(0.0f, 0.0f, 1.0f));
+		mChangedShader.setM4_Uniform("model", model);
 	}
-	mViewMatrix = mCamera.getViewMatrix(mRenderData) * model;
-	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
+
+	mViewMatrix = mCamera.getViewMatrix(mRenderData);
+	mUniformBuffer.uploadUboData(mCamera.getViewMatrix(mRenderData), mProjectionMatrix);
 	
 	mTex.bind();
 	mVertexBuffer.bind();
@@ -249,6 +252,7 @@ void OGLRenderer::draw()
 	mViewMatrix = mCamera.getViewMatrix(mRenderData) * glm::mat4(1.0f);
 	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
 	mGltfShader.use();
+	mGltfShader.setM4_Uniform("model", glm::mat4(1.0f));
 	mGltfModel->draw();
 	mTex.unbind();
 	mFramebuffer.unbind();

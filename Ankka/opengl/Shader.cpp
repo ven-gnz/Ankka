@@ -86,3 +86,9 @@ void Shader::use()
 	glUseProgram(mShaderProgram);
 }
 
+void Shader::setM4_Uniform(const std::string& name, glm::mat4 m)
+{
+	int mLoc = glGetUniformLocation(mShaderProgram, name.c_str());
+	glUniformMatrix4fv(mLoc, 1, GL_FALSE, glm::value_ptr(m));
+
+}
