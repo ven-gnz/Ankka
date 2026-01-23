@@ -185,3 +185,9 @@ void GltfModel::draw()
 	mTex.unbind();
 
 }
+
+glm::mat4& GltfModel::modelMatrix()
+{
+	return mModelMatrix;
+}
+

@@ -23,6 +23,7 @@
 
 #include "Ankka/tools/Timer.h"
 #include "Ankka/tools/Camera.h"
+#include "Ankka/tools/Raycaster.h"
 
 #include "OGLRenderData.h"
 
@@ -62,7 +63,10 @@ private:
 	Texture mTex{};
 	bool old_VSync = true;
 
+	bool isMove = false;
+
 	OGLRenderData mRenderData{};
+	Raycaster rc{};
 
 	void reorient_camera();
 

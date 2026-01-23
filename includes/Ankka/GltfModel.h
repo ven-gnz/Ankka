@@ -18,12 +18,14 @@ public:
 	void cleanup();
 	void uploadVertexBuffers();
 	void uploadIndexBuffer();
+	glm::mat4& modelMatrix();
 
 private:
 	void createVertexBuffers();
 	void createIndexBuffer();
 	int getTriangleCount();
 
+	glm::mat4 mModelMatrix = glm::mat4(1.0f);
 	std::shared_ptr<tinygltf::Model> mModel = nullptr;
 
 	GLuint mVAO = 0;
@@ -33,5 +35,5 @@ private:
 	std::map<std::string, GLint> attributes = { {"POSITION", 0}, {"NORMAL",1}, {"TEXCOORD_0" , 2} };
 
 	Texture mTex{};
-
+	
 };

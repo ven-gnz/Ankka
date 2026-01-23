@@ -78,6 +78,12 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos)
 	mMouseXPos = static_cast<int>(xPos);
 	mMouseYPos = static_cast<int>(yPos);
 
+	if (isMove)
+	{
+		glm::vec3 h = rc.screenToWorld(xPos, yPos, mRenderData.rdCameraWorldPosition.z, mRenderData.rdWindow, mCamera.getViewMatrix(mRenderData), mProjectionMatrix);
+		mGltfModel->modelMatrix()[3] = glm::vec4(h, 1.0f);
+	}
+
 }
 
 
@@ -118,6 +124,12 @@ void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_ENTER) == GLFW_PRESS)
 	{
 		reorient_camera();
+	}
+
+	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	{
+		isMove = !isMove;
+		Logger::log(1, "can move objects : %s\n", isMove ? "true" : "false", __FUNCTION__);
 	}
 }
 
@@ -252,7 +264,7 @@ void OGLRenderer::draw()
 	mViewMatrix = mCamera.getViewMatrix(mRenderData) * glm::mat4(1.0f);
 	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
 	mGltfShader.use();
-	mGltfShader.setM4_Uniform("model", glm::mat4(1.0f));
+	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw();
 	mTex.unbind();
 	mFramebuffer.unbind();
