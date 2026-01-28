@@ -1,5 +1,7 @@
 #include "Ankka/GltfModel.h"
 #include "Ankka/Logger.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 
 void GltfModel::createIndexBuffer()
 {
@@ -10,6 +12,9 @@ void GltfModel::createIndexBuffer()
 
 void GltfModel::createVertexBuffers()
 {
+
+	
+
 	const tinygltf::Primitive& primitives =
 		mModel->meshes.at(0).primitives.at(0); // since model only contains one mesh, this is fine for now
 	mVertexVBO.resize(primitives.attributes.size());
@@ -28,6 +33,30 @@ void GltfModel::createVertexBuffers()
 			attribType.compare("TEXCOORD_0") != 0) {
 			continue;
 			}
+		// Loop for AABB max and min
+		if (attribType == "POSITION")
+		{
+			const unsigned char* dataP = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
+
+			glm::vec3 meshMin(FLT_MAX);
+			glm::vec3 meshMax(-FLT_MAX);
+
+			size_t stride = accessor.ByteStride(bufferView);
+			if (stride == 0) stride = sizeof(float) * 3;
+
+			for (size_t i = 0; i < accessor.count; ++i)
+			{
+				const float* pos = reinterpret_cast<const float*>(dataP + stride * i);
+				glm::vec3 vert(pos[0], pos[1], pos[2]);
+
+				meshMin = glm::min(meshMin, vert);
+				meshMax = glm::max(meshMax, vert);
+			}
+
+			mLocalAABBmin = meshMin;
+			mLocalAABBmax = meshMax;
+
+		}
 
 		int dataSize = 1;
 		switch (accessor.type)
@@ -69,6 +98,12 @@ void GltfModel::createVertexBuffers()
 		glEnableVertexAttribArray(attributes[attribType]);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+
+	std::string minStr = glm::to_string(mLocalAABBmin);
+	std::string maxStr = glm::to_string(mLocalAABBmax);
+
+	Logger::log(1, "%s: AABB smallest: %s\n", __FUNCTION__, minStr.c_str());
+	Logger::log(1, "%s: AABB biggest  : %s\n", __FUNCTION__, maxStr.c_str());
 
 }
 

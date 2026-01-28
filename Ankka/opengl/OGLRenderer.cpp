@@ -52,6 +52,7 @@ void OGLRenderer::handleMouseButtonEvents(int button, int action, int mods)
 
 	if (mMouseLock) glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	else glfwSetInputMode(mRenderData.rdWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
 	
 }
 
