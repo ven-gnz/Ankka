@@ -2,6 +2,7 @@
 #include "Ankka/Logger.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+#include <fstream>
 
 void GltfModel::createIndexBuffer()
 {
@@ -12,8 +13,6 @@ void GltfModel::createIndexBuffer()
 
 void GltfModel::createVertexBuffers()
 {
-
-	
 
 	const tinygltf::Primitive& primitives =
 		mModel->meshes.at(0).primitives.at(0); // since model only contains one mesh, this is fine for now
@@ -146,17 +145,39 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string modelFileName,
 	std::string textureFileName)
 {
-	if (!mTex.loadTexture(textureFileName, false), false)
-	{
-		return false;
-	}
-	mModel = std::make_shared<tinygltf::Model>();
 
-	tinygltf::TinyGLTF gltfLoader;
 	std::string loaderErrors;
 	std::string loaderWarnings;
+	tinygltf::TinyGLTF gltfLoader;
+	mModel = std::make_shared<tinygltf::Model>();
 	bool result = false;
-	result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings, modelFileName);
+
+	if (modelFileName.ends_with(".glb"))
+	{
+
+		std::ifstream f(modelFileName, std::ios::binary | std::ios::ate);
+		if (!f)
+		{
+			Logger::log(1, "Failed to open: %s\n", modelFileName.c_str());
+			return false;
+		}
+
+			result = gltfLoader.LoadBinaryFromFile(mModel.get(),
+			&loaderErrors,
+			&loaderWarnings,
+			modelFileName,
+			0);
+	}
+
+	else
+	{
+		result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings, modelFileName);
+
+		if (!mTex.loadTexture(textureFileName, false), false)
+		{
+			return false;
+		}
+	}
 
 	if (!loaderWarnings.empty())
 	{
@@ -208,9 +229,6 @@ void GltfModel::draw()
 		Logger::log(1, "s error: unknowd draw mode %i\n", __FUNCTION__, drawMode);
 		break;
 	}
-	mTex.bind();
-	glBindVertexArray(mVAO);
-
 	mTex.bind();
 	glBindVertexArray(mVAO);
 

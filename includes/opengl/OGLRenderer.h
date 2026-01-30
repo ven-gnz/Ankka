@@ -79,5 +79,7 @@ private:
 
 	Shader mGltfShader{};
 	std::shared_ptr<GltfModel> mGltfModel = nullptr;
+	std::shared_ptr<GltfModel> mGltfModel1 = nullptr;
+	std::vector<GltfModel> mGltfModels;
 
 };

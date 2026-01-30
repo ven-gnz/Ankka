@@ -184,6 +184,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mUserInterface.init(mRenderData);
 
+	mGltfModels.reserve(2 * sizeof(GltfModel));
+
 	mGltfModel = std::make_shared<GltfModel>();
 	std::string modelFilename = "assets/Woman.gltf";
 	std::string modelTexFilename = "tex/Woman.png";
@@ -195,6 +197,17 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModel->uploadIndexBuffer();
 
 	mGltfModel->uploadVertexBuffers();
+	mGltfModel1 = std::make_shared<GltfModel>();
+	std::string modelFilename1 = "assets/DamagedHelmet.glb";
+	
+	if (!mGltfModel1->loadModel(mRenderData, modelFilename1, modelTexFilename))
+	{
+		return false;
+	}
+
+	mGltfModel1->uploadIndexBuffer();
+
+	mGltfModel1->uploadVertexBuffers();
 	return true;
 
 }
@@ -264,9 +277,16 @@ void OGLRenderer::draw()
 	
 	mViewMatrix = mCamera.getViewMatrix(mRenderData) * glm::mat4(1.0f);
 	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
+
 	mGltfShader.use();
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw();
+	
+	
+	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
+	mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix());
+	mGltfModel1->draw();
+
 	mTex.unbind();
 	mFramebuffer.unbind();
 

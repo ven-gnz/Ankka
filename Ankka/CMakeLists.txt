@@ -33,7 +33,7 @@ add_executable (Ankka
 	"tools/Timer.cpp"
 	"tools/Camera.cpp" "GltfModel.cpp" "tools/Raycaster.cpp")
 
-# Resource management
+# Shaders
 
 file(GLOB SHADERS ${CMAKE_CURRENT_BINARY_DIR}/shaders/*)
 
@@ -73,7 +73,7 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Ankka PROPERTY CXX_STANDARD 20)
 endif()
 
-
+# Other assets
 
 add_custom_command(TARGET Ankka POST_BUILD 
 		COMMAND ${CMAKE_COMMAND} -E copy_directory
