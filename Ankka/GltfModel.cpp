@@ -180,6 +180,21 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 			&loaderWarnings,
 			modelFileName,
 			0);
+			if (!result)
+			{
+				Logger::log(1, "Failed to load: %s\n", modelFileName.c_str());
+				return false;
+			}
+
+			tinygltf::Image& img = mModel->images[0];
+
+			if (!mTex.loadTextureFromBinary(img))
+			{
+				return false;
+			}
+
+
+
 	}
 
 	else

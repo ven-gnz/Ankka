@@ -47,3 +47,25 @@ void Texture::cleanup()
 {
 
 }
+
+bool Texture::loadTextureFromBinary(tinygltf::Image& img)
+{
+	
+	glGenTextures(1, &mTexture);
+	glBindTexture(GL_TEXTURE_2D, mTexture);
+
+	GLenum format = GL_RGBA;
+	if (img.component == 1) format = GL_RED;
+	else if (img.component == 2) format = GL_RG;
+	else if (img.component == 3) format = GL_RGB;
+	else if (img.component == 4) format = GL_RGBA;
+
+	glTexImage2D(GL_TEXTURE_2D, 0, format, img.width, img.height, 0, format, GL_UNSIGNED_BYTE, img.image.data());
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	return true;
+}
+
