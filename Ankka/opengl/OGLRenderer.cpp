@@ -282,8 +282,7 @@ void OGLRenderer::draw()
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw();
 	
-	
-	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
+
 	mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix());
 	mGltfModel1->draw();
 

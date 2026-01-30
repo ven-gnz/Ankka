@@ -93,7 +93,13 @@ void GltfModel::createVertexBuffers()
 		glGenBuffers(1, &mVertexVBO[attributes[attribType]]);
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[attributes[attribType]]);
 
-		glVertexAttribPointer(attributes[attribType], dataSize, dataType, GL_FALSE, 0, (void*)0);
+		glBufferData(GL_ARRAY_BUFFER,
+			bufferView.byteLength,
+			buffer.data.data() + bufferView.byteOffset + accessor.byteOffset,
+			GL_STATIC_DRAW);
+
+		size_t stride = accessor.ByteStride(bufferView);
+		glVertexAttribPointer(attributes[attribType], dataSize, dataType, GL_FALSE, stride, (void*)0);
 		glEnableVertexAttribArray(attributes[attribType]);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -108,14 +114,21 @@ void GltfModel::createVertexBuffers()
 
 void GltfModel::uploadVertexBuffers()
 {
-	for (int i = 0; i < 3; ++i)
+	const tinygltf::Primitive& primitives = mModel->meshes[0].primitives[0];
+
+	for (const auto& attrib : primitives.attributes)
 	{
-		const tinygltf::Accessor& accessor = mModel->accessors.at(i);
+		const std::string& attribType = attrib.first;
+		int accessorNum = attrib.second;
+
+		if (attributes.find(attribType) == attributes.end()) continue;
+
+		const tinygltf::Accessor& accessor = mModel->accessors.at(accessorNum);
 		const tinygltf::BufferView& bufferView = mModel->bufferViews[accessor.bufferView];
 		const tinygltf::Buffer& buffer = mModel->buffers[bufferView.buffer];
 
-		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[i]);
-		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, &buffer.data.at(0) + bufferView.byteOffset, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[attributes[attribType]]);
+		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, buffer.data.data() + bufferView.byteOffset + accessor.byteOffset, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -229,10 +242,18 @@ void GltfModel::draw()
 		Logger::log(1, "s error: unknowd draw mode %i\n", __FUNCTION__, drawMode);
 		break;
 	}
+	GLenum indexType = 0;
+	switch (indexAccessor.componentType)
+	{
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: indexType = GL_UNSIGNED_BYTE; break;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: indexType = GL_UNSIGNED_SHORT; break;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: indexType = GL_UNSIGNED_INT; break;
+	default: Logger::log(1, "error unknown index component type");
+	}
 	mTex.bind();
 	glBindVertexArray(mVAO);
 
-	glDrawElements(drawMode, indexAccessor.count, indexAccessor.componentType, nullptr);
+	glDrawElements(drawMode, indexAccessor.count, indexType, nullptr);
 
 	glBindVertexArray(0);
 	mTex.unbind();
