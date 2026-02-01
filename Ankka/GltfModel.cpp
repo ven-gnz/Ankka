@@ -202,10 +202,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 			Logger::log(1, "Failed to load: %s\n", modelFileName.c_str());
 			return false;
 		}
-		/*
-		const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
-		const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
-		*/
+	
 		const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
 		if (primitives.indices < 0)
 		{

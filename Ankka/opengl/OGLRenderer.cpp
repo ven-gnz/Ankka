@@ -208,6 +208,10 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModel1->uploadIndexBuffer();
 
 	mGltfModel1->uploadVertexBuffers();
+
+	mGltfModel1->modelMatrix() =
+		glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, -3.0f))
+		* glm::scale(glm::mat4(1.0f), glm::vec3(0.02f));
 	return true;
 
 }
