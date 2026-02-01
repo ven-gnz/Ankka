@@ -133,25 +133,42 @@ void GltfModel::uploadVertexBuffers()
 	}
 }
 
+// If the model does not contain indices, ie the data is laid out in a triangle friendly order -> no index buffer needed
 void GltfModel::uploadIndexBuffer()
 {
 	const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
-	const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
-	const tinygltf::BufferView& indexBufferView = mModel->bufferViews[indexAccessor.bufferView];
-	const tinygltf::Buffer& indexBuffer = mModel->buffers[indexBufferView.buffer];
+	if (primitives.indices >= 0)
+	{
+		const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
+		const tinygltf::BufferView& indexBufferView = mModel->bufferViews[indexAccessor.bufferView];
+		const tinygltf::Buffer& indexBuffer = mModel->buffers[indexBufferView.buffer];
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexVBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-		indexBufferView.byteLength, &indexBuffer.data.at(0) +
-		indexBufferView.byteOffset, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexVBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+			indexBufferView.byteLength, &indexBuffer.data.at(0) +
+			indexBufferView.byteOffset, GL_STATIC_DRAW);
+	}
 }
 
 int GltfModel::getTriangleCount()
 {
 	const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
+	// indexed geometry
+	if (primitives.indices >= 0)
+	{
+		const tinygltf::Accessor& indexAccessor =
+			mModel->accessors[primitives.indices];
+		return indexAccessor.count;
+	}
+	// non indexed geo
+	else
+	{
+		const tinygltf::Accessor& posAccessor =
+			mModel->accessors[primitives.attributes.at("POSITION")];
 
-	const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
-	return indexAccessor.count;
+		return posAccessor.count;
+	}
+
 }
 
 bool GltfModel::loadModel(OGLRenderData& renderData,
@@ -175,20 +192,32 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 			return false;
 		}
 
-			result = gltfLoader.LoadBinaryFromFile(mModel.get(),
+		result = gltfLoader.LoadBinaryFromFile(mModel.get(),
 			&loaderErrors,
 			&loaderWarnings,
 			modelFileName,
 			0);
-			if (!result)
-			{
-				Logger::log(1, "Failed to load: %s\n", modelFileName.c_str());
-				return false;
-			}
+		if (!result)
+		{
+			Logger::log(1, "Failed to load: %s\n", modelFileName.c_str());
+			return false;
+		}
+		/*
+		const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
+		const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
+		*/
+		const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
+		if (primitives.indices < 0)
+		{
+			const tinygltf::Accessor& posAccessor =
+				mModel->accessors[primitives.attributes.at("POSITION")];
+
+			mVertexCount = posAccessor.count;
+		}
 
 			tinygltf::Image& img = mModel->images[0];
 
-			if (!mTex.loadTextureFromBinary(img))
+			if (!mTex.loadTextureFromBinary(img)) 
 			{
 				return false;
 			}
@@ -245,7 +274,6 @@ void GltfModel::cleanup()
 void GltfModel::draw()
 {
 	const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
-	const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
 
 	GLuint drawMode = GL_TRIANGLES;
 	switch (primitives.mode)
@@ -258,18 +286,32 @@ void GltfModel::draw()
 		break;
 	}
 	GLenum indexType = 0;
-	switch (indexAccessor.componentType)
+	const tinygltf::Accessor* indexAccessor = nullptr;
+	
+	if (primitives.indices >= 0)
 	{
-	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: indexType = GL_UNSIGNED_BYTE; break;
-	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: indexType = GL_UNSIGNED_SHORT; break;
-	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: indexType = GL_UNSIGNED_INT; break;
-	default: Logger::log(1, "error unknown index component type");
+		indexAccessor = &mModel->accessors.at(primitives.indices);
+		switch (indexAccessor->componentType)
+		{
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: indexType = GL_UNSIGNED_BYTE; break;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: indexType = GL_UNSIGNED_SHORT; break;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: indexType = GL_UNSIGNED_INT; break;
+		default: Logger::log(1, "error unknown index component type");
+			
+		}
+
 	}
 	mTex.bind();
 	glBindVertexArray(mVAO);
-
-	glDrawElements(drawMode, indexAccessor.count, indexType, nullptr);
-
+	if (indexAccessor)
+	{
+		glDrawElements(drawMode, indexAccessor->count, indexType, nullptr);
+	}
+	else
+	{
+		glDrawArrays(drawMode, 0, mVertexCount);
+	}
+	
 	glBindVertexArray(0);
 	mTex.unbind();
 

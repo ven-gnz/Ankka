@@ -34,6 +34,8 @@ private:
 
 	std::map<std::string, GLint> attributes = { {"POSITION", 0}, {"NORMAL",1}, {"TEXCOORD_0" , 2} };
 
+	int mVertexCount;
+
 	glm::vec3 mLocalAABBmin;
 	glm::vec3 mLocalAABBmax;
 

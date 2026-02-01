@@ -198,7 +198,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mGltfModel->uploadVertexBuffers();
 	mGltfModel1 = std::make_shared<GltfModel>();
-	std::string modelFilename1 = "assets/DamagedHelmet.glb";
+	std::string modelFilename1 = "assets/Fox.glb";
 	
 	if (!mGltfModel1->loadModel(mRenderData, modelFilename1, modelTexFilename))
 	{
