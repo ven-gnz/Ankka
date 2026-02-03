@@ -2,6 +2,7 @@
 #include "Ankka/Logger.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 
 void GltfModel::createIndexBuffer()
@@ -171,6 +172,50 @@ int GltfModel::getTriangleCount()
 
 }
 
+void GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix)
+{
+	int nodeNum = treeNode->getNodeNum();
+	const tinygltf::Node& node = mModel->nodes.at(nodeNum);
+	treeNode->setNodeName(node.name);
+
+	if (node.translation.size())
+	{
+		treeNode->setTranslation(glm::make_vec3(node.translation.data()));
+	}
+	if (node.rotation.size())
+	{
+		treeNode->setRotation(glm::make_quat(node.rotation.data()));
+	}
+	if (node.scale.size())
+	{
+		treeNode->setScale(glm::make_vec3(node.scale.data()));
+	}
+	treeNode->calculateLocalTRSMatrix();
+	treeNode->calculateNodeMatrix(parentNodeMatrix);
+	
+}
+
+void GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
+{
+	int nodeNum = treeNode->getNodeNum();
+	std::vector<int> childNodes = mModel->nodes.at(nodeNum).children;
+
+	auto removeIt = std::remove_if(childNodes.begin(), childNodes.end(),
+		[&](int num) { return mModel->nodes.at(num).skin != -1; });
+
+	childNodes.erase(removeIt, childNodes.end());
+
+	treeNode->addChilds(childNodes);
+	glm::mat4 treeNodeMatrix = treeNode->getNodeMatrix();
+
+	for (auto& childNode : treeNode->getChilds())
+	{
+		getNodeData(childNode, treeNodeMatrix);
+		getNodes(childNode);
+	}
+
+}
+
 bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string modelFileName,
 	std::string textureFileName)
@@ -255,6 +300,11 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	createIndexBuffer();
 	glBindVertexArray(0);
 
+	int rootNode = mModel->scenes.at(0).nodes.at(0);
+	mRootNode = GltfNode::createRoot(rootNode);
+	getNodes(mRootNode);
+
+	mRootNode->printTree();
 	renderData.rdTriangelCount = getTriangleCount();
 	return true;
 }
