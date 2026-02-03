@@ -6,6 +6,7 @@
 #include <tiny_gltf.h>
 #include "opengl/Texture.h"
 #include "opengl/OGLRenderData.h"
+#include "Ankka/GltfNode.h"
 
 
 class GltfModel {
@@ -27,6 +28,10 @@ private:
 
 	glm::mat4 mModelMatrix = glm::mat4(1.0f);
 	std::shared_ptr<tinygltf::Model> mModel = nullptr;
+
+	std::shared_ptr<GltfNode> mRootNode = nullptr;
+	void getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix);
+	void getNodes(std::shared_ptr<GltfNode> treeNode);
 
 	GLuint mVAO = 0;
 	std::vector<GLuint> mVertexVBO{};

@@ -1,6 +1,7 @@
 #include <Ankka/GltfNode.h>
 #include <Ankka/Logger.h>
 
+
 void GltfNode::calculateNodeMatrix(glm::mat4 parentNodeMatrix)
 {
 	mNodeMatrix = parentNodeMatrix * mLocalTRSMatrix;
@@ -84,4 +85,9 @@ std::vector<std::shared_ptr<GltfNode>> GltfNode::getChilds()
 int GltfNode::getNodeNum()
 {
 	return mNodeNum;
+}
+
+glm::mat4 GltfNode::getNodeMatrix()
+{
+	return mNodeMatrix;
 }
