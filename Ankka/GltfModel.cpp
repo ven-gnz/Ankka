@@ -151,6 +151,61 @@ void GltfModel::uploadIndexBuffer()
 	}
 }
 
+void GltfModel::getJointData()
+{
+	std::string jointsAccessorAttrib = "JOINTS_0";
+	int jointsAccessor = mModel->meshes.at(0).primitives.at(0).attributes.at(jointsAccessorAttrib);
+	Logger::log(1, "%s : using accessor %i to get %s\n", __FUNCTION__, jointsAccessor,
+		jointsAccessorAttrib.c_str());
+
+	const tinygltf::Accessor &accessor = mModel->accessors.at(jointsAccessor);
+	const tinygltf::BufferView &bufferView = mModel->bufferViews.at(accessor.bufferView);
+	const tinygltf::Buffer &buffer = mModel->buffers.at(bufferView.buffer);
+
+	int jointVecSize = accessor.count;
+	Logger::log(1, "%s: %i short vec4 in JOINTS_0\n", __FUNCTION__, jointVecSize);
+	mJointVec.resize(jointVecSize);
+
+	std::memcpy(
+		mJointVec.data(), 
+		&buffer.data.at(0) + bufferView.byteOffset, 
+		bufferView.byteLength);
+
+	mNodeToJoint.resize(mModel->nodes.size());
+
+	const tinygltf::Skin& skin = mModel->skins.at(0);
+	for (int i = 0; i < skin.joints.size(); ++i)
+	{
+		int destinationNode = skin.joints.at(i);
+		mNodeToJoint.at(destinationNode) = i;
+		Logger::log(1, "%s: joint %i affects node %i\n", __FUNCTION__, i, destinationNode);
+	}
+}
+
+void GltfModel::getWeightData()
+{
+	std::string weightsAccessorAttrib = "WEIGHTS_0";
+	int weightAccessor = mModel->meshes.at(0).primitives.at(0).attributes.at(weightsAccessorAttrib);
+	Logger::log(1, "%s: using accessor %i to get %s\n", __FUNCTION__, weightAccessor,
+		weightsAccessorAttrib.c_str());
+
+	const tinygltf::Accessor &accessor = mModel->accessors.at(weightAccessor);
+	const tinygltf::BufferView &bufferView = mModel->bufferViews.at(accessor.bufferView);
+	const tinygltf::Buffer &buffer = mModel->buffers.at(bufferView.buffer);
+
+	int weightVecSize = accessor.count;
+	Logger::log(1, "%s: %i vec4 in WEIGHTS_0\n", __FUNCTION__, weightVecSize);
+	mWeightVec.resize(weightVecSize);
+
+	std::memcpy(
+		mWeightVec.data(), 
+		&buffer.data.at(0) + bufferView.byteOffset,
+		bufferView.byteLength);
+
+}
+
+
+
 int GltfModel::getTriangleCount()
 {
 	const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
@@ -192,6 +247,9 @@ void GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parent
 	}
 	treeNode->calculateLocalTRSMatrix();
 	treeNode->calculateNodeMatrix(parentNodeMatrix);
+
+	mJointMatrices.at(mNodeToJoint.at(nodeNum)) =
+		treeNode->getNodeMatrix() * mInverseBindMatrices.at(mNodeToJoint.at(nodeNum));
 	
 }
 
