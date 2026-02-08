@@ -153,8 +153,20 @@ void GltfModel::uploadIndexBuffer()
 
 void GltfModel::getJointData()
 {
+	// Guarding for non skinned fox model
+	auto& prim = mModel->meshes.at(0).primitives.at(0);
+
+	auto it = prim.attributes.find("JOINTS_0");
+	if (it == prim.attributes.end())
+	{
+		Logger::log(1, "Mesh has no JOINTS_0 — this model is not skinned.\n");
+		return;
+	}
+
 	std::string jointsAccessorAttrib = "JOINTS_0";
 	int jointsAccessor = mModel->meshes.at(0).primitives.at(0).attributes.at(jointsAccessorAttrib);
+
+
 	Logger::log(1, "%s : using accessor %i to get %s\n", __FUNCTION__, jointsAccessor,
 		jointsAccessorAttrib.c_str());
 
