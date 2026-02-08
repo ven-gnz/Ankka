@@ -274,6 +274,22 @@ void GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
 
 }
 
+void GltfModel::getInvBindMatrices()
+{
+	const tinygltf::Skin& skin = mModel->skins.at(0);
+	int invBindMatAccessor = skin.inverseBindMatrices;
+
+	const tinygltf::Accessor& accessor = mModel->accessors.at(invBindMatAccessor);
+	const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
+	const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
+
+	mInverseBindMatrices.resize(skin.joints.size());
+	mJointMatrices.resize(skin.joints.size());
+
+	std::memcpy(mInverseBindMatrices.data(), &buffer.data.at(0) + bufferView.byteOffset,
+		bufferView.byteLength);
+}
+
 bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string modelFileName,
 	std::string textureFileName)
@@ -358,9 +374,18 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	createIndexBuffer();
 	glBindVertexArray(0);
 
+	getJointData();
+	getWeightData();
+	getInvBindMatrices();
+
+	int nodeCount = mModel->nodes.size();
 	int rootNode = mModel->scenes.at(0).nodes.at(0);
 	mRootNode = GltfNode::createRoot(rootNode);
+	getNodeData(mRootNode, glm::mat4(1.0f));
 	getNodes(mRootNode);
+	
+
+	mSkeletonMesh = std::make_shared<OGLMesh>();
 
 	mRootNode->printTree();
 	renderData.rdTriangelCount = getTriangleCount();
