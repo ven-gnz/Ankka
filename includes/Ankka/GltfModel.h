@@ -21,10 +21,14 @@ public:
 	void uploadIndexBuffer();
 	glm::mat4& modelMatrix();
 
+	std::shared_ptr<OGLMesh> getSkeleton(bool enableSkinning);
+
 private:
 	void createVertexBuffers();
 	void createIndexBuffer();
 	int getTriangleCount();
+
+	void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode, bool enableSkinning);
 
 	void getJointData();
 	void getWeightData();

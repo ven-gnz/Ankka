@@ -204,6 +204,80 @@ void GltfModel::getWeightData()
 
 }
 
+void GltfModel::getInvBindMatrices()
+{
+	const tinygltf::Skin& skin = mModel->skins.at(0);
+	int invBindMatAccessor = skin.inverseBindMatrices;
+
+	const tinygltf::Accessor& accessor = mModel->accessors.at(invBindMatAccessor);
+	const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
+	const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
+
+	mInverseBindMatrices.resize(skin.joints.size());
+	mJointMatrices.resize(skin.joints.size());
+
+	std::memcpy(
+		mInverseBindMatrices.data(),
+		&buffer.data.at(0) + bufferView.byteOffset,
+		bufferView.byteLength
+	);
+
+}
+
+std::shared_ptr<OGLMesh> GltfModel::getSkeleton(bool enableSkinning)
+{
+	mSkeletonMesh->vertices.resize(mModel->nodes.size() * 2);
+	mSkeletonMesh->vertices.clear();
+
+	getSkeletonPerNode(mRootNode->getChilds().at(0), enableSkinning);
+	return mSkeletonMesh;
+}
+
+void GltfModel::getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode, bool enableSkinning)
+{
+	glm::vec3 parentPos = glm::vec3(0.0f);
+
+	if (enableSkinning)
+	{
+		parentPos = glm::vec3(treeNode->getNodeMatrix()[3]);
+	}
+	else
+	{
+		glm::mat4 bindMatrix = glm::inverse(mInverseBindMatrices.at(mNodeToJoint.at(treeNode->getNodeNum())));
+		parentPos = bindMatrix * treeNode->getNodeMatrix()[3];
+	}
+	OGLVertex parentVertex;
+	parentVertex.position = parentPos;
+	parentVertex.color = glm::vec3(0.0f, 1.0f, 1.0f);
+
+	for (const auto& childNode : treeNode->getChilds())
+	{
+		// transform child
+		glm::vec3 childPos = glm::vec3(0.0f);
+		if (enableSkinning)
+		{
+			childPos = glm::vec3(childNode->getNodeMatrix()[3]);
+		}
+		else
+		{
+			glm::mat4 bindMatrix = glm::inverse(mInverseBindMatrices.at(mNodeToJoint.at(childNode->getNodeNum())));
+			childPos = bindMatrix * childNode->getNodeMatrix()[3];
+		}
+		// update state
+		OGLVertex childVertex;
+		childVertex.position = childPos;
+		childVertex.color = glm::vec3(0.0f, 0.0f, 1.0f);
+		mSkeletonMesh->vertices.emplace_back(parentVertex);
+		mSkeletonMesh->vertices.emplace_back(childVertex);
+		// recurse down
+		getSkeletonPerNode(childNode, enableSkinning);
+	}
+
+}
+
+
+
+
 
 
 int GltfModel::getTriangleCount()
