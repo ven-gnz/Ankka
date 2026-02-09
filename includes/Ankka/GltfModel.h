@@ -22,6 +22,7 @@ public:
 	glm::mat4& modelMatrix();
 
 	std::shared_ptr<OGLMesh> getSkeleton(bool enableSkinning);
+	void applyCPUVertexSkinning();
 
 private:
 	void createVertexBuffers();

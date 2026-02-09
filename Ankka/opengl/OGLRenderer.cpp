@@ -260,7 +260,8 @@ void OGLRenderer::draw()
 		120.0f);
 
 	float t = glfwGetTime();
-
+	/*
+	
 	//glm::mat4 view = glm::mat4(1.0f);
 	glm::mat4 model = glm::mat4(1.0f);
 	
@@ -276,6 +277,7 @@ void OGLRenderer::draw()
 		model = glm::rotate(glm::mat4(1.0f), t, glm::vec3(0.0f, 0.0f, 1.0f));
 		mChangedShader.setM4_Uniform("model", model);
 	}
+	*/
 
 	mViewMatrix = mCamera.getViewMatrix(mRenderData);
 	mUniformBuffer.uploadUboData(mCamera.getViewMatrix(mRenderData), mProjectionMatrix);
@@ -288,8 +290,14 @@ void OGLRenderer::draw()
 	mViewMatrix = mCamera.getViewMatrix(mRenderData) * glm::mat4(1.0f);
 	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
 
+	mGltfModel->applyCPUVertexSkinning();
+	
+
+
 	mGltfShader.use();
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
+
+
 	mGltfModel->draw();
 	
 

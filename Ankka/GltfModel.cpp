@@ -36,6 +36,12 @@ void GltfModel::createVertexBuffers()
 		// Loop for AABB max and min
 		if (attribType == "POSITION")
 		{
+
+			int numPositionEntries = accessor.count;
+			mAlteredPositions.resize(numPositionEntries);
+			Logger::log(1, "%s: loaded %i vertices from glTF file\n", __FUNCTION__,
+				numPositionEntries);
+
 			const unsigned char* dataP = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
 
 			glm::vec3 meshMin(FLT_MAX);
@@ -84,6 +90,9 @@ void GltfModel::createVertexBuffers()
 		case TINYGLTF_COMPONENT_TYPE_FLOAT:
 			dataType = GL_FLOAT;
 			break;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+			dataType = GL_UNSIGNED_SHORT;
+			break;
 		default:
 			Logger::log(1, "%s error: accessor %i uses uknown data type %i\n", __FUNCTION__, accessorNum, dataType);
 			break;
@@ -91,8 +100,8 @@ void GltfModel::createVertexBuffers()
 
 
 
-		glGenBuffers(1, &mVertexVBO[attributes[attribType]]);
-		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[attributes[attribType]]);
+		glGenBuffers(1, &mVertexVBO.at(attributes.at(attribType)));
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(attributes.at(attribType)));
 
 		glBufferData(GL_ARRAY_BUFFER,
 			bufferView.byteLength,
@@ -100,8 +109,8 @@ void GltfModel::createVertexBuffers()
 			GL_STATIC_DRAW);
 
 		size_t stride = accessor.ByteStride(bufferView);
-		glVertexAttribPointer(attributes[attribType], dataSize, dataType, GL_FALSE, stride, (void*)0);
-		glEnableVertexAttribArray(attributes[attribType]);
+		glVertexAttribPointer(attributes.at(attribType), dataSize, dataType, GL_FALSE, stride, (void*)0);
+		glEnableVertexAttribArray(attributes.at(attribType));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
@@ -125,13 +134,41 @@ void GltfModel::uploadVertexBuffers()
 		if (attributes.find(attribType) == attributes.end()) continue;
 
 		const tinygltf::Accessor& accessor = mModel->accessors.at(accessorNum);
-		const tinygltf::BufferView& bufferView = mModel->bufferViews[accessor.bufferView];
-		const tinygltf::Buffer& buffer = mModel->buffers[bufferView.buffer];
+		const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
+		const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[attributes[attribType]]);
 		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, buffer.data.data() + bufferView.byteOffset + accessor.byteOffset, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+}
+
+void GltfModel::applyCPUVertexSkinning()
+{
+	const tinygltf::Accessor& accessor = mModel->accessors.at(0);
+	const tinygltf::BufferView& bufferView = mModel -> bufferViews.at(accessor.bufferView);
+	const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
+
+	std::memcpy(
+		mAlteredPositions.data(),
+		&buffer.data.at(0) + bufferView.byteOffset,
+		bufferView.byteLength
+	);
+
+	for (int i = 0; i < mJointVec.size(); ++i)
+	{
+		glm::ivec4 jointIndex = glm::make_vec4(mJointVec.at(i));
+		glm::vec4 weightIndex = glm::make_vec4(mWeightVec.at(i));
+		glm::mat4 skinMat =
+			weightIndex.x * mJointMatrices.at(jointIndex.x) +
+			weightIndex.y * mJointMatrices.at(jointIndex.y) +
+			weightIndex.z * mJointMatrices.at(jointIndex.z) +
+			weightIndex.w * mJointMatrices.at(jointIndex.w);
+		mAlteredPositions.at(i) = skinMat * glm::vec4(mAlteredPositions.at(i), 1.0f);
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(0));
+	glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, mAlteredPositions.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 // If the model does not contain indices, ie the data is laid out in a triangle friendly order -> no index buffer needed

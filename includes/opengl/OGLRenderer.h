@@ -60,6 +60,7 @@ private:
 	Framebuffer mFramebuffer{};
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer;
+	UniformBuffer mGltfUniformBuffer{};
 	Texture mTex{};
 	bool old_VSync = true;
 
