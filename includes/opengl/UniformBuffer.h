@@ -1,14 +1,16 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <glad/glad.h>
+#include <vector>
 
 class UniformBuffer
 {
 public:
-	void init();
-	void uploadUboData(glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+	void init(size_t bufferSize);
+	void uploadUboData(std::vector<glm::mat4> bufferData, int bindingPoint);
 	void cleanup();
 
 private:
+	size_t mBufferSize;
 	GLuint mUboBuffer = 0;
 };

@@ -23,7 +23,7 @@ public:
 
 	std::shared_ptr<OGLMesh> getSkeleton(bool enableSkinning);
 	void applyCPUVertexSkinning();
-
+	std::vector<glm::mat4> getJointMatrices();
 private:
 	void createVertexBuffers();
 	void createIndexBuffer();
@@ -54,6 +54,8 @@ private:
 	std::shared_ptr<GltfNode> mRootNode = nullptr;
 	
 	std::shared_ptr<OGLMesh> mSkeletonMesh = nullptr;
+
+	
 	
 
 	GLuint mVAO = 0;

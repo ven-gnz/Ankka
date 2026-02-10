@@ -59,7 +59,7 @@ private:
 	Shader mChangedShader{};
 	Framebuffer mFramebuffer{};
 	VertexBuffer mVertexBuffer{};
-	UniformBuffer mUniformBuffer;
+	UniformBuffer mUniformBuffer{};
 	UniformBuffer mGltfUniformBuffer{};
 	Texture mTex{};
 	bool old_VSync = true;
@@ -82,5 +82,6 @@ private:
 	std::shared_ptr<GltfModel> mGltfModel = nullptr;
 	std::shared_ptr<GltfModel> mGltfModel1 = nullptr;
 	std::vector<GltfModel> mGltfModels;
+	std::vector<glm::mat4> renderMatrices{};
 
 };
