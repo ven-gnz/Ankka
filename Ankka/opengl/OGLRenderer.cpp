@@ -168,14 +168,15 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
-	if (!mGltfShader.loadShaders("shaders/gltf.vert", "shaders/gltf.frag"))
+	if (!mGltfShader.loadShaders("shaders/gltf_gpu.vert", "shaders/gltf_gpu.frag"))
 	{
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);
 		return false;
 	}
 
-	mUniformBuffer.init();
+	mUniformBuffer.init(2 * sizeof(glm::mat4));
+	mGltfUniformBuffer.init(42 * sizeof(glm::mat4));
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
@@ -196,27 +197,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	}
 	mGltfModel->uploadIndexBuffer();
 
-	mGltfModel->uploadVertexBuffers();
-	
-	
-	//Temporary fix to prioritize progression in the book
-	//mGltfModel1 = std::make_shared<GltfModel>();
-	//std::string modelFilename1 = "assets/Fox.glb";
-	//
-	//if (!mGltfModel1->loadModel(mRenderData, modelFilename1, modelTexFilename))
-	//{
-	//	return false;
-	//}
-
-	//mGltfModel1->uploadIndexBuffer();
-
-	//mGltfModel1->uploadVertexBuffers();
-
-	//mGltfModel1->modelMatrix() =
-	//	glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, -3.0f))
-	//	* glm::scale(glm::mat4(1.0f), glm::vec3(0.02f));
-		
-
+	mGltfModel->uploadVertexBuffers();	
 		
 	return true;
 
@@ -260,51 +241,26 @@ void OGLRenderer::draw()
 		120.0f);
 
 	float t = glfwGetTime();
-	/*
-	
-	//glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 model = glm::mat4(1.0f);
-	
-	if (mRenderData.rdUseChangedShader)
-	{	
-		mChangedShader.use();
-		model = glm::rotate(glm::mat4(1.0f), -t, glm::vec3(0.0f, 0.0f, 1.0f));
-		mChangedShader.setM4_Uniform("model", model);
-	}
-	else
-	{
-		mBasicShader.use();
-		model = glm::rotate(glm::mat4(1.0f), t, glm::vec3(0.0f, 0.0f, 1.0f));
-		mChangedShader.setM4_Uniform("model", model);
-	}
-	*/
-
-	mViewMatrix = mCamera.getViewMatrix(mRenderData);
-	mUniformBuffer.uploadUboData(mCamera.getViewMatrix(mRenderData), mProjectionMatrix);
-	
-	mTex.bind();
-	mVertexBuffer.bind();
-	mVertexBuffer.draw(GL_TRIANGLES, 0, mRenderData.rdTriangelCount * 3);
-	mVertexBuffer.unbind();
-	
-	mViewMatrix = mCamera.getViewMatrix(mRenderData) * glm::mat4(1.0f);
-	mUniformBuffer.uploadUboData(mViewMatrix, mProjectionMatrix);
-
-	mGltfModel->applyCPUVertexSkinning();
-	
 
 
 	mGltfShader.use();
+
+	mViewMatrix = mCamera.getViewMatrix(mRenderData);
+	renderMatrices.push_back(mViewMatrix);
+	renderMatrices.push_back(mProjectionMatrix);
+	mUniformBuffer.uploadUboData(renderMatrices, 0);
+	renderMatrices.clear();
+
+	// mGltfModel->applyCPUVertexSkinning();
+	mGltfUniformBuffer.uploadUboData(mGltfModel->getJointMatrices(), 1);
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
-
-
+	
 	mGltfModel->draw();
 	
 
 	//mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix());
 	//mGltfModel1->draw();
-
-	mTex.unbind();
+	
 	mFramebuffer.unbind();
 
 	mFramebuffer.drawToScreen();

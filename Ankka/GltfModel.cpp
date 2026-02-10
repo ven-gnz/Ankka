@@ -18,6 +18,7 @@ void GltfModel::createVertexBuffers()
 	const tinygltf::Primitive& primitives =
 		mModel->meshes.at(0).primitives.at(0); // since model only contains one mesh, this is fine for now
 	mVertexVBO.resize(primitives.attributes.size());
+	mAttribAccessors.resize(primitives.attributes.size());
 
 	for (const auto& attrib : primitives.attributes)
 	{
@@ -109,7 +110,7 @@ void GltfModel::createVertexBuffers()
 			GL_STATIC_DRAW);
 
 		size_t stride = accessor.ByteStride(bufferView);
-		glVertexAttribPointer(attributes.at(attribType), dataSize, dataType, GL_FALSE, stride, (void*)0);
+		glVertexAttribPointer(attributes.at(attribType), dataSize, dataType, GL_FALSE, 0, (void*)0);
 		glEnableVertexAttribArray(attributes.at(attribType));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -124,21 +125,15 @@ void GltfModel::createVertexBuffers()
 
 void GltfModel::uploadVertexBuffers()
 {
-	const tinygltf::Primitive& primitives = mModel->meshes[0].primitives[0];
 
-	for (const auto& attrib : primitives.attributes)
+	for (int i = 0; i < 5; ++i)
 	{
-		const std::string& attribType = attrib.first;
-		int accessorNum = attrib.second;
-
-		if (attributes.find(attribType) == attributes.end()) continue;
-
-		const tinygltf::Accessor& accessor = mModel->accessors.at(accessorNum);
+		const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(i));
 		const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
 		const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
-		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO[attributes[attribType]]);
-		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, buffer.data.data() + bufferView.byteOffset + accessor.byteOffset, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(i));
+		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, &buffer.data.at(0) + bufferView.byteOffset + accessor.byteOffset, GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -183,8 +178,9 @@ void GltfModel::uploadIndexBuffer()
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexVBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-			indexBufferView.byteLength, &indexBuffer.data.at(0) +
-			indexBufferView.byteOffset, GL_STATIC_DRAW);
+			indexBufferView.byteLength, 
+			&indexBuffer.data.at(0) + indexBufferView.byteOffset,
+			GL_STATIC_DRAW);
 	}
 }
 
@@ -559,3 +555,7 @@ glm::mat4& GltfModel::modelMatrix()
 	return mModelMatrix;
 }
 
+std::vector<glm::mat4> GltfModel::getJointMatrices()
+{
+	return mJointMatrices;
+}
