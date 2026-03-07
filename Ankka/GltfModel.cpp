@@ -31,7 +31,10 @@ void GltfModel::createVertexBuffers()
 
 		if ((attribType.compare("POSITION") != 0) &&
 			(attribType.compare("NORMAL") != 0) &&
-			attribType.compare("TEXCOORD_0") != 0) {
+			attribType.compare("TEXCOORD_0") != 0 &&
+			attribType.compare("JOINTS_0") != 0 &&
+			attribType.compare("WEIGHTS_0") != 0)
+			 {
 			continue;
 			}
 		// Loop for AABB max and min
@@ -64,6 +67,8 @@ void GltfModel::createVertexBuffers()
 			mLocalAABBmax = meshMax;
 
 		}
+
+		mAttribAccessors.at(attributes.at(attribType)) = accessorNum;
 
 		int dataSize = 1;
 		switch (accessor.type)
@@ -104,10 +109,10 @@ void GltfModel::createVertexBuffers()
 		glGenBuffers(1, &mVertexVBO.at(attributes.at(attribType)));
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(attributes.at(attribType)));
 
-		glBufferData(GL_ARRAY_BUFFER,
-			bufferView.byteLength,
-			buffer.data.data() + bufferView.byteOffset + accessor.byteOffset,
-			GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER,
+		//	bufferView.byteLength,
+		//	buffer.data.data() + bufferView.byteOffset + accessor.byteOffset,
+		//	GL_STATIC_DRAW);
 
 		size_t stride = accessor.ByteStride(bufferView);
 		glVertexAttribPointer(attributes.at(attribType), dataSize, dataType, GL_FALSE, 0, (void*)0);
@@ -404,6 +409,14 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	mModel = std::make_shared<tinygltf::Model>();
 	bool result = false;
 
+	if (!mTex.loadTexture(textureFileName, false))
+	{
+		Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
+		return false;
+	}
+	Logger::log(1, "%s: glTF model texture '%s' successfully loaded\n", __FUNCTION__,
+		modelFileName.c_str());
+
 	if (modelFileName.ends_with(".glb"))
 	{
 
@@ -538,7 +551,7 @@ void GltfModel::draw()
 	glBindVertexArray(mVAO);
 	if (indexAccessor)
 	{
-		glDrawElements(drawMode, indexAccessor->count, indexType, nullptr);
+		glDrawElements(drawMode, indexAccessor->count, indexAccessor->componentType, nullptr);
 	}
 	else
 	{

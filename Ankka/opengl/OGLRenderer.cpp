@@ -148,10 +148,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	}
 
 	
-	if (!mTex.loadTexture("tex/crate.png", true)) {
-		Logger::log(1, "%s: cannot find texture", __FUNCTION__);
-		return false;
-	}
+	
 
 	mVertexBuffer.init();
 
@@ -162,11 +159,6 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
-	if (!mChangedShader.loadShaders("shaders/changed.vert", "shaders/changed.frag"))
-	{
-		Logger::log(1, "% s: cannot find shaders\n", __FUNCTION__);
-		return false;
-	}
 
 	if (!mGltfShader.loadShaders("shaders/gltf_gpu.vert", "shaders/gltf_gpu.frag"))
 	{
@@ -251,7 +243,8 @@ void OGLRenderer::draw()
 	mUniformBuffer.uploadUboData(renderMatrices, 0);
 	renderMatrices.clear();
 
-	// mGltfModel->applyCPUVertexSkinning();
+	//mGltfModel->applyCPUVertexSkinning();
+	mGltfModel->uploadVertexBuffers();
 	mGltfUniformBuffer.uploadUboData(mGltfModel->getJointMatrices(), 1);
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	
