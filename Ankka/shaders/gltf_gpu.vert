@@ -17,9 +17,9 @@ layout (std140, binding = 0) uniform Matrices
 
 // Uniform buffer needs to have the number of elements at shader compile time
 // This is a throwaway solution, will keep exploring as the book progresses
-layout (std140, binding = 1) uniform JointMatrices
+layout (std430, binding = 1) readonly buffer JointMatrices
 {
-	mat4 jointMat[42];
+	mat4 jointMat[];
 };
 
 uniform mat4 model;

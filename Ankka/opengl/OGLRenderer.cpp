@@ -245,7 +245,7 @@ void OGLRenderer::draw()
 
 	//mGltfModel->applyCPUVertexSkinning();
 	mGltfModel->uploadVertexBuffers();
-	mGltfUniformBuffer.uploadUboData(mGltfModel->getJointMatrices(), 1);
+	mGltfUniformBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	
 	mGltfModel->draw();

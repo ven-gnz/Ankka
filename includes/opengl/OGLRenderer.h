@@ -12,6 +12,7 @@
 #include "opengl/Texture.h"
 #include "opengl/Shader.h"
 #include "opengl/UniformBuffer.h"
+#include "opengl/ShaderStorageBuffer.h"
 
 #include "Ankka/GltfModel.h"
 
@@ -60,7 +61,7 @@ private:
 	Framebuffer mFramebuffer{};
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer{};
-	UniformBuffer mGltfUniformBuffer{};
+	ShaderStorageBuffer mGltfUniformBuffer{};
 	Texture mTex{};
 	bool old_VSync = true;
 
