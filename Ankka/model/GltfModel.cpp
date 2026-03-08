@@ -434,9 +434,14 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 	std::string loaderErrors;
 	std::string loaderWarnings;
-	tinygltf::TinyGLTF gltfLoader;
-	mModel = std::make_shared<tinygltf::Model>();
 	bool result = false;
+
+	result = mModelLoader.loadGltfModel(
+		modelFileName,
+		mModel,
+		loaderErrors,
+		loaderWarnings
+	);
 
 	if (!mTex.loadTexture(textureFileName, false))
 	{
@@ -446,56 +451,6 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	Logger::log(1, "%s: glTF model texture '%s' successfully loaded\n", __FUNCTION__,
 		modelFileName.c_str());
 
-	if (modelFileName.ends_with(".glb"))
-	{
-
-		std::ifstream f(modelFileName, std::ios::binary | std::ios::ate);
-		if (!f)
-		{
-			Logger::log(1, "Failed to open: %s\n", modelFileName.c_str());
-			return false;
-		}
-
-		result = gltfLoader.LoadBinaryFromFile(mModel.get(),
-			&loaderErrors,
-			&loaderWarnings,
-			modelFileName,
-			0);
-		if (!result)
-		{
-			Logger::log(1, "Failed to load: %s\n", modelFileName.c_str());
-			return false;
-		}
-	
-		const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
-		if (primitives.indices < 0)
-		{
-			const tinygltf::Accessor& posAccessor =
-				mModel->accessors[primitives.attributes.at("POSITION")];
-
-			mVertexCount = posAccessor.count;
-		}
-
-			tinygltf::Image& img = mModel->images[0];
-
-			if (!mTex.loadTextureFromBinary(img)) 
-			{
-				return false;
-			}
-
-
-
-	}
-
-	else
-	{
-		result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings, modelFileName);
-
-		if (!mTex.loadTexture(textureFileName, false), false)
-		{
-			return false;
-		}
-	}
 
 	if (!loaderWarnings.empty())
 	{

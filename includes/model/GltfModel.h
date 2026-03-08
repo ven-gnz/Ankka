@@ -7,6 +7,7 @@
 #include "opengl/Texture.h"
 #include "opengl/OGLRenderData.h"
 #include "model/GltfNode.h"
+#include "model/ModelLoader.h"
 
 
 class GltfModel {
@@ -31,6 +32,7 @@ private:
 	void createVertexBuffers();
 	void createIndexBuffer();
 	int getTriangleCount();
+	ModelLoader mModelLoader{};
 
 	void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode, bool enableSkinning);
 

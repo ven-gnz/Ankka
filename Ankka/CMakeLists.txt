@@ -31,7 +31,7 @@ add_executable (Ankka
 	"../includes/vulkan/VkRenderer.h" 
 	"vulkan/VkRenderer.cpp"
 	"tools/Timer.cpp"
-	"tools/Camera.cpp" "model/GltfModel.cpp" "tools/Raycaster.cpp" "model/GltfNode.cpp" "opengl/ShaderStorageBuffer.cpp")
+	"tools/Camera.cpp" "model/GltfModel.cpp" "tools/Raycaster.cpp" "model/GltfNode.cpp" "opengl/ShaderStorageBuffer.cpp" "model/ModelLoader.cpp")
 
 # Shaders
 
