@@ -1,4 +1,4 @@
-#include "Ankka/GltfModel.h"
+#include "model/GltfModel.h"
 #include "Ankka/Logger.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>

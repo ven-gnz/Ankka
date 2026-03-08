@@ -6,7 +6,7 @@
 #include <tiny_gltf.h>
 #include "opengl/Texture.h"
 #include "opengl/OGLRenderData.h"
-#include "Ankka/GltfNode.h"
+#include "model/GltfNode.h"
 
 
 class GltfModel {

@@ -1,4 +1,4 @@
-#include <Ankka/GltfNode.h>
+#include <model/GltfNode.h>
 #include <Ankka/Logger.h>
 
 

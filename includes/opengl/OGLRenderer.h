@@ -14,7 +14,7 @@
 #include "opengl/UniformBuffer.h"
 #include "opengl/ShaderStorageBuffer.h"
 
-#include "Ankka/GltfModel.h"
+#include "model/GltfModel.h"
 
 
 #include "imgui_impl_opengl3.h"
