@@ -160,12 +160,14 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	}
 
 
-	if (!mGltfShader.loadShaders("shaders/gltf_gpu.vert", "shaders/gltf_gpu.frag"))
+	if (!mGltfShader.loadShaders("shaders/gltf_gpu_dquat.vert", "shaders/gltf_gpu_dquat.frag"))
 	{
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);
 		return false;
 	}
+
+
 
 	mUniformBuffer.init(2 * sizeof(glm::mat4));
 	mGltfUniformBuffer.init(42 * sizeof(glm::mat4));
@@ -187,6 +189,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	{
 		return false;
 	}
+
+	size_t modelJointDualQuatBufferSize = mGltfModel->getJointDualQuatsSize() *
+		sizeof(glm::mat2x4);
+	mGltfDualQuatSSBuffer.init(modelJointDualQuatBufferSize);
+	Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
+
+
 	mGltfModel->uploadIndexBuffer();
 
 	mGltfModel->uploadVertexBuffers();	
@@ -244,6 +253,8 @@ void OGLRenderer::draw()
 	renderMatrices.clear();
 
 	//mGltfModel->applyCPUVertexSkinning();
+
+	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
 	mGltfModel->uploadVertexBuffers();
 	mGltfUniformBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());

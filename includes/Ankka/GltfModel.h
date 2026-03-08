@@ -24,6 +24,9 @@ public:
 	std::shared_ptr<OGLMesh> getSkeleton(bool enableSkinning);
 	void applyCPUVertexSkinning();
 	std::vector<glm::mat4> getJointMatrices();
+	std::vector<glm::mat2x4> getJointDualQuats();
+	int getJointDualQuatsSize();
+
 private:
 	void createVertexBuffers();
 	void createIndexBuffer();
@@ -37,6 +40,7 @@ private:
 	void getNodes(std::shared_ptr<GltfNode> treeNode);
 	void getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix);
 
+	std::vector < glm::mat2x4> mJointDualQuats{};
 	std::vector<glm::tvec4<uint16_t>> mJointVec{};
 	std::vector<glm::vec4> mWeightVec{};
 	std::vector<glm::mat4> mInverseBindMatrices{};
