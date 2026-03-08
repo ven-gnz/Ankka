@@ -28,6 +28,11 @@ public:
 	std::vector<glm::mat2x4> getJointDualQuats();
 	int getJointDualQuatsSize();
 
+	glm::vec3 calculateAABB(const tinygltf::Accessor& accessor,
+		const tinygltf::BufferView& bufferView,
+		const tinygltf::Buffer& buffer,
+		glm::vec3& maxi);
+
 private:
 	void createVertexBuffers();
 	void createIndexBuffer();

@@ -14,6 +14,32 @@ void GltfModel::createIndexBuffer()
 
 }
 
+glm::vec3 GltfModel::calculateAABB(const tinygltf::Accessor& accessor,
+	const tinygltf::BufferView& bufferView,
+	const tinygltf::Buffer& buffer,
+	glm::vec3& maxi)
+{
+	const unsigned char* dataP = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
+
+	glm::vec3 meshMin(FLT_MAX);
+	glm::vec3 meshMax(-FLT_MAX);
+
+	size_t stride = accessor.ByteStride(bufferView);
+	if (stride == 0) stride = sizeof(float) * 3;
+
+	for (size_t i = 0; i < accessor.count; ++i)
+	{
+		const float* pos = reinterpret_cast<const float*>(dataP + stride * i);
+		glm::vec3 vert(pos[0], pos[1], pos[2]);
+
+		meshMin = glm::min(meshMin, vert);
+		meshMax = glm::max(meshMax, vert);
+	}
+
+	maxi = meshMax;
+	return meshMin;
+}
+
 void GltfModel::createVertexBuffers()
 {
 
@@ -39,36 +65,9 @@ void GltfModel::createVertexBuffers()
 			 {
 			continue;
 			}
-		// Loop for AABB max and min
-		if (attribType == "POSITION")
-		{
 
-			int numPositionEntries = accessor.count;
-			mAlteredPositions.resize(numPositionEntries);
-			Logger::log(1, "%s: loaded %i vertices from glTF file\n", __FUNCTION__,
-				numPositionEntries);
-
-			const unsigned char* dataP = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
-
-			glm::vec3 meshMin(FLT_MAX);
-			glm::vec3 meshMax(-FLT_MAX);
-
-			size_t stride = accessor.ByteStride(bufferView);
-			if (stride == 0) stride = sizeof(float) * 3;
-
-			for (size_t i = 0; i < accessor.count; ++i)
-			{
-				const float* pos = reinterpret_cast<const float*>(dataP + stride * i);
-				glm::vec3 vert(pos[0], pos[1], pos[2]);
-
-				meshMin = glm::min(meshMin, vert);
-				meshMax = glm::max(meshMax, vert);
-			}
-
-			mLocalAABBmin = meshMin;
-			mLocalAABBmax = meshMax;
-
-		}
+		mLocalAABBmin = calculateAABB(accessor, bufferView, buffer, mLocalAABBmax);
+	
 
 		mAttribAccessors.at(attributes.at(attribType)) = accessorNum;
 
