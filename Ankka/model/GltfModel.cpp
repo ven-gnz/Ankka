@@ -7,6 +7,49 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <fstream>
 
+void GltfModel::buildMeshPrimitive()
+{
+	const tinygltf::Primitive& primitive = mModel->meshes.at(0).primitives.at(0);
+
+	switch (primitive.mode)
+	{
+	case TINYGLTF_MODE_TRIANGLES:
+		mMeshPrimitive.drawMode = GL_TRIANGLES;
+		break;
+	default:
+		Logger::log(1, "$ unknown draw mode \n", __FUNCTION__);
+	}
+
+	if (primitive.indices >= 0)
+	{
+		const tinygltf::Accessor& accessor = mModel->accessors.at(primitive.indices);
+		mMeshPrimitive.indexed = true;
+		mMeshPrimitive.indexCount = accessor.count;
+
+		switch (accessor.componentType)
+		{
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+			mMeshPrimitive.indexType = GL_UNSIGNED_BYTE;
+			break;
+
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+			mMeshPrimitive.indexType = GL_UNSIGNED_SHORT;
+			break;
+
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+			mMeshPrimitive.indexType = GL_UNSIGNED_INT;
+			break;
+		}
+	}
+	else
+	{
+		const tinygltf::Accessor& posAccessor = mModel->accessors.at(primitive.attributes.at("POSITION"));
+
+		mMeshPrimitive.vertexCount = posAccessor.count;
+	}
+
+}
+
 void GltfModel::createIndexBuffer()
 {
 	glGenBuffers(1, &mIndexVBO);
@@ -45,13 +88,22 @@ void GltfModel::createVertexBuffers()
 
 	const tinygltf::Primitive& primitives =
 		mModel->meshes.at(0).primitives.at(0); // since model only contains one mesh, this is fine for now
-	mVertexVBO.resize(primitives.attributes.size());
-	mAttribAccessors.resize(primitives.attributes.size());
+	mVertexVBO.resize(attributes.size());
+	mAttribAccessors.resize(attributes.size());
 
 	for (const auto& attrib : primitives.attributes)
 	{
 		const std::string attribType = attrib.first;
 		const int accessorNum = attrib.second;
+
+		auto it = attributes.find(attribType);
+		if (it == attributes.end())
+		{
+			continue;
+		}
+
+		int slot = it->second;
+		mAttribAccessors.at(slot) = accessorNum;
 
 		const tinygltf::Accessor& accessor = mModel->accessors.at(accessorNum);
 		const tinygltf::BufferView& bufferView = mModel->bufferViews[accessor.bufferView];
@@ -65,10 +117,11 @@ void GltfModel::createVertexBuffers()
 			 {
 			continue;
 			}
-
-		mLocalAABBmin = calculateAABB(accessor, bufferView, buffer, mLocalAABBmax);
-	
-
+		if (attribType.compare("POSITION") == 0)
+		{
+			mLocalAABBmin = calculateAABB(accessor, bufferView, buffer, mLocalAABBmax);
+		}
+		
 		mAttribAccessors.at(attributes.at(attribType)) = accessorNum;
 
 		int dataSize = 1;
@@ -105,18 +158,11 @@ void GltfModel::createVertexBuffers()
 			break;
 		}
 
-
-
-		glGenBuffers(1, &mVertexVBO.at(attributes.at(attribType)));
-		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(attributes.at(attribType)));
-
-		//glBufferData(GL_ARRAY_BUFFER,
-		//	bufferView.byteLength,
-		//	buffer.data.data() + bufferView.byteOffset + accessor.byteOffset,
-		//	GL_STATIC_DRAW);
+		glGenBuffers(1, &mVertexVBO.at(slot));
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(slot));
 
 		size_t stride = accessor.ByteStride(bufferView);
-		glVertexAttribPointer(attributes.at(attribType), dataSize, dataType, GL_FALSE, 0, (void*)0);
+		glVertexAttribPointer(slot, dataSize, dataType, GL_FALSE, 0, (void*)accessor.byteOffset);
 		glEnableVertexAttribArray(attributes.at(attribType));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -202,6 +248,12 @@ void GltfModel::getJointData()
 		return;
 	}
 
+	if (mModel->skins.empty())
+	{
+		Logger::log(1, "Mesh has JOINTS_0 but model has no skin — skipping joint data.\n");
+		return;
+	}
+
 	std::string jointsAccessorAttrib = "JOINTS_0";
 	int jointsAccessor = mModel->meshes.at(0).primitives.at(0).attributes.at(jointsAccessorAttrib);
 
@@ -257,9 +309,18 @@ void GltfModel::getWeightData()
 
 void GltfModel::getInvBindMatrices()
 {
+
+	if (mModel->skins.empty())
+	{
+		Logger::log(1, "%s: no skins found, skipping inverse bind matrices\n", __FUNCTION__);
+		return;
+	}
+
+
 	const tinygltf::Skin& skin = mModel->skins.at(0);
 	int invBindMatAccessor = skin.inverseBindMatrices;
 
+	//FIXME
 	mJointDualQuats.resize(skin.joints.size());
 
 	const tinygltf::Accessor& accessor = mModel->accessors.at(invBindMatAccessor);
@@ -348,7 +409,6 @@ int GltfModel::getTriangleCount()
 	{
 		const tinygltf::Accessor& posAccessor =
 			mModel->accessors[primitives.attributes.at("POSITION")];
-
 		return posAccessor.count;
 	}
 
@@ -442,13 +502,31 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		loaderWarnings
 	);
 
-	if (!mTex.loadTexture(textureFileName, false))
+	if (!textureFileName.empty())
 	{
-		Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
-		return false;
+		if (!mTex.loadTexture(textureFileName, false))
+		{
+			Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
+			return false;
+		}
 	}
-	Logger::log(1, "%s: glTF model texture '%s' successfully loaded\n", __FUNCTION__,
-		modelFileName.c_str());
+
+	else if (mModel->images.empty())
+	{
+		if (!mTex.loadTextureFromBinary(mModel->images[0]))
+		{
+			Logger::log(1, "%s: failed to load embedded texture\n", __FUNCTION__);
+			return false;
+		}
+		Logger::log(1, "%s: loaded embedded texture from .glb\n", __FUNCTION__);
+	}
+	else
+	{
+		Logger::log(1, "%s: no texture to load\n", __FUNCTION__);
+	}
+	
+
+	
 
 
 	if (!loaderWarnings.empty())
@@ -467,10 +545,13 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		return false;
 	}
 
+
+
 	glGenVertexArrays(1, &mVAO);
 	glBindVertexArray(mVAO);
 	createVertexBuffers();
 	createIndexBuffer();
+	buildMeshPrimitive();
 	glBindVertexArray(0);
 
 	getJointData();
@@ -502,47 +583,19 @@ void GltfModel::cleanup()
 
 void GltfModel::draw()
 {
-	const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
 
-	GLuint drawMode = GL_TRIANGLES;
-	switch (primitives.mode)
-	{
-	case TINYGLTF_MODE_TRIANGLES:
-		drawMode = GL_TRIANGLES;
-		break;
-	default:
-		Logger::log(1, "s error: unknowd draw mode %i\n", __FUNCTION__, drawMode);
-		break;
-	}
-	GLenum indexType = 0;
-	const tinygltf::Accessor* indexAccessor = nullptr;
-	
-	if (primitives.indices >= 0)
-	{
-		indexAccessor = &mModel->accessors.at(primitives.indices);
-		switch (indexAccessor->componentType)
-		{
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: indexType = GL_UNSIGNED_BYTE; break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: indexType = GL_UNSIGNED_SHORT; break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: indexType = GL_UNSIGNED_INT; break;
-		default: Logger::log(1, "error unknown index component type");
-			
-		}
-
-	}
 	mTex.bind();
 	glBindVertexArray(mVAO);
-	if (indexAccessor)
+
+	if (mMeshPrimitive.indexed)
 	{
-		glDrawElements(drawMode, indexAccessor->count, indexAccessor->componentType, nullptr);
+		glDrawElements(mMeshPrimitive.drawMode, mMeshPrimitive.indexCount, mMeshPrimitive.indexType, nullptr);
 	}
 	else
 	{
-		glDrawArrays(drawMode, 0, mVertexCount);
+		glDrawArrays(mMeshPrimitive.drawMode, 0, mMeshPrimitive.vertexCount);
 	}
-	
 	glBindVertexArray(0);
-	mTex.unbind();
 
 }
 

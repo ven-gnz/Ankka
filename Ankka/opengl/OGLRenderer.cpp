@@ -182,6 +182,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModels.reserve(2 * sizeof(GltfModel));
 
 	mGltfModel = std::make_shared<GltfModel>();
+	mGltfModel1 = std::make_shared<GltfModel>();
 	std::string modelFilename = "assets/Woman.gltf";
 	std::string modelTexFilename = "tex/Woman.png";
 
@@ -195,10 +196,16 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfDualQuatSSBuffer.init(modelJointDualQuatBufferSize);
 	Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
 
-
 	mGltfModel->uploadIndexBuffer();
+	mGltfModel->uploadVertexBuffers();
 
-	mGltfModel->uploadVertexBuffers();	
+	std::string model1filename = "assets/fox.glb";
+	std::string modelTexName = "";
+	
+	//if (!mGltfModel1->loadModel(mRenderData, model1filename, modelTexName))
+	//{
+	//	return false;
+	//}
 		
 	return true;
 
