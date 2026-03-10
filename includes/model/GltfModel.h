@@ -8,6 +8,7 @@
 #include "opengl/OGLRenderData.h"
 #include "model/GltfNode.h"
 #include "model/ModelLoader.h"
+#include "model/MeshPrimitive.h"
 
 
 class GltfModel {
@@ -33,6 +34,7 @@ public:
 		const tinygltf::Buffer& buffer,
 		glm::vec3& maxi);
 
+	void buildMeshPrimitive();
 private:
 	void createVertexBuffers();
 	void createIndexBuffer();
@@ -66,6 +68,7 @@ private:
 	
 	std::shared_ptr<OGLMesh> mSkeletonMesh = nullptr;
 
+	MeshPrimitive mMeshPrimitive;
 	
 	
 
