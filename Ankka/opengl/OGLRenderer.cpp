@@ -191,8 +191,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
-	size_t modelJointDualQuatBufferSize = mGltfModel->getJointDualQuatsSize() *
-		sizeof(glm::mat2x4);
+	size_t modelJointDualQuatBufferSize = mGltfModel->getJointDualQuatsSize() * sizeof(glm::mat2x4);
 	mGltfDualQuatSSBuffer.init(modelJointDualQuatBufferSize);
 	Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
 
@@ -202,10 +201,17 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	std::string model1filename = "assets/fox.glb";
 	std::string modelTexName = "";
 	
-	//if (!mGltfModel1->loadModel(mRenderData, model1filename, modelTexName))
-	//{
-	//	return false;
-	//}
+	if (!mGltfModel1->loadModel(mRenderData, model1filename, modelTexName))
+	{
+		return false;
+	}
+
+	size_t modelJointDualQuatBufferSize1 = mGltfModel1->getJointDualQuatsSize() * sizeof(glm::mat2x4);
+	mGltfDualQuatSSBuffer1.init(modelJointDualQuatBufferSize1);
+	Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize1);
+
+	mGltfModel1->uploadVertexBuffers();
+
 		
 	return true;
 
@@ -259,7 +265,6 @@ void OGLRenderer::draw()
 	mUniformBuffer.uploadUboData(renderMatrices, 0);
 	renderMatrices.clear();
 
-	//mGltfModel->applyCPUVertexSkinning();
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
 	mGltfModel->uploadVertexBuffers();
@@ -269,8 +274,13 @@ void OGLRenderer::draw()
 	mGltfModel->draw();
 	
 
-	//mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix());
-	//mGltfModel1->draw();
+
+	mGltfDualQuatSSBuffer1.uploadSsboData(mGltfModel1->getJointDualQuats(), 2);
+	mGltfModel1->uploadVertexBuffers();
+	mGltfUniformBuffer1.uploadSsboData(mGltfModel1->getJointMatrices(), 1);
+	mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix() * glm::mat4(0.05f));
+
+	mGltfModel1->draw();
 	
 	mFramebuffer.unbind();
 

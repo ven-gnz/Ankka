@@ -62,7 +62,9 @@ private:
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer{};
 	ShaderStorageBuffer mGltfUniformBuffer{};
+	ShaderStorageBuffer mGltfUniformBuffer1{};
 	ShaderStorageBuffer mGltfDualQuatSSBuffer{};
+	ShaderStorageBuffer mGltfDualQuatSSBuffer1{};
 
 	Texture mTex{};
 	bool old_VSync = true;

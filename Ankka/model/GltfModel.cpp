@@ -178,7 +178,7 @@ void GltfModel::createVertexBuffers()
 void GltfModel::uploadVertexBuffers()
 {
 
-	for (int i = 0; i < 5; ++i)
+	for (size_t i = 0; i < mAttribAccessors.size(); ++i)
 	{
 		const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(i));
 		const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
@@ -244,13 +244,13 @@ void GltfModel::getJointData()
 	auto it = prim.attributes.find("JOINTS_0");
 	if (it == prim.attributes.end())
 	{
-		Logger::log(1, "Mesh has no JOINTS_0 — this model is not skinned.\n");
+		Logger::log(1, "Mesh has no JOINTS_0 \n", __FUNCTION__);
 		return;
 	}
 
 	if (mModel->skins.empty())
 	{
-		Logger::log(1, "Mesh has JOINTS_0 but model has no skin — skipping joint data.\n");
+		Logger::log(1, "Mesh has JOINTS_0 but model has no skin\n", __FUNCTION__);
 		return;
 	}
 
@@ -269,10 +269,14 @@ void GltfModel::getJointData()
 	Logger::log(1, "%s: %i short vec4 in JOINTS_0\n", __FUNCTION__, jointVecSize);
 	mJointVec.resize(jointVecSize);
 
+
+	const unsigned char* start = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
+	int elemcount = accessor.count * sizeof(glm::u16vec4);
+
 	std::memcpy(
 		mJointVec.data(), 
-		&buffer.data.at(0) + bufferView.byteOffset, 
-		bufferView.byteLength);
+		start, 
+		elemcount);
 
 	mNodeToJoint.resize(mModel->nodes.size());
 
@@ -300,10 +304,13 @@ void GltfModel::getWeightData()
 	Logger::log(1, "%s: %i vec4 in WEIGHTS_0\n", __FUNCTION__, weightVecSize);
 	mWeightVec.resize(weightVecSize);
 
+	const unsigned char* start = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
+	int elemCount = accessor.count * sizeof(glm::vec4);
+
 	std::memcpy(
 		mWeightVec.data(), 
-		&buffer.data.at(0) + bufferView.byteOffset,
-		bufferView.byteLength);
+		start,
+		elemCount);
 
 }
 
@@ -318,6 +325,7 @@ void GltfModel::getInvBindMatrices()
 
 
 	const tinygltf::Skin& skin = mModel->skins.at(0);
+	if (skin.inverseBindMatrices < 0) return;
 	int invBindMatAccessor = skin.inverseBindMatrices;
 
 	//FIXME
@@ -327,13 +335,16 @@ void GltfModel::getInvBindMatrices()
 	const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
 	const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
+	const unsigned char* start = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
+	size_t elemcount = accessor.count * sizeof(glm::mat4);
+
 	mInverseBindMatrices.resize(skin.joints.size());
 	mJointMatrices.resize(skin.joints.size());
 
 	std::memcpy(
 		mInverseBindMatrices.data(),
-		&buffer.data.at(0) + bufferView.byteOffset,
-		bufferView.byteLength
+		start,
+		elemcount
 	);
 
 }
