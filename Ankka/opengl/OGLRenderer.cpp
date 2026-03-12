@@ -212,7 +212,9 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mGltfModel1->uploadVertexBuffers();
 
-		
+	mGltfModel1->modelMatrix() = glm::translate(glm::mat4(1.0), glm::vec3(5.0, 0.0, 5.0));
+	mGltfModel1->modelMatrix() = glm::scale(glm::mat4(1.0), glm::vec3(0.05f));
+	
 	return true;
 
 }
@@ -278,7 +280,8 @@ void OGLRenderer::draw()
 	mGltfDualQuatSSBuffer1.uploadSsboData(mGltfModel1->getJointDualQuats(), 2);
 	mGltfModel1->uploadVertexBuffers();
 	mGltfUniformBuffer1.uploadSsboData(mGltfModel1->getJointMatrices(), 1);
-	mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix() * glm::mat4(0.05f));
+	
+	mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix());
 
 	mGltfModel1->draw();
 	
