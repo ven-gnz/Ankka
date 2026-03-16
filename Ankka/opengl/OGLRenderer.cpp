@@ -212,8 +212,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mGltfModel1->uploadVertexBuffers();
 
-	mGltfModel1->modelMatrix() = glm::translate(glm::mat4(1.0), glm::vec3(5.0, 0.0, 5.0));
-	mGltfModel1->modelMatrix() = glm::scale(glm::mat4(1.0), glm::vec3(0.05f));
+	mGltfModel1->modelMatrix() = glm::translate(glm::mat4(1.0), glm::vec3(3.0, 0.0, 0.0));
+	mGltfModel1->modelMatrix() = glm::scale(mGltfModel1->modelMatrix(), glm::vec3(0.02f));
 	
 	return true;
 
@@ -251,7 +251,7 @@ void OGLRenderer::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mProjectionMatrix = glm::perspective(
-		static_cast<float>(mRenderData.rdFielfOfView),
+		glm::radians(static_cast<float>(mRenderData.rdFielfOfView)),
 		static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
 		0.01f,
 		120.0f);
