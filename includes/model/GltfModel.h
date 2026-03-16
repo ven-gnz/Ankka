@@ -27,7 +27,7 @@ public:
 	void applyCPUVertexSkinning();
 	std::vector<glm::mat4> getJointMatrices();
 	std::vector<glm::mat2x4> getJointDualQuats();
-	int getJointDualQuatsSize();
+	int getJointDualQuatsSize(); 
 
 	glm::vec3 calculateAABB(const tinygltf::Accessor& accessor,
 		const tinygltf::BufferView& bufferView,
@@ -60,6 +60,8 @@ private:
 	
 	std::vector<glm::vec3> mAlteredPositions{};
 
+	std::vector<glm::vec3> mNormals{};
+	void calculateNormals(std::string modelFileName);
 
 	glm::mat4 mModelMatrix = glm::mat4(1.0f);
 	std::shared_ptr<tinygltf::Model> mModel = nullptr;
