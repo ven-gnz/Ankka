@@ -162,7 +162,8 @@ void GltfModel::createVertexBuffers()
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(slot));
 
 		size_t stride = accessor.ByteStride(bufferView);
-		glVertexAttribPointer(slot, dataSize, dataType, GL_FALSE, 0, (void*)accessor.byteOffset);
+		// here we add the accessor offset, and removed it from the upload to avoid ambiguity and future bugs because silly bear
+		glVertexAttribPointer(slot, dataSize, dataType, GL_FALSE, stride, (void*)accessor.byteOffset);
 		glEnableVertexAttribArray(attributes.at(attribType));
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -185,7 +186,10 @@ void GltfModel::uploadVertexBuffers()
 		const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(i));
-		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, &buffer.data.at(0) + bufferView.byteOffset + accessor.byteOffset, GL_STATIC_DRAW);
+
+		// changed the start of the data pointer with the intent that the accessor offsets is handled when constructing the vertex buffer
+		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, &buffer.data.at(0) + bufferView.byteOffset, GL_STATIC_DRAW);
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -328,7 +332,6 @@ void GltfModel::getInvBindMatrices()
 	if (skin.inverseBindMatrices < 0) return;
 	int invBindMatAccessor = skin.inverseBindMatrices;
 
-	//FIXME
 	mJointDualQuats.resize(skin.joints.size());
 
 	const tinygltf::Accessor& accessor = mModel->accessors.at(invBindMatAccessor);
@@ -522,7 +525,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		}
 	}
 
-	else if (mModel->images.empty())
+	else if (!mModel->images.empty())
 	{
 		if (!mTex.loadTextureFromBinary(mModel->images[0]))
 		{
@@ -556,10 +559,17 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		return false;
 	}
 
+	const tinygltf::Primitive& primitive = mModel->meshes.at(0).primitives.at(0);
+
 
 
 	glGenVertexArrays(1, &mVAO);
 	glBindVertexArray(mVAO);
+	bool hasNormals = primitive.attributes.find("NORMAL") != primitive.attributes.end();
+	if (!hasNormals)
+	{
+		calculateNormals(modelFileName);
+	}
 	createVertexBuffers();
 	createIndexBuffer();
 	buildMeshPrimitive();
@@ -607,6 +617,23 @@ void GltfModel::draw()
 		glDrawArrays(mMeshPrimitive.drawMode, 0, mMeshPrimitive.vertexCount);
 	}
 	glBindVertexArray(0);
+
+}
+
+void GltfModel::calculateNormals(std::string modelFileName)
+{
+	/*
+	
+
+	
+	triangle normal = normalize(cross(v1-v0, v2-v0));
+
+	Apparently this was not yet needed for the fox?
+
+	*/
+
+	Logger::log(1, "%s: This model has no normals '%s'\n", __FUNCTION__, modelFileName.c_str());
+
 
 }
 
