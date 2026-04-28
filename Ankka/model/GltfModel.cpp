@@ -7,6 +7,8 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <fstream>
 
+#include <iostream>
+
 void GltfModel::createIndexBuffer()
 {
 	glGenBuffers(1, &mIndexVBO);
@@ -14,11 +16,39 @@ void GltfModel::createIndexBuffer()
 
 }
 
+glm::vec3 GltfModel::calculateAABB(const tinygltf::Accessor& accessor,
+	const tinygltf::BufferView& bufferView,
+	const tinygltf::Buffer& buffer,
+	glm::vec3& maxi)
+{
+	const unsigned char* dataP = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
+
+	glm::vec3 meshMin(FLT_MAX);
+	glm::vec3 meshMax(-FLT_MAX);
+
+	size_t stride = accessor.ByteStride(bufferView);
+	if (stride == 0) stride = sizeof(float) * 3;
+
+	for (size_t i = 0; i < accessor.count; ++i)
+	{
+		const float* pos = reinterpret_cast<const float*>(dataP + stride * i);
+		glm::vec3 vert(pos[0], pos[1], pos[2]);
+
+		meshMin = glm::min(meshMin, vert);
+		meshMax = glm::max(meshMax, vert);
+	}
+
+	maxi = meshMax;
+	return meshMin;
+}
+
+
+
 void GltfModel::createVertexBuffers()
 {
 
-	const tinygltf::Primitive& primitives =
-		mModel->meshes.at(0).primitives.at(0); // since model only contains one mesh, this is fine for now
+	const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
+
 	mVertexVBO.resize(primitives.attributes.size());
 	mAttribAccessors.resize(primitives.attributes.size());
 
@@ -27,54 +57,30 @@ void GltfModel::createVertexBuffers()
 		const std::string attribType = attrib.first;
 		const int accessorNum = attrib.second;
 
-		const tinygltf::Accessor& accessor = mModel->accessors.at(accessorNum);
-		const tinygltf::BufferView& bufferView = mModel->bufferViews[accessor.bufferView];
-		const tinygltf::Buffer& buffer = mModel->buffers[bufferView.buffer];
+		const tinygltf::Accessor &accessor = mModel->accessors.at(accessorNum);
+		const tinygltf::BufferView &bufferView = mModel->bufferViews.at(accessor.bufferView);
+		const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
-		if ((attribType.compare("POSITION") != 0) &&
-			(attribType.compare("NORMAL") != 0) &&
-			attribType.compare("TEXCOORD_0") != 0 &&
-			attribType.compare("JOINTS_0") != 0 &&
-			attribType.compare("WEIGHTS_0") != 0)
-			 {
+		if ((attribType.compare("POSITION") != 0) && (attribType.compare("NORMAL") != 0)
+			&& (attribType.compare("TEXCOORD_0") != 0) && (attribType.compare("JOINTS_0") != 0
+				&& (attribType.compare("WEIGHTS_0") != 0))) {
+			Logger::log(1, "%s: skipping attribute type %s\n", __FUNCTION__, attribType.c_str());
 			continue;
-			}
-		// Loop for AABB max and min
-		if (attribType == "POSITION")
-		{
+		}
 
+		Logger::log(1, "%s: data for %s uses accessor %i\n", __FUNCTION__, attribType.c_str(),
+			accessorNum);
+		if (attribType.compare("POSITION") == 0) {
 			int numPositionEntries = accessor.count;
 			mAlteredPositions.resize(numPositionEntries);
 			Logger::log(1, "%s: loaded %i vertices from glTF file\n", __FUNCTION__,
 				numPositionEntries);
-
-			const unsigned char* dataP = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
-
-			glm::vec3 meshMin(FLT_MAX);
-			glm::vec3 meshMax(-FLT_MAX);
-
-			size_t stride = accessor.ByteStride(bufferView);
-			if (stride == 0) stride = sizeof(float) * 3;
-
-			for (size_t i = 0; i < accessor.count; ++i)
-			{
-				const float* pos = reinterpret_cast<const float*>(dataP + stride * i);
-				glm::vec3 vert(pos[0], pos[1], pos[2]);
-
-				meshMin = glm::min(meshMin, vert);
-				meshMax = glm::max(meshMax, vert);
-			}
-
-			mLocalAABBmin = meshMin;
-			mLocalAABBmax = meshMax;
-
 		}
 
 		mAttribAccessors.at(attributes.at(attribType)) = accessorNum;
 
 		int dataSize = 1;
-		switch (accessor.type)
-		{
+		switch (accessor.type) {
 		case TINYGLTF_TYPE_SCALAR:
 			dataSize = 1;
 			break;
@@ -88,13 +94,13 @@ void GltfModel::createVertexBuffers()
 			dataSize = 4;
 			break;
 		default:
-			Logger::log(1, "$s error : accessor %i uses data size %i\n", __FUNCTION__, accessorNum, dataSize);
+			Logger::log(1, "%s error: accessor %i uses data size %i\n", __FUNCTION__,
+				accessorNum, accessor.type);
 			break;
 		}
 
 		GLuint dataType = GL_FLOAT;
-		switch (accessor.componentType)
-		{
+		switch (accessor.componentType) {
 		case TINYGLTF_COMPONENT_TYPE_FLOAT:
 			dataType = GL_FLOAT;
 			break;
@@ -102,45 +108,51 @@ void GltfModel::createVertexBuffers()
 			dataType = GL_UNSIGNED_SHORT;
 			break;
 		default:
-			Logger::log(1, "%s error: accessor %i uses uknown data type %i\n", __FUNCTION__, accessorNum, dataType);
+			Logger::log(1, "%s error: accessor %i uses unknown data type %i\n", __FUNCTION__,
+				accessorNum, accessor.componentType);
 			break;
 		}
 
-
-
+		/* buffers for position, normal and tex coordinates */
 		glGenBuffers(1, &mVertexVBO.at(attributes.at(attribType)));
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(attributes.at(attribType)));
 
-		//glBufferData(GL_ARRAY_BUFFER,
-		//	bufferView.byteLength,
-		//	buffer.data.data() + bufferView.byteOffset + accessor.byteOffset,
-		//	GL_STATIC_DRAW);
-
-		size_t stride = accessor.ByteStride(bufferView);
-		glVertexAttribPointer(attributes.at(attribType), dataSize, dataType, GL_FALSE, 0, (void*)0);
+		glVertexAttribPointer(attributes.at(attribType), dataSize, dataType, GL_FALSE,
+			0, (void*)0);
 		glEnableVertexAttribArray(attributes.at(attribType));
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	}
+}
 
-	std::string minStr = glm::to_string(mLocalAABBmin);
-	std::string maxStr = glm::to_string(mLocalAABBmax);
+void GltfModel::uploadPositionBuffer() {
+	const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(0));
+	const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
+	const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
-	Logger::log(1, "%s: AABB smallest: %s\n", __FUNCTION__, minStr.c_str());
-	Logger::log(1, "%s: AABB biggest  : %s\n", __FUNCTION__, maxStr.c_str());
-
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(0));
+	glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength,
+		mAlteredPositions.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void GltfModel::uploadVertexBuffers()
 {
 
-	for (int i = 0; i < 5; ++i)
+	
+	for (size_t i = 0; i < 5; ++i)
 	{
 		const tinygltf::Accessor& accessor = mModel->accessors.at(mAttribAccessors.at(i));
 		const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
 		const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(i));
-		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength, &buffer.data.at(0) + bufferView.byteOffset + accessor.byteOffset, GL_STATIC_DRAW);
+
+		// changed the start of the data pointer with the intent that the accessor offsets is handled when constructing the vertex buffer
+		glBufferData(GL_ARRAY_BUFFER, bufferView.byteLength,
+			&buffer.data.at(0) + bufferView.byteOffset, GL_STATIC_DRAW);
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -193,44 +205,30 @@ void GltfModel::uploadIndexBuffer()
 
 void GltfModel::getJointData()
 {
-	// Guarding for non skinned fox model
-	auto& prim = mModel->meshes.at(0).primitives.at(0);
-
-	auto it = prim.attributes.find("JOINTS_0");
-	if (it == prim.attributes.end())
-	{
-		Logger::log(1, "Mesh has no JOINTS_0 — this model is not skinned.\n");
-		return;
-	}
-
+	
 	std::string jointsAccessorAttrib = "JOINTS_0";
 	int jointsAccessor = mModel->meshes.at(0).primitives.at(0).attributes.at(jointsAccessorAttrib);
-
-
-	Logger::log(1, "%s : using accessor %i to get %s\n", __FUNCTION__, jointsAccessor,
+	Logger::log(1, "%s: using accessor %i to get %s\n", __FUNCTION__, jointsAccessor,
 		jointsAccessorAttrib.c_str());
 
-	const tinygltf::Accessor &accessor = mModel->accessors.at(jointsAccessor);
-	const tinygltf::BufferView &bufferView = mModel->bufferViews.at(accessor.bufferView);
-	const tinygltf::Buffer &buffer = mModel->buffers.at(bufferView.buffer);
+	const tinygltf::Accessor& accessor = mModel->accessors.at(jointsAccessor);
+	const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
+	const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 
 	int jointVecSize = accessor.count;
 	Logger::log(1, "%s: %i short vec4 in JOINTS_0\n", __FUNCTION__, jointVecSize);
 	mJointVec.resize(jointVecSize);
 
-	std::memcpy(
-		mJointVec.data(), 
-		&buffer.data.at(0) + bufferView.byteOffset, 
+	std::memcpy(mJointVec.data(), &buffer.data.at(0) + bufferView.byteOffset,
 		bufferView.byteLength);
 
 	mNodeToJoint.resize(mModel->nodes.size());
 
 	const tinygltf::Skin& skin = mModel->skins.at(0);
-	for (int i = 0; i < skin.joints.size(); ++i)
-	{
+	for (int i = 0; i < skin.joints.size(); ++i) {
 		int destinationNode = skin.joints.at(i);
 		mNodeToJoint.at(destinationNode) = i;
-		Logger::log(1, "%s: joint %i affects node %i\n", __FUNCTION__, i, destinationNode);
+		Logger::log(2, "%s: joint %i affects node %i\n", __FUNCTION__, i, destinationNode);
 	}
 }
 
@@ -249,19 +247,21 @@ void GltfModel::getWeightData()
 	Logger::log(1, "%s: %i vec4 in WEIGHTS_0\n", __FUNCTION__, weightVecSize);
 	mWeightVec.resize(weightVecSize);
 
+	const unsigned char* start = buffer.data.data() + bufferView.byteOffset + accessor.byteOffset;
+	int elemCount = accessor.count * sizeof(glm::vec4);
+
 	std::memcpy(
 		mWeightVec.data(), 
-		&buffer.data.at(0) + bufferView.byteOffset,
-		bufferView.byteLength);
+		start,
+		elemCount);
 
 }
 
 void GltfModel::getInvBindMatrices()
 {
+
 	const tinygltf::Skin& skin = mModel->skins.at(0);
 	int invBindMatAccessor = skin.inverseBindMatrices;
-
-	mJointDualQuats.resize(skin.joints.size());
 
 	const tinygltf::Accessor& accessor = mModel->accessors.at(invBindMatAccessor);
 	const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
@@ -269,12 +269,10 @@ void GltfModel::getInvBindMatrices()
 
 	mInverseBindMatrices.resize(skin.joints.size());
 	mJointMatrices.resize(skin.joints.size());
+	mJointDualQuats.resize(skin.joints.size());
 
-	std::memcpy(
-		mInverseBindMatrices.data(),
-		&buffer.data.at(0) + bufferView.byteOffset,
-		bufferView.byteLength
-	);
+	std::memcpy(mInverseBindMatrices.data(), &buffer.data.at(0) + bufferView.byteOffset,
+		bufferView.byteLength);
 
 }
 
@@ -349,7 +347,6 @@ int GltfModel::getTriangleCount()
 	{
 		const tinygltf::Accessor& posAccessor =
 			mModel->accessors[primitives.attributes.at("POSITION")];
-
 		return posAccessor.count;
 	}
 
@@ -403,7 +400,7 @@ void GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parent
 		Logger::log(1, "%s error: could not decompose matrix for node %i\n", __FUNCTION__,
 			nodeNum);
 	}
-	
+
 }
 
 void GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
@@ -436,21 +433,22 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string loaderWarnings;
 	bool result = false;
 
+	if (!textureFileName.empty())
+	{
+		mTexNameStr = textureFileName;
+		if(!(mTex.loadTexture(mTexNameStr, false)))
+		{
+			Logger::log(1, "%s: texture could not be loaded");
+			return false;
+		}
+	}
+	
 	result = mModelLoader.loadGltfModel(
 		modelFileName,
 		mModel,
 		loaderErrors,
 		loaderWarnings
 	);
-
-	if (!mTex.loadTexture(textureFileName, false))
-	{
-		Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
-		return false;
-	}
-	Logger::log(1, "%s: glTF model texture '%s' successfully loaded\n", __FUNCTION__,
-		modelFileName.c_str());
-
 
 	if (!loaderWarnings.empty())
 	{
@@ -468,27 +466,49 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		return false;
 	}
 
+	const tinygltf::Primitive& primitive = mModel->meshes.at(0).primitives.at(0);
+
+
+	bool hasNormals = primitive.attributes.find("NORMAL") != primitive.attributes.end();
+	if (!hasNormals)
+	{
+		calculateNormals(modelFileName);
+	}
+
 	glGenVertexArrays(1, &mVAO);
 	glBindVertexArray(mVAO);
 	createVertexBuffers();
 	createIndexBuffer();
+
 	glBindVertexArray(0);
 
-	getJointData();
-	getWeightData();
-	getInvBindMatrices();
+	bool hasJoints = primitive.attributes.find("JOINTS_0") != primitive.attributes.end();
+	if (hasJoints)
+	{
+		getJointData();
+		bool hasWeights = primitive.attributes.find("WEIGHTS_0") != primitive.attributes.end();
+		if (hasWeights)
+		{
+			mSkinned = true;
+			getWeightData();
+			getInvBindMatrices();
+
+		}
+	}
 
 	int nodeCount = mModel->nodes.size();
 	int rootNode = mModel->scenes.at(0).nodes.at(0);
 	mRootNode = GltfNode::createRoot(rootNode);
+	
 	getNodeData(mRootNode, glm::mat4(1.0f));
 	getNodes(mRootNode);
-	
+
+	mRootNode->printTree();
 
 	mSkeletonMesh = std::make_shared<OGLMesh>();
 
-	mRootNode->printTree();
 	renderData.rdTriangelCount = getTriangleCount();
+	modelMatrix() = glm::mat4(1.0f);
 	return true;
 }
 
@@ -501,55 +521,74 @@ void GltfModel::cleanup()
 	mModel.reset();
 }
 
-void GltfModel::draw()
+void GltfModel::drawNode(std::shared_ptr<GltfNode> node, glm::mat4 parentMatrix, Shader s)
 {
+	glm::mat4 global = parentMatrix * node->getNodeMatrix();
+	// check if node has meshes
+	// apply transformations
+	// draw node mesh
+}
+
+
+
+void GltfModel::draw(Shader s) {
+
+	//s.setM4_Uniform("model", modelMatrix());
 	const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
 
-	GLuint drawMode = GL_TRIANGLES;
-	switch (primitives.mode)
-	{
-	case TINYGLTF_MODE_TRIANGLES:
-		drawMode = GL_TRIANGLES;
-		break;
-	default:
-		Logger::log(1, "s error: unknowd draw mode %i\n", __FUNCTION__, drawMode);
-		break;
-	}
-	GLenum indexType = 0;
-	const tinygltf::Accessor* indexAccessor = nullptr;
-	
+
 	if (primitives.indices >= 0)
 	{
-		indexAccessor = &mModel->accessors.at(primitives.indices);
-		switch (indexAccessor->componentType)
-		{
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: indexType = GL_UNSIGNED_BYTE; break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: indexType = GL_UNSIGNED_SHORT; break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: indexType = GL_UNSIGNED_INT; break;
-		default: Logger::log(1, "error unknown index component type");
-			
+		//std::cout << " debug ";
+		const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
+
+		GLuint drawMode = GL_TRIANGLES;
+		switch (primitives.mode) {
+		case TINYGLTF_MODE_TRIANGLES:
+			drawMode = GL_TRIANGLES;
+			break;
+		default:
+			Logger::log(1, "%s error: unknown draw mode %i\n", __FUNCTION__, primitives.mode);
+			break;
 		}
 
-	}
-	mTex.bind();
-	glBindVertexArray(mVAO);
-	if (indexAccessor)
-	{
-		glDrawElements(drawMode, indexAccessor->count, indexAccessor->componentType, nullptr);
-	}
-	else
-	{
-		glDrawArrays(drawMode, 0, mVertexCount);
+		mTex.bind();
+		glBindVertexArray(mVAO);
+		s.setM4_Uniform("model", modelMatrix());
+		glDrawElements(drawMode, indexAccessor.count, indexAccessor.componentType, nullptr);
+		glBindVertexArray(0);
+		mTex.unbind();
 	}
 	
-	glBindVertexArray(0);
-	mTex.unbind();
+
+
+}
+
+void GltfModel::calculateNormals(std::string modelFileName)
+{
+	/*
+	
+
+	
+	triangle normal = normalize(cross(v1-v0, v2-v0));
+
+	Apparently this was not yet needed for the fox?
+
+	*/
+
+	Logger::log(1, "%s: This model has no normals '%s'\n", __FUNCTION__, modelFileName.c_str());
+
 
 }
 
 glm::mat4& GltfModel::modelMatrix()
 {
 	return mModelMatrix;
+}
+
+int GltfModel::getJointMatrixSize()
+{
+	return mJointMatrices.size();
 }
 
 std::vector<glm::mat4> GltfModel::getJointMatrices()

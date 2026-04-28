@@ -5,6 +5,7 @@
 
 bool Texture::loadTexture(std::string textureFilename, bool flipImage)
 {
+
 	int mTexWidth, mTexHeight, mNumberOfChannels;
 	stbi_set_flip_vertically_on_load(flipImage);
 	unsigned char* textureData = stbi_load(textureFilename.c_str(), &mTexWidth, &mTexHeight, &mNumberOfChannels, 0);
@@ -13,8 +14,13 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage)
 	{
 		stbi_image_free(textureData);
 		Logger::log(1, "s%: No texture data found!", __FUNCTION__);
-		return false;
+		return 0;
 	}
+
+	GLenum format = 3;
+	if (mNumberOfChannels == 1) format = GL_RED;
+	if (mNumberOfChannels == 3) format = GL_RGB;
+	if (mNumberOfChannels == 4) format = GL_RGBA;
 
 	glGenTextures(1, &mTexture);
 	glBindTexture(GL_TEXTURE_2D, mTexture);
@@ -24,11 +30,11 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, mTexWidth, mTexHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
-
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, mTexWidth, mTexHeight, 0, format, GL_UNSIGNED_BYTE, textureData);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	Logger::log(1, "%s: texture '%s' loaded (%dx%d, %d channels)\n", __FUNCTION__, textureFilename.c_str(), mTexWidth, mTexHeight, mNumberOfChannels);
 	stbi_image_free(textureData);
 	return true;
 }
@@ -48,11 +54,16 @@ void Texture::cleanup()
 
 }
 
-bool Texture::loadTextureFromBinary(tinygltf::Image& img)
+/*
+	26.03. -> This might be a stupid idea but should lead to a relatively easy per primitive texture binding point storing
+*/
+GLuint Texture::loadTextureFromBinary(const tinygltf::Image& img)
 {
 	
-	glGenTextures(1, &mTexture);
-	glBindTexture(GL_TEXTURE_2D, mTexture);
+	GLuint tex = 0;
+	glGenTextures(1, &tex);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, tex);
 
 	GLenum format = GL_RGBA;
 	if (img.component == 1) format = GL_RED;
@@ -66,6 +77,6 @@ bool Texture::loadTextureFromBinary(tinygltf::Image& img)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	return true;
+	return tex;
 }
 

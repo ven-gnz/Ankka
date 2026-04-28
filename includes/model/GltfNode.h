@@ -37,6 +37,7 @@ private:
 
 	glm::mat4 mLocalTRSMatrix = glm::mat4(1.0f);
 	glm::mat4 mNodeMatrix = glm::mat4(1.0f);
+	
 
 	void printNodes(std::shared_ptr<GltfNode> startNode, int indent);
 };

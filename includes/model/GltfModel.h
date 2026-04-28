@@ -6,8 +6,10 @@
 #include <tiny_gltf.h>
 #include "opengl/Texture.h"
 #include "opengl/OGLRenderData.h"
+#include "opengl/Shader.h"
 #include "model/GltfNode.h"
 #include "model/ModelLoader.h"
+#include "model/MeshPrimitive.h"
 
 
 class GltfModel {
@@ -16,17 +18,26 @@ public:
 		std::string modelfilename,
 		std::string textureFilename);
 
-	void draw();
+	void draw(Shader s);
 	void cleanup();
 	void uploadVertexBuffers();
 	void uploadIndexBuffer();
+	void uploadPositionBuffer();
 	glm::mat4& modelMatrix();
 
 	std::shared_ptr<OGLMesh> getSkeleton(bool enableSkinning);
 	void applyCPUVertexSkinning();
 	std::vector<glm::mat4> getJointMatrices();
 	std::vector<glm::mat2x4> getJointDualQuats();
-	int getJointDualQuatsSize();
+	int getJointDualQuatsSize(); 
+
+	int getJointMatrixSize();
+	bool mSkinned;
+
+	glm::vec3 calculateAABB(const tinygltf::Accessor& accessor,
+		const tinygltf::BufferView& bufferView,
+		const tinygltf::Buffer& buffer,
+		glm::vec3& maxi);
 
 private:
 	void createVertexBuffers();
@@ -41,6 +52,7 @@ private:
 	void getInvBindMatrices();
 	void getNodes(std::shared_ptr<GltfNode> treeNode);
 	void getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix);
+	void drawNode(std::shared_ptr<GltfNode> node, glm::mat4 parentMatrix, Shader s);
 
 	std::vector < glm::mat2x4> mJointDualQuats{};
 	std::vector<glm::tvec4<uint16_t>> mJointVec{};
@@ -53,6 +65,8 @@ private:
 	
 	std::vector<glm::vec3> mAlteredPositions{};
 
+	std::vector<glm::vec3> mNormals{};
+	void calculateNormals(std::string modelFileName);
 
 	glm::mat4 mModelMatrix = glm::mat4(1.0f);
 	std::shared_ptr<tinygltf::Model> mModel = nullptr;
@@ -60,13 +74,13 @@ private:
 	std::shared_ptr<GltfNode> mRootNode = nullptr;
 	
 	std::shared_ptr<OGLMesh> mSkeletonMesh = nullptr;
-
 	
 	
 
 	GLuint mVAO = 0;
 	std::vector<GLuint> mVertexVBO{};
 	GLuint mIndexVBO = 0;
+	std::string mTexNameStr;
 
 	std::map<std::string, GLint> attributes = {
 		{"POSITION", 0},

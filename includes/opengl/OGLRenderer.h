@@ -43,6 +43,7 @@ public:
 	void handleMousePositionEvents(double xPos, double yPos);
 
 	void toggleVsync();
+	void setModelMatrix(const glm::mat4& model);
 
 private:
 
@@ -61,8 +62,13 @@ private:
 	Framebuffer mFramebuffer{};
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer{};
-	ShaderStorageBuffer mGltfUniformBuffer{};
+	ShaderStorageBuffer mShaderStorageBuffer{};
+	ShaderStorageBuffer mShaderStorageBuffer1{};
+	ShaderStorageBuffer mShaderStorageBuffer2{};
+
 	ShaderStorageBuffer mGltfDualQuatSSBuffer{};
+	ShaderStorageBuffer mGltfDualQuatSSBuffer1{};
+	ShaderStorageBuffer mGltfDualQuatSSBuffer2{};
 
 	Texture mTex{};
 	bool old_VSync = true;
@@ -84,6 +90,7 @@ private:
 	Shader mGltfShader{};
 	std::shared_ptr<GltfModel> mGltfModel = nullptr;
 	std::shared_ptr<GltfModel> mGltfModel1 = nullptr;
+	std::shared_ptr<GltfModel> mGltfModel2 = nullptr;
 	std::vector<GltfModel> mGltfModels;
 	std::vector<glm::mat4> renderMatrices{};
 

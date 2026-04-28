@@ -8,10 +8,12 @@ class Texture
 {
 public:
 	bool loadTexture(std::string filename, bool flipImage);
-	bool loadTextureFromBinary(tinygltf::Image& img);
+	static GLuint loadTextureFromBinary(const tinygltf::Image& img);
 	void bind();
 	void unbind();
 	void cleanup();
+
+	Texture() : mTexture(0) {};
 
 private:
 	GLuint mTexture = 0;
