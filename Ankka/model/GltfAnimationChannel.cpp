@@ -266,3 +266,20 @@ glm::quat GltfAnimationChannel::getRotation(float time)
 	return finalRotate;
 
 	}
+
+void GltfAnimationChannel::setTimings(std::vector<float> timings)
+{
+	mTimings = timings;
+}
+void GltfAnimationChannel::setScalings(std::vector<glm::vec3> scalings)
+{
+	mScaling = scalings;
+}
+void GltfAnimationChannel::setTranslations(std::vector<glm::vec3> translations)
+{
+	mTranslations = translations;
+}
+void GltfAnimationChannel::setRotations(std::vector<glm::quat> rotations)
+{
+	mRotations = rotations;
+}
