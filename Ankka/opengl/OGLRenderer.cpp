@@ -182,38 +182,6 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModels.reserve(3 * sizeof(GltfModel));
 
 	mGltfModel = std::make_shared<GltfModel>();
-	//mGltfModel1 = std::make_shared<GltfModel>();
-
-
-	//std::string modelFileName1 = "assets/fox.glb";
-	//std::string modelTexFileName1 = "";
-	//
-	//if (!mGltfModel1->loadModel(mRenderData, modelFileName1, modelTexFileName1))
-	//{
-	//	return false;
-	//}
-
-	//size_t modelJointDualQuatBufferSize1 = mGltfModel1->getJointDualQuatsSize() * sizeof(glm::mat2x4);
-	//mGltfDualQuatSSBuffer1.init(modelJointDualQuatBufferSize1);
-	//Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize1);
-
-	//mGltfModel1->uploadVertexBuffers();
-
-	//mGltfModel1->modelMatrix() = glm::translate(glm::mat4(1.0), glm::vec3(3.0, 0.0, 0.0));
-	//mGltfModel1->modelMatrix() = glm::scale(mGltfModel1->modelMatrix(), glm::vec3(0.02f));
-
-	//mGltfModel2 = std::make_shared<GltfModel>();
-	//std::string modelFileName2 = "assets/CesiumMilkTruck.glb";
-	//std::string modelTexFileName2 = "";
-	//
-	//if (!mGltfModel2->loadModel(mRenderData, modelFileName2, modelTexFileName2))
-	//{
-	//	return false;
-	//}
-
-	//size_t modelJointDualQuatBufferSize2 = mGltfModel2->getJointDualQuatsSize() * sizeof(glm::mat2x4);
-	//mGltfDualQuatSSBuffer2.init(modelJointDualQuatBufferSize2);
-	//Logger::log(1, "%s : gltf joint dual quaternions shader storage buffer (size %i bytes) sucessfully created\n", __FUNCTION__, modelJointDualQuatBufferSize2);
 
 
 
@@ -298,18 +266,7 @@ void OGLRenderer::draw()
 	mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw(mGltfShader);
-	
 
-
-	//mGltfDualQuatSSBuffer1.uploadSsboData(mGltfModel1->getJointDualQuats(), 2);
-	//mGltfModel1->uploadVertexBuffers();
-	//mShaderStorageBuffer1.uploadSsboData(mGltfModel1->getJointMatrices(), 1);
-	//mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix());
-	//mGltfModel1->draw(mGltfShader);
-
-	//mGltfModel2->uploadVertexBuffers();
-	////mGltfShader.setM4_Uniform("model", mGltfModel2->modelMatrix());
-	//mGltfModel2->draw(mGltfShader);
 	
 	mFramebuffer.unbind();
 
