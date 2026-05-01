@@ -51,4 +51,6 @@ private:
 	void setScalings(std::vector<glm::vec3> scalings);
 	void setTranslations(std::vector<glm::vec3> translations);
 	void setRotations(std::vector<glm::quat> rotations);
-}
+
+
+};
