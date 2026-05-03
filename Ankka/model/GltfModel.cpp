@@ -6,8 +6,9 @@
 #include <glm/gtx/dual_quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <fstream>
-
 #include <iostream>
+#include <chrono>
+#include <cmath>
 
 void GltfModel::createIndexBuffer()
 {
@@ -499,6 +500,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	int nodeCount = mModel->nodes.size();
 	int rootNode = mModel->scenes.at(0).nodes.at(0);
 	mRootNode = GltfNode::createRoot(rootNode);
+	mNodeList.resize(nodeCount);
 	
 	getNodeData(mRootNode, glm::mat4(1.0f));
 	getNodes(mRootNode);
@@ -603,4 +605,87 @@ int GltfModel::getJointDualQuatsSize() {
 std::vector<glm::mat2x4> GltfModel::getJointDualQuats()
 {
 	return mJointDualQuats;
+}
+
+void GltfModel::getAnimations()
+{
+	for (const auto& anim : mModel->animations)
+	{
+		GltfAnimationClip clip(anim.name);
+		for (const auto& channel : anim.channels)
+		{
+			clip.addChannel(mModel, anim, channel);
+		}
+		mAnimClips.push_back(clip);
+	}
+}
+
+void GltfModel::playAnimation(
+	int animNum,
+	float speedDivider)
+{
+	double currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::steady_clock::now().time_since_epoch()).count();
+
+	setAnimationFrame(animNum,
+		std::fmod(currentTime / 1000.0 * speedDivider,
+			mAnimClips.at(animNum).getClipEndTime()));
+
+}
+
+void GltfModel::setAnimationFrame(int animNum, float time)
+{
+	mAnimClips.at(animNum).setAnimationFrame(mNodeList, time);
+	updateNodesMatrices(mRootNode, modelMatrix());
+}
+
+float GltfModel::getAnimationEndTime(int animNum)
+{
+	return mAnimClips.at(animNum).getClipEndTime();
+}
+
+void GltfModel::updateNodesMatrices(
+	std::shared_ptr<GltfNode> node,
+	glm::mat4 parentNodeMatrix)
+{
+	node->calculateNodeMatrix(parentNodeMatrix);
+	updateJointMatricesAndQuats(node);
+	for (auto& child : node->getChilds())
+	{
+		updateNodesMatrices(child, node->getNodeMatrix());
+	}
+}
+
+void GltfModel::updateJointMatricesAndQuats(std::shared_ptr<GltfNode> treeNode)
+{
+	int nodeNum = treeNode->getNodeNum();
+	mJointMatrices.at(mNodeToJoint.at(nodeNum)) =
+		treeNode->getNodeMatrix() * mInverseBindMatrices.at(mNodeToJoint.at(nodeNum));
+
+
+	glm::quat orientation;
+	glm::vec3 scale;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::dualquat dq;
+
+	if (glm::decompose(
+		mJointMatrices.at(mNodeToJoint.at(nodeNum)),
+		scale,
+		orientation,
+		translation,
+		skew,
+		perspective))
+	{
+		dq[0] = orientation;
+		dq[1] = glm::quat(0.0, translation.x, translation.y, translation.z) * orientation * 0.5f;
+		mJointDualQuats.at(mNodeToJoint.at(nodeNum)) = glm::mat2x4_cast(dq);
+	}
+	else
+	{
+		Logger::log(1, "%s error: could not decompose matrix for node %i\n", __FUNCTION__,
+			nodeNum);
+	}
+
 }

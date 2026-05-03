@@ -10,7 +10,7 @@
 #include "model/GltfNode.h"
 #include "model/ModelLoader.h"
 #include "model/MeshPrimitive.h"
-
+#include "model/GltfAnimationClip.h"
 
 class GltfModel {
 public:
@@ -39,6 +39,11 @@ public:
 		const tinygltf::Buffer& buffer,
 		glm::vec3& maxi);
 
+	void playAnimation(int animNum, float speedDivider);
+	void setAnimationFrame(int animNumber, float time);
+	float getAnimationEndTime(int animNum);
+	std::string getClipName(int animNum);
+
 private:
 	void createVertexBuffers();
 	void createIndexBuffer();
@@ -64,6 +69,11 @@ private:
 	std::vector<int> mNodeToJoint{};
 	
 	std::vector<glm::vec3> mAlteredPositions{};
+	std::vector<std::shared_ptr<GltfNode>> mNodeList{};
+	void updateNodesMatrices(
+		std::shared_ptr<GltfNode> node,
+		glm::mat4 parentNodeMatrix);
+	void updateJointMatricesAndQuats(std::shared_ptr<GltfNode> treeNode);
 
 	std::vector<glm::vec3> mNormals{};
 	void calculateNormals(std::string modelFileName);
@@ -74,7 +84,9 @@ private:
 	std::shared_ptr<GltfNode> mRootNode = nullptr;
 	
 	std::shared_ptr<OGLMesh> mSkeletonMesh = nullptr;
-	
+
+	std::vector<GltfAnimationClip> mAnimClips{};
+	void getAnimations();
 	
 
 	GLuint mVAO = 0;
