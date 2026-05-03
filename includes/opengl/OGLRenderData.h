@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
-
+#include <string>
 #include <GLFW/glfw3.h>
 
 struct OGLRenderData
@@ -28,6 +28,14 @@ struct OGLRenderData
 
 	float rdTickDiff = 0.0f;
 	glm::vec3 rdCameraWorldPosition = glm::vec3(3.5, 2.5, 2.5);
+
+	bool rdPlayAnimation = true;
+	std::string rdClipName = "None";
+	int rdAnimClip = 0;
+	int rdAnimClipSize = 0;
+	float rdAnimSpeed = 1.0f;
+	float rdAnimTimePosition = 0.0f;
+	float rdAnimEndTime = 0.0f;
 };
 
 struct OGLVertex

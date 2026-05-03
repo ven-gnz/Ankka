@@ -15,7 +15,7 @@ void GltfAnimationClip::addChannel(
 }
 
 void GltfAnimationClip::setAnimationFrame(
-	std::vector <std::shared_ptr<GltfNode>> nodes,
+	std::vector<std::shared_ptr<GltfNode>> nodes,
 	float time
 )
 {

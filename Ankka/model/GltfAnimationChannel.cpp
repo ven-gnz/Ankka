@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include <model/GltfAnimationChannel.h>
 
 
@@ -282,4 +283,16 @@ void GltfAnimationChannel::setTranslations(std::vector<glm::vec3> translations)
 void GltfAnimationChannel::setRotations(std::vector<glm::quat> rotations)
 {
 	mRotations = rotations;
+}
+
+int GltfAnimationChannel::getTargetNode() {
+	return mTargetNode;
+}
+
+float GltfAnimationChannel::getMaxTime() {
+	return mTimings.at(mTimings.size() - 1);
+}
+
+ETargetPath GltfAnimationChannel::getTargetPath() {
+	return mTargetPath;
 }

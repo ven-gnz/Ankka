@@ -1,9 +1,10 @@
 
 
 #pragma once
-
+#define GLM_ENABLE_EXPERIMENTAL
 #include <string>
 #include <vector>
+#include <memory>
 #include <tiny_gltf.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>

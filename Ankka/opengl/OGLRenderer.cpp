@@ -171,7 +171,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mUniformBuffer.init(2 * sizeof(glm::mat4));
 	mShaderStorageBuffer.init(42 * sizeof(glm::mat4));
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
 	mRenderData.rdWidth = width;
@@ -197,7 +197,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
 
 	
-	mGltfModel->uploadVertexBuffers();
+	//mGltfModel->uploadVertexBuffers();
 	mGltfModel->uploadIndexBuffer();
 	
 	
@@ -259,11 +259,24 @@ void OGLRenderer::draw()
 	mUniformBuffer.uploadUboData(renderMatrices, 0);
 	renderMatrices.clear();
 
+	mRenderData.rdClipName = mGltfModel->getClipName(mRenderData.rdAnimClip);
+
+	if (mRenderData.rdPlayAnimation)
+	{
+		mGltfModel->playAnimation(mRenderData.rdAnimClip,
+			mRenderData.rdAnimSpeed);
+	}
+	else
+	{
+		mRenderData.rdAnimEndTime = mGltfModel->getAnimationEndTime(mRenderData.rdAnimClip);
+		mGltfModel->setAnimationFrame(mRenderData.rdAnimClip, mRenderData.rdAnimTimePosition);
+	}
+
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
 	
 	mGltfModel->uploadVertexBuffers();
-	mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
+	//mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
 	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw(mGltfShader);
 

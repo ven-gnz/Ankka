@@ -85,7 +85,7 @@ private:
 	
 	std::shared_ptr<OGLMesh> mSkeletonMesh = nullptr;
 
-	std::vector<GltfAnimationClip> mAnimClips{};
+	std::vector<std::shared_ptr<GltfAnimationClip>> mAnimClips{};
 	void getAnimations();
 	
 
