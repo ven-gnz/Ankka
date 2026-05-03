@@ -532,7 +532,6 @@ void GltfModel::draw(Shader s) {
 		}
 
 		
-
 		mTex.bind();
 		glBindVertexArray(mVAO);
 		//s.setM4_Uniform("model", modelMatrix());
