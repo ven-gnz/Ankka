@@ -25,11 +25,15 @@ mat2x4 getJointTransform(ivec4 joints, vec4 weights)
 	mat2x4 dq1 = jointDQs[joints.y];
 	mat2x4 dq2 = jointDQs[joints.z];
 	mat2x4 dq3 = jointDQs[joints.w];
+	
+//	weights.y *= sign(dot(dq0[0], dq1[0]));
+//	weights.z *= sign(dot(dq0[0], dq2[0]));
+//	weights.w *= sign(dot(dq0[0], dq3[0]));
 
-	weights.y *= sign(dot(dq0[0], dq1[0]));
-	weights.z *= sign(dot(dq0[0], dq2[0]));
-	weights.w *= sign(dot(dq0[0], dq3[0]));
-
+	// on the off chance that the sign is zero
+	weights.y *= (dot(dq0[0], dq1[0]) < 0.0 ? -1.0 : 1.0);
+	weights.z *= (dot(dq0[0], dq2[0]) < 0.0 ? - 1.0 : 1.0);
+	weights.w *= (dot(dq0[0], dq3[0]) < 0.0 ? -1.0 : 1.0);
 	mat2x4 result =
 		weights.x * dq0 +
 		weights.y * dq1 +

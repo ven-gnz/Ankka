@@ -82,7 +82,7 @@ void GltfAnimationChannel::loadChannelData(
 
 glm::vec3 GltfAnimationChannel::getTranslation(float time)
 {
-	if (mTranslations.size() == 0) return glm::vec3(1.0f);
+	if (mTranslations.size() == 0) return glm::vec3(0.0f);
 
 	if (time < mTimings.at(0)) return mTranslations.at(0);
 	if (time > mTimings.at(mTimings.size() - 1)) return mTranslations.at(mTranslations.size() - 1);
@@ -238,11 +238,9 @@ glm::quat GltfAnimationChannel::getRotation(float time)
 		glm::quat prevRotate = mRotations.at(prevTimeIndex);
 		glm::quat nextRotate = mRotations.at(nextTimeIndex);
 		finalRotate = glm::slerp(prevRotate, nextRotate, interpolatedTime);
-		
-	}
-								   break;
-	case EInterpolationType::CUBICSPLINE :
-	{
+		break;
+		}
+	case EInterpolationType::CUBICSPLINE : {
 
 		float deltaTime = mTimings.at(nextTimeIndex) - mTimings.at(prevTimeIndex);
 		glm::quat prevTangent = deltaTime * mRotations.at(prevTimeIndex * 3 + 2);
@@ -261,8 +259,8 @@ glm::quat GltfAnimationChannel::getRotation(float time)
 			(interpolatedTimeCub - 2 * interpolatedTimeSq + interpolatedTime) * prevTangent +
 			(-2 * interpolatedTimeCub + 3 * interpolatedTimeSq) * nextPoint +
 			(interpolatedTimeCub - interpolatedTimeSq) * nextTangent;
-	}
-	break;							 
+		break;
+		}
 	}
 	return finalRotate;
 

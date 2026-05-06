@@ -475,6 +475,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	int rootNode = mModel->scenes.at(0).nodes.at(0);
 	mRootNode = GltfNode::createRoot(rootNode);
 	mNodeList.resize(nodeCount);
+	mNodeList.at(rootNode) = mRootNode;
 	
 	getNodeData(mRootNode, glm::mat4(1.0f));
 	getNodes(mRootNode);
@@ -642,7 +643,7 @@ void GltfModel::updateJointMatricesAndQuats(std::shared_ptr<GltfNode> treeNode)
 	mJointMatrices.at(mNodeToJoint.at(nodeNum)) =
 		treeNode->getNodeMatrix() * mInverseBindMatrices.at(mNodeToJoint.at(nodeNum));
 
-
+	
 	glm::quat orientation;
 	glm::vec3 scale;
 	glm::vec3 translation;
