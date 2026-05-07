@@ -428,23 +428,23 @@ FodyWeavers.xsd
 *.msp
 
 
-external/**/*.h
-external/**/*.hpp
-external/**/*.c
-external/**/*.cpp
-external/**/*.dll
-external/**/*.lib
-external/**/*.inl
-external/**/*.cppm
-external/imgui/
+#external/**/*.h
+#external/**/*.hpp
+#external/**/*.c
+#external/**/*.cpp
+#external/**/*.dll
+#external/**/*.lib
+#external/**/*.inl
+#external/**/*.cppm
+#external/imgui/
 
-assets/*
-Ankka/assets/*
-Ankka/tex/*
+#assets/*
+#Ankka/assets/*
+#Ankka/tex/*
 
-external/**/copying.txt
-!external/**/CMakeLists.txt
+#external/**/copying.txt
+#!external/**/CMakeLists.txt
 
 
 
-includes/STB
+#includes/STB
