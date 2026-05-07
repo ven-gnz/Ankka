@@ -25,11 +25,15 @@ mat2x4 getJointTransform(ivec4 joints, vec4 weights)
 	mat2x4 dq1 = jointDQs[joints.y];
 	mat2x4 dq2 = jointDQs[joints.z];
 	mat2x4 dq3 = jointDQs[joints.w];
+	
+//	weights.y *= sign(dot(dq0[0], dq1[0]));
+//	weights.z *= sign(dot(dq0[0], dq2[0]));
+//	weights.w *= sign(dot(dq0[0], dq3[0]));
 
-	weights.y *= sign(dot(dq0[0], dq1[0]));
-	weights.z *= sign(dot(dq0[0], dq2[0]));
-	weights.w *= sign(dot(dq0[0], dq3[0]));
-
+	// on the off chance that the sign is zero
+	weights.y *= (dot(dq0[0], dq1[0]) < 0.0 ? -1.0 : 1.0);
+	weights.z *= (dot(dq0[0], dq2[0]) < 0.0 ? - 1.0 : 1.0);
+	weights.w *= (dot(dq0[0], dq3[0]) < 0.0 ? -1.0 : 1.0);
 	mat2x4 result =
 		weights.x * dq0 +
 		weights.y * dq1 +
@@ -50,22 +54,22 @@ mat4 getSkinMat() {
   vec4 t = bone[1]; // translation
 
   return mat4(
-      1.0 - (2.0 * r.y * r.y) - (2.0 * r.z * r.z),
-            (2.0 * r.x * r.y) + (2.0 * r.w * r.z),
-            (2.0 * r.x * r.z) - (2.0 * r.w * r.y),
-      0.0,
+      1.0 - 2.0 *(r.y * r.y + r.z * r.z),
+	  2.0 * (r.x * r.y + r.z * r.w),
+	  2.0 * (r.x * r.z - r.y * r.w),
+	  0.0,
+	  
+	  2.0 * (r.x * r.y - r.z * r.w),
+	  1.0 - 2.0 * (r.x * r.x + r.z * r.z),
+	  2.0 * (r.y * r.z + r.x * r.w),
+	  0.0,
 
-            (2.0 * r.x * r.y) - (2.0 * r.w * r.z),
-      1.0 - (2.0 * r.x * r.x) - (2.0 * r.z * r.z),
-            (2.0 * r.y * r.z) + (2.0 * r.w * r.x),
-      0.0,
+	  2.0 * (r.x * r.z + r.y * r.w),
+	  2.0 * (r.y * r.z - r.x * r.w),
+	  1.0 - 2.0 * (r.x * r.x + r.y * r.y),
+	  0.0,
 
-            (2.0 * r.x * r.z) + (2.0 * r.w * r.y),
-            (2.0 * r.y * r.z) - (2.0 * r.w * r.x),
-      1.0 - (2.0 * r.x * r.x) - (2.0 * r.y * r.y),
-      0.0,
-
-      2.0 * (-t.w * r.x + t.x * r.w - t.y * r.z + t.z * r.y),
+	  2.0 * (-t.w * r.x + t.x * r.w - t.y * r.z + t.z * r.y),
       2.0 * (-t.w * r.y + t.x * r.z + t.y * r.w - t.z * r.x),
       2.0 * (-t.w * r.z - t.x * r.y + t.y * r.x + t.z * r.w),
       1);
@@ -75,8 +79,10 @@ mat4 getSkinMat() {
 void main()
 {
 
-	gl_Position = projection * view * model * getSkinMat() * vec4(aPos, 1.0);
-	normal = aNormal;
+	mat4 skinMat = getSkinMat();
+	gl_Position = projection * view * skinMat * vec4(aPos, 1.0);
+	normal = vec3(transpose(inverse(skinMat)) * vec4(aNormal, 1.0));
+
 	texCoord = aTexCoord;
 
 }

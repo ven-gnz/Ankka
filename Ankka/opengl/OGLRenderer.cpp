@@ -171,7 +171,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mUniformBuffer.init(2 * sizeof(glm::mat4));
 	mShaderStorageBuffer.init(42 * sizeof(glm::mat4));
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
 	mRenderData.rdWidth = width;
@@ -182,38 +182,6 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModels.reserve(3 * sizeof(GltfModel));
 
 	mGltfModel = std::make_shared<GltfModel>();
-	//mGltfModel1 = std::make_shared<GltfModel>();
-
-
-	//std::string modelFileName1 = "assets/fox.glb";
-	//std::string modelTexFileName1 = "";
-	//
-	//if (!mGltfModel1->loadModel(mRenderData, modelFileName1, modelTexFileName1))
-	//{
-	//	return false;
-	//}
-
-	//size_t modelJointDualQuatBufferSize1 = mGltfModel1->getJointDualQuatsSize() * sizeof(glm::mat2x4);
-	//mGltfDualQuatSSBuffer1.init(modelJointDualQuatBufferSize1);
-	//Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize1);
-
-	//mGltfModel1->uploadVertexBuffers();
-
-	//mGltfModel1->modelMatrix() = glm::translate(glm::mat4(1.0), glm::vec3(3.0, 0.0, 0.0));
-	//mGltfModel1->modelMatrix() = glm::scale(mGltfModel1->modelMatrix(), glm::vec3(0.02f));
-
-	//mGltfModel2 = std::make_shared<GltfModel>();
-	//std::string modelFileName2 = "assets/CesiumMilkTruck.glb";
-	//std::string modelTexFileName2 = "";
-	//
-	//if (!mGltfModel2->loadModel(mRenderData, modelFileName2, modelTexFileName2))
-	//{
-	//	return false;
-	//}
-
-	//size_t modelJointDualQuatBufferSize2 = mGltfModel2->getJointDualQuatsSize() * sizeof(glm::mat2x4);
-	//mGltfDualQuatSSBuffer2.init(modelJointDualQuatBufferSize2);
-	//Logger::log(1, "%s : gltf joint dual quaternions shader storage buffer (size %i bytes) sucessfully created\n", __FUNCTION__, modelJointDualQuatBufferSize2);
 
 
 
@@ -229,7 +197,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
 
 	
-	mGltfModel->uploadVertexBuffers();
+	//mGltfModel->uploadVertexBuffers();
 	mGltfModel->uploadIndexBuffer();
 	
 	
@@ -291,25 +259,31 @@ void OGLRenderer::draw()
 	mUniformBuffer.uploadUboData(renderMatrices, 0);
 	renderMatrices.clear();
 
+	mRenderData.rdClipName = mGltfModel->getClipName(mRenderData.rdAnimClip);
+
+	if (mRenderData.rdPlayAnimation)
+	{
+		mGltfModel->playAnimation(mRenderData.rdAnimClip,
+			mRenderData.rdAnimSpeed);
+	}
+	else
+	{
+		mRenderData.rdAnimEndTime = mGltfModel->getAnimationEndTime(mRenderData.rdAnimClip);
+		mGltfModel->setAnimationFrame(mRenderData.rdAnimClip, mRenderData.rdAnimTimePosition);
+	}
+
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
+
+	if (mModelUploadRequired) {
+		mGltfModel->uploadVertexBuffers();
+		mModelUploadRequired = false;
+	}
 	
-	mGltfModel->uploadVertexBuffers();
-	mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
-	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
+	//mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
+	//mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw(mGltfShader);
-	
 
-
-	//mGltfDualQuatSSBuffer1.uploadSsboData(mGltfModel1->getJointDualQuats(), 2);
-	//mGltfModel1->uploadVertexBuffers();
-	//mShaderStorageBuffer1.uploadSsboData(mGltfModel1->getJointMatrices(), 1);
-	//mGltfShader.setM4_Uniform("model", mGltfModel1->modelMatrix());
-	//mGltfModel1->draw(mGltfShader);
-
-	//mGltfModel2->uploadVertexBuffers();
-	////mGltfShader.setM4_Uniform("model", mGltfModel2->modelMatrix());
-	//mGltfModel2->draw(mGltfShader);
 	
 	mFramebuffer.unbind();
 
