@@ -22,7 +22,7 @@ Now following the book more closely in order to finish in timely manner ie over 
 
 More sophisticated glTF loading on the roadmap after finishing the book or as a separate effort from the main branch.
 
+ #### Milestone update : 07.05.2026
 
 
-
-
+<img width=400 height=400 alt="animated gif of a woman running" src="progress.gif">
