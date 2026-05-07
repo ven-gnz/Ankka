@@ -513,7 +513,6 @@ void GltfModel::drawNode(std::shared_ptr<GltfNode> node, glm::mat4 parentMatrix,
 
 void GltfModel::draw(Shader s) {
 
-	//s.setM4_Uniform("model", modelMatrix());
 	const tinygltf::Primitive& primitives = mModel->meshes.at(0).primitives.at(0);
 
 
@@ -535,7 +534,6 @@ void GltfModel::draw(Shader s) {
 		
 		mTex.bind();
 		glBindVertexArray(mVAO);
-		//s.setM4_Uniform("model", modelMatrix());
 		glDrawElements(drawMode, indexAccessor.count, indexAccessor.componentType, nullptr);
 		glBindVertexArray(0);
 		mTex.unbind();

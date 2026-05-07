@@ -74,6 +74,7 @@ private:
 	bool old_VSync = true;
 
 	bool isMove = false;
+	bool mModelUploadRequired = true;
 
 	OGLRenderData mRenderData{};
 	Raycaster rc{};

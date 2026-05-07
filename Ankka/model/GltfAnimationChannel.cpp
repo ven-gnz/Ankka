@@ -1,4 +1,4 @@
-#define GLM_ENABLE_EXPERIMENTAL
+
 #include <model/GltfAnimationChannel.h>
 
 

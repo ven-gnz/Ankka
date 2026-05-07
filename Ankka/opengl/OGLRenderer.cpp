@@ -274,10 +274,14 @@ void OGLRenderer::draw()
 
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
+
+	if (mModelUploadRequired) {
+		mGltfModel->uploadVertexBuffers();
+		mModelUploadRequired = false;
+	}
 	
-	mGltfModel->uploadVertexBuffers();
 	//mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
-	mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
+	//mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw(mGltfShader);
 
 	
