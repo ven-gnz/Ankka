@@ -62,7 +62,7 @@ void GltfAnimationChannel::loadChannelData(
 		std::vector<glm::vec3> translations;
 		translations.resize(outputAccessor.count);
 		std::memcpy(translations.data(),
-			&outputBuffer.data.at(0) + outputBufferView.byteLength,
+			&outputBuffer.data.at(0) + outputBufferView.byteOffset,
 			outputBufferView.byteLength);
 		setTranslations(translations);
 
