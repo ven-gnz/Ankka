@@ -264,12 +264,15 @@ void OGLRenderer::draw()
 	if (mRenderData.rdPlayAnimation)
 	{
 		mGltfModel->playAnimation(mRenderData.rdAnimClip,
-			mRenderData.rdAnimSpeed);
+			mRenderData.rdAnimSpeed, mRenderData.rdAnimBlendFactor);
 	}
 	else
 	{
 		mRenderData.rdAnimEndTime = mGltfModel->getAnimationEndTime(mRenderData.rdAnimClip);
-		mGltfModel->setAnimationFrame(mRenderData.rdAnimClip, mRenderData.rdAnimTimePosition);
+		mGltfModel->blendAnimationFrame(
+			mRenderData.rdAnimClip,
+			mRenderData.rdAnimTimePosition,
+			mRenderData.rdAnimBlendFactor);
 	}
 
 

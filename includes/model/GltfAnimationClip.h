@@ -19,6 +19,9 @@ public:
 		std::vector<std::shared_ptr<GltfNode>> nodes,
 		float time);
 
+	void blendAnimationFrame(
+		std::vector<std::shared_ptr<GltfNode>> nodes, float time, float blendFactor);
+
 	float getClipEndTime();
 	std::string getClipName();
 

@@ -39,7 +39,8 @@ public:
 		const tinygltf::Buffer& buffer,
 		glm::vec3& maxi);
 
-	void playAnimation(int animNum, float speedDivider);
+	void playAnimation(int animNum, float speedDivider, float blendFactor);
+	void blendAnimationFrame(int animNum, float time, float blenFactor);
 	void setAnimationFrame(int animNumber, float time);
 	float getAnimationEndTime(int animNum);
 	std::string getClipName(int animNum);

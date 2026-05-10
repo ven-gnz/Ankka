@@ -599,15 +599,22 @@ void GltfModel::getAnimations()
 
 void GltfModel::playAnimation(
 	int animNum,
-	float speedDivider)
+	float speedDivider, float blendFactor)
 {
 	double currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(
 		std::chrono::steady_clock::now().time_since_epoch()).count();
 
-	setAnimationFrame(animNum,
+	blendAnimationFrame(animNum,
 		std::fmod(currentTime / 1000.0 * speedDivider,
-			mAnimClips.at(animNum)->getClipEndTime()));
+			mAnimClips.at(animNum)->getClipEndTime()),
+		blendFactor);
 
+}
+
+void GltfModel::blendAnimationFrame(int animNum, float time, float blendFactor)
+{
+	mAnimClips.at(animNum)->blendAnimationFrame(mNodeList, time, blendFactor);
+	updateNodesMatrices(mRootNode, glm::mat4(1.0f));
 }
 
 void GltfModel::setAnimationFrame(int animNum, float time)
