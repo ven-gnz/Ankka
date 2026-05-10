@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include<algorithm>
 
 class GltfNode {
 
@@ -25,7 +26,15 @@ public:
 
 	void printTree();
 
+	void blendScale(glm::vec3 scale, float blendFactor);
+	void blendTranslation(glm::vec3 translation, float blendFactor);
+	void blendRotation(glm::quat rotation, float blendFactor);
+
 private:
+
+	glm::vec3 mBlendScale = glm::vec3(1.0f);
+	glm::vec3 mBlendTranslation = glm::vec3(0.0f);
+	glm::quat mBlendRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
 	int mNodeNum = 0;
 	std::string mNodeName;
