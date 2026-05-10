@@ -36,6 +36,14 @@ struct OGLRenderData
 	float rdAnimSpeed = 1.0f;
 	float rdAnimTimePosition = 0.0f;
 	float rdAnimEndTime = 0.0f;
+
+	float rdAnimBlendFactor = 1.0f;
+
+	bool rdCrossBlending = false;
+	int rdCrossBlendDestAnimClip = 0;
+	std::string rdCrossBlendDestClipName = "None";
+	float rdAnimCrossBlendFactor = 0.0f;
+
 };
 
 struct OGLVertex

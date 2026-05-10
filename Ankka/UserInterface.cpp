@@ -112,38 +112,51 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 	ImGui::SameLine();
 	ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());
 
-	if (ImGui::CollapsingHeader("glTF Animation"))
-	{
-		ImGui::Text("Clip No");
+	ImGuiSliderFlags flags = ImGuiSliderFlags_ClampOnInput;
+
+	if (ImGui::CollapsingHeader("glTF Animation Blending")) {
+		ImGui::Checkbox("Blending Type:", &renderData.rdCrossBlending);
 		ImGui::SameLine();
-		ImGui::SliderInt("##Clip", &renderData.rdAnimClip, 0, renderData.rdAnimClipSize - 1);
+		if (renderData.rdCrossBlending) {
+			ImGui::Text("Cross");
+		}
+		else {
+			ImGui::Text("Single");
+		}
 
-		ImGui::Text("Clip Name: %s", renderData.rdClipName.c_str());
-
-		ImGui::Checkbox("Play Animation", &renderData.rdPlayAnimation);
-
-		if (!renderData.rdPlayAnimation) {
+		if (renderData.rdCrossBlending) {
 			ImGui::BeginDisabled();
 		}
-		ImGui::Text("Speed  ");
+
+		ImGui::Text("Blend Factor");
 		ImGui::SameLine();
-		ImGui::SliderFloat("##ClipSpeed", &renderData.rdAnimSpeed, 0.0f, 2.0f);
-		if (!renderData.rdPlayAnimation) {
+		ImGui::SliderFloat("##BlendFactor", &renderData.rdAnimBlendFactor, 0.0f, 1.0f, "%.3f",
+			flags);
+
+		if (renderData.rdCrossBlending) {
 			ImGui::EndDisabled();
 		}
 
-		if (renderData.rdPlayAnimation) {
+		if (!renderData.rdCrossBlending) {
 			ImGui::BeginDisabled();
 		}
-		ImGui::Text("Timepos");
-		ImGui::SameLine();
-		ImGui::SliderFloat("##ClipPos", &renderData.rdAnimTimePosition, 0.0f, renderData.rdAnimEndTime);
 
-		if (renderData.rdPlayAnimation) {
+		ImGui::Text("Dest Clip   ");
+		ImGui::SameLine();
+		ImGui::SliderInt("##DestClip", &renderData.rdCrossBlendDestAnimClip, 0,
+			renderData.rdAnimClipSize - 1, "%d", flags);
+
+		ImGui::Text("Dest Clip Name: %s", renderData.rdCrossBlendDestClipName.c_str());
+
+		ImGui::Text("Cross Blend ");
+		ImGui::SameLine();
+		ImGui::SliderFloat("##CrossBlendFactor", &renderData.rdAnimCrossBlendFactor, 0.0f, 1.0f,
+			"%.3f", flags);
+
+		if (!renderData.rdCrossBlending) {
 			ImGui::EndDisabled();
 		}
 	}
-
 
 	ImGui::End();
 }

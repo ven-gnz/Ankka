@@ -39,12 +39,17 @@ public:
 		const tinygltf::Buffer& buffer,
 		glm::vec3& maxi);
 
-	void playAnimation(int animNum, float speedDivider);
+	void playAnimation(int animNum, float speedDivider, float blendFactor);
+	void blendAnimationFrame(int animNum, float time, float blenFactor);
 	void setAnimationFrame(int animNumber, float time);
 	float getAnimationEndTime(int animNum);
 	std::string getClipName(int animNum);
 
+	void playAnimation(int sourceAnimNum, int destAnimNum, float speedDivider, float blendFactor);
+	void crossBlendAnimationFrame(int sourceAnimNumber, int destAnimNumber, float time, float blendFactor);
+	void resetNodeData();
 private:
+	void resetNodeData(std::shared_ptr<GltfNode> treenode, glm::mat4 parentNodeMatrix);
 	void createVertexBuffers();
 	void createIndexBuffer();
 	int getTriangleCount();
