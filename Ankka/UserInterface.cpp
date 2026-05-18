@@ -153,10 +153,27 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 		ImGui::SliderFloat("##CrossBlendFactor", &renderData.rdAnimCrossBlendFactor, 0.0f, 1.0f,
 			"%.3f", flags);
 
+		
+
+		ImGui::Checkbox("Additive Blending", &renderData.rdAdditiveBlending);
+
+		if (!renderData.rdAdditiveBlending) {
+			ImGui::BeginDisabled();
+		}
+		ImGui::Text("Split Node  ");
+		ImGui::SameLine();
+		ImGui::SliderInt("##SplitNode", &renderData.rdSkelSplitNode, 0,
+			renderData.rdModelNodeCount - 1, "%d", flags);
+		ImGui::Text("Split Node Name: %s", renderData.rdSkelSplitNodeName.c_str());
+
+		if (!renderData.rdAdditiveBlending) {
+			ImGui::EndDisabled();
+		}
 		if (!renderData.rdCrossBlending) {
 			ImGui::EndDisabled();
 		}
 	}
+
 
 	ImGui::End();
 }
