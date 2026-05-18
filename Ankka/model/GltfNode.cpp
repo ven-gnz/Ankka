@@ -37,6 +37,11 @@ void GltfNode::setNodeName(std::string name)
 	mNodeName = name;
 }
 
+std::string GltfNode::getNodeName()
+{
+	return mNodeName;
+}
+
 void GltfNode::blendScale(glm::vec3 scale, float blendFactor)
 {
 	float factor = std::clamp(blendFactor, 0.0f, 1.0f);

@@ -44,11 +44,20 @@ public:
 	void setAnimationFrame(int animNumber, float time);
 	float getAnimationEndTime(int animNum);
 	std::string getClipName(int animNum);
+	void updateAdditiveMask(std::shared_ptr<GltfNode> treeNode, int splitNodeNum);
 
 	void playAnimation(int sourceAnimNum, int destAnimNum, float speedDivider, float blendFactor);
 	void crossBlendAnimationFrame(int sourceAnimNumber, int destAnimNumber, float time, float blendFactor);
 	void resetNodeData();
+
+	void setSkeletonSplitNode(int nodeNum);
+	std::string getnodeName(int nodeNum);
+
 private:
+
+	std::vector<bool> mAdditiveAnimationMask{};
+	std::vector<bool> mInvertedAdditiveAnimationMask{};
+
 	void resetNodeData(std::shared_ptr<GltfNode> treenode, glm::mat4 parentNodeMatrix);
 	void createVertexBuffers();
 	void createIndexBuffer();

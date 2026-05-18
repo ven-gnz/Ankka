@@ -87,6 +87,7 @@ private:
 	UserInterface mUserInterface{};
 
 	Timer mUIGenerateTimer{};
+	Timer mFrameTimer{};
 
 	Shader mGltfShader{};
 	std::shared_ptr<GltfModel> mGltfModel = nullptr;

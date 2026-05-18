@@ -44,6 +44,12 @@ struct OGLRenderData
 	std::string rdCrossBlendDestClipName = "None";
 	float rdAnimCrossBlendFactor = 0.0f;
 
+	bool rdAdditiveBlending = false;
+	int rdSkelSplitNode = 0;
+	std::string rdSkelSplitNodeName = "None";
+
+	int rdModelNodeCount = 0;
+
 };
 
 struct OGLVertex

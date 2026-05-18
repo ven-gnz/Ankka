@@ -29,6 +29,7 @@ public:
 	void blendScale(glm::vec3 scale, float blendFactor);
 	void blendTranslation(glm::vec3 translation, float blendFactor);
 	void blendRotation(glm::quat rotation, float blendFactor);
+	std::string getNodeName();
 
 private:
 

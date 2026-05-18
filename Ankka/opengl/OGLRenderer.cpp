@@ -199,8 +199,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	
 	//mGltfModel->uploadVertexBuffers();
 	mGltfModel->uploadIndexBuffer();
-	
-	
+	mRenderData.rdSkelSplitNode = mRenderData.rdModelNodeCount - 1;
+	mFrameTimer.start();
 	return true;
 
 }
@@ -262,13 +262,29 @@ void OGLRenderer::draw()
 	mRenderData.rdClipName = mGltfModel->getClipName(mRenderData.rdAnimClip);
 	mRenderData.rdCrossBlendDestClipName = mGltfModel->getClipName(mRenderData.rdCrossBlendDestAnimClip);
 	static bool blendingChanged = mRenderData.rdCrossBlending;
-
-	if (!blendingChanged != mRenderData.rdCrossBlending)
-	{
+	if (blendingChanged != mRenderData.rdCrossBlending) {
 		blendingChanged = mRenderData.rdCrossBlending;
+		if (!mRenderData.rdCrossBlending) {
+			mRenderData.rdAdditiveBlending = false;
+		}
 		mGltfModel->resetNodeData();
 	}
-
+	static bool additiveBlendingChanged = mRenderData.rdAdditiveBlending;
+	if (additiveBlendingChanged != mRenderData.rdAdditiveBlending) {
+		additiveBlendingChanged = mRenderData.rdAdditiveBlending;
+		if (!mRenderData.rdAdditiveBlending) {
+			mRenderData.rdSkelSplitNode = mRenderData.rdModelNodeCount - 1;
+		}
+		mGltfModel->resetNodeData();
+	}
+	static int skelSplitNode = mRenderData.rdSkelSplitNode;
+	if (skelSplitNode != mRenderData.rdSkelSplitNode) {
+		mGltfModel->setSkeletonSplitNode(mRenderData.rdSkelSplitNode);
+		mRenderData.rdSkelSplitNodeName = mGltfModel->getnodeName(mRenderData.rdSkelSplitNode);
+		skelSplitNode = mRenderData.rdSkelSplitNode;
+		mGltfModel->resetNodeData();
+	}
+	
 	if (mRenderData.rdPlayAnimation)
 	{
 		if (mRenderData.rdCrossBlending)
