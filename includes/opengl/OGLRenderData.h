@@ -5,6 +5,23 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
+enum class skinningMode {
+	linear = 0,
+	dualQuat
+};
+
+enum class blendMode
+{
+	fadeinout = 0,
+	crossfade,
+	additive
+};
+
+enum class replayDirection {
+	forward = 0,
+	backward
+};
+
 struct OGLRenderData
 {
 	GLFWwindow *rdWindow = nullptr;
@@ -29,8 +46,13 @@ struct OGLRenderData
 	float rdTickDiff = 0.0f;
 	glm::vec3 rdCameraWorldPosition = glm::vec3(3.5, 2.5, 2.5);
 
+	skinningMode rdGPUDualQuatVertexSkinning = skinningMode::linear;
+	blendMode rdBlendingMode = blendMode::fadeinout;
+	replayDirection rdAnimationPlayDirection = replayDirection::forward;
+
 	bool rdPlayAnimation = true;
-	std::string rdClipName = "None";
+	//std::string rdClipName = "None";
+	std::vector<std::string> rdClipNames{};
 	int rdAnimClip = 0;
 	int rdAnimClipSize = 0;
 	float rdAnimSpeed = 1.0f;
@@ -39,14 +61,13 @@ struct OGLRenderData
 
 	float rdAnimBlendFactor = 1.0f;
 
-	bool rdCrossBlending = false;
 	int rdCrossBlendDestAnimClip = 0;
-	std::string rdCrossBlendDestClipName = "None";
+	//std::string rdCrossBlendDestClipName = "None";
 	float rdAnimCrossBlendFactor = 0.0f;
 
-	bool rdAdditiveBlending = false;
 	int rdSkelSplitNode = 0;
-	std::string rdSkelSplitNodeName = "None";
+	//std::string rdSkelSplitNodeName = "None";
+	std::vector<std::string> rdSkelSplitNodeNames{};
 
 	int rdModelNodeCount = 0;
 

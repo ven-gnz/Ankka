@@ -13,6 +13,7 @@ void UserInterface::init(OGLRenderData& renderData)
 	ImGui_ImplGlfw_InitForOpenGL(renderData.rdWindow, true);
 	const char* glslVersion = "#version 460 core";
 	ImGui_ImplOpenGL3_Init(glslVersion);
+    mFPSValues.resize(mNumFPSValues);
 }
 
 void UserInterface::cleanup()
@@ -30,6 +31,20 @@ static std::string trim_float(float f, int l)
 
 void UserInterface::createFrame(OGLRenderData& renderData)
 {
+
+    static double updateTime = 0.0;
+    if (updateTime < 0.000001)
+    {
+        updateTime = ImGui::GetTime();
+    }
+    static int fpsOffset = 0;
+
+    while (updateTime < ImGui::GetTime())
+    {
+        mFPSValues.at(fpsOffset) = mFramesPerSecond;
+        fpsOffset = ++fpsOffset & mNumFPSValues;
+        updateTime += 1.0 / 30.0;
+    }
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
@@ -44,36 +59,44 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 		newFps = 1.0f / renderData.rdFrameTime;
 	}
 
-	framesPerSecond = (averagingAlpha * framesPerSecond) + (1.0f - averagingAlpha) * newFps;
+    mFramesPerSecond = (averagingAlpha * mFramesPerSecond) + (1.0f - averagingAlpha) * newFps;
 
-	ImGui::Text("FPS:");
-	ImGui::SameLine();
-	ImGui::Text(trim_float(framesPerSecond, 4).c_str());
-	ImGui::Separator();
+    ImGui::BeginGroup();
+    ImGui::Text("FPS:");
+    ImGui::SameLine();
+    ImGui::Text("%s", std::to_string(mFramesPerSecond).c_str());
+    ImGui::EndGroup();
 
-	ImGui::Text("Triangles:");
-	ImGui::SameLine();
-	ImGui::Text(std::to_string(renderData.rdTriangelCount + renderData.rdGltfTriangleCount).c_str());
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        float averageFPS = 0.0f;
+        for (const auto value : mFPSValues) {
+            averageFPS += value;
+        }
+        averageFPS /= static_cast<float>(mNumFPSValues);
+        std::string fpsOverlay = "now:     " + std::to_string(mFramesPerSecond) + "\n30s avg: " + std::to_string(averageFPS);
+        ImGui::Text("FPS");
+        ImGui::SameLine();
+        ImGui::PlotLines("##FrameTimes", mFPSValues.data(), mFPSValues.size(), fpsOffset, fpsOverlay.c_str(), 0.0f, FLT_MAX,
+            ImVec2(0, 80));
+        ImGui::EndTooltip();
+    }
 
-	std::string windowDims = std::to_string(renderData.rdWidth) + "x"
-		+ std::to_string(renderData.rdHeight) + "y";
-	ImGui::Text("Window dimensions:");
-	ImGui::SameLine();
-	ImGui::Text(windowDims.c_str());
+    if (ImGui::CollapsingHeader("Info")) {
+        ImGui::Text("Triangles:");
+        ImGui::SameLine();
+        ImGui::Text("%s", std::to_string(renderData.rdTriangelCount + renderData.rdGltfTriangleCount).c_str());
 
-	std::string imgWindowPos
-		= std::to_string(static_cast<int>(ImGui::GetWindowPos().x)) + "/"
-		+ std::to_string(static_cast<int>(ImGui::GetWindowPos().y));
+        std::string windowDims = std::to_string(renderData.rdWidth) + "x" + std::to_string(renderData.rdHeight);
+        ImGui::Text("Window Dimensions:");
+        ImGui::SameLine();
+        ImGui::Text("%s", windowDims.c_str());
 
-	ImGui::Text("ImGui Window Position :");
-	ImGui::SameLine();
-	ImGui::Text(imgWindowPos.c_str());
-
-	ImGui::Text("UI Generation time:");
-	ImGui::SameLine();
-	ImGui::Text(trim_float(renderData.rdUIGenerateTime, 4).c_str());
-	ImGui::SameLine();
-	ImGui::Text("ms");
+        std::string imgWindowPos = std::to_string(static_cast<int>(ImGui::GetWindowPos().x)) + "/" + std::to_string(static_cast<int>(ImGui::GetWindowPos().y));
+        ImGui::Text("ImGui Window Position:");
+        ImGui::SameLine();
+        ImGui::Text("%s", imgWindowPos.c_str());
+    }
 
 	ImGui::Checkbox("Vsync", &renderData.isVSYNC);
 
@@ -114,68 +137,133 @@ void UserInterface::createFrame(OGLRenderData& renderData)
 
 	ImGuiSliderFlags flags = ImGuiSliderFlags_ClampOnInput;
 
-	if (ImGui::CollapsingHeader("glTF Animation Blending")) {
-		ImGui::Checkbox("Blending Type:", &renderData.rdCrossBlending);
-		ImGui::SameLine();
-		if (renderData.rdCrossBlending) {
-			ImGui::Text("Cross");
-		}
-		else {
-			ImGui::Text("Single");
-		}
+    if (ImGui::CollapsingHeader("glTF Animation")) {
+        ImGui::Checkbox("Play Animation", &renderData.rdPlayAnimation);
 
-		if (renderData.rdCrossBlending) {
-			ImGui::BeginDisabled();
-		}
+        if (!renderData.rdPlayAnimation) {
+            ImGui::BeginDisabled();
+        }
 
-		ImGui::Text("Blend Factor");
-		ImGui::SameLine();
-		ImGui::SliderFloat("##BlendFactor", &renderData.rdAnimBlendFactor, 0.0f, 1.0f, "%.3f",
-			flags);
+        ImGui::Text("Animation Direction:");
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Forward",
+            renderData.rdAnimationPlayDirection == replayDirection::forward)) {
+            renderData.rdAnimationPlayDirection = replayDirection::forward;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Backward",
+            renderData.rdAnimationPlayDirection == replayDirection::backward)) {
+            renderData.rdAnimationPlayDirection = replayDirection::backward;
+        }
 
-		if (renderData.rdCrossBlending) {
-			ImGui::EndDisabled();
-		}
+        if (!renderData.rdPlayAnimation) {
+            ImGui::EndDisabled();
+        }
 
-		if (!renderData.rdCrossBlending) {
-			ImGui::BeginDisabled();
-		}
+        ImGui::Text("Clip   ");
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##ClipCombo",
+            renderData.rdClipNames.at(renderData.rdAnimClip).c_str())) {
+            for (int i = 0; i < renderData.rdClipNames.size(); ++i) {
+                const bool isSelected = (renderData.rdAnimClip == i);
+                if (ImGui::Selectable(renderData.rdClipNames.at(i).c_str(), isSelected)) {
+                    renderData.rdAnimClip = i;
+                }
 
-		ImGui::Text("Dest Clip   ");
-		ImGui::SameLine();
-		ImGui::SliderInt("##DestClip", &renderData.rdCrossBlendDestAnimClip, 0,
-			renderData.rdAnimClipSize - 1, "%d", flags);
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
 
-		ImGui::Text("Dest Clip Name: %s", renderData.rdCrossBlendDestClipName.c_str());
+        if (renderData.rdPlayAnimation) {
+            ImGui::Text("Speed  ");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##ClipSpeed", &renderData.rdAnimSpeed, 0.0f, 2.0f, "%.3f", flags);
+        }
+        else {
+            ImGui::Text("Timepos");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##ClipPos", &renderData.rdAnimTimePosition, 0.0f,
+                renderData.rdAnimEndTime, "%.3f", flags);
+        }
+    }
 
-		ImGui::Text("Cross Blend ");
-		ImGui::SameLine();
-		ImGui::SliderFloat("##CrossBlendFactor", &renderData.rdAnimCrossBlendFactor, 0.0f, 1.0f,
-			"%.3f", flags);
+    if (ImGui::CollapsingHeader("glTF Animation Blending")) {
+        ImGui::Text("Blending Type:");
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Fade In/Out",
+            renderData.rdBlendingMode == blendMode::fadeinout)) {
+            renderData.rdBlendingMode = blendMode::fadeinout;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Crossfading",
+            renderData.rdBlendingMode == blendMode::crossfade)) {
+            renderData.rdBlendingMode = blendMode::crossfade;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Additive",
+            renderData.rdBlendingMode == blendMode::additive)) {
+            renderData.rdBlendingMode = blendMode::additive;
+        }
 
-		
+        if (renderData.rdBlendingMode == blendMode::fadeinout) {
+            ImGui::Text("Blend Factor");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##BlendFactor", &renderData.rdAnimBlendFactor, 0.0f, 1.0f, "%.3f",
+                flags);
+        }
 
-		ImGui::Checkbox("Additive Blending", &renderData.rdAdditiveBlending);
+        if (renderData.rdBlendingMode == blendMode::crossfade ||
+            renderData.rdBlendingMode == blendMode::additive) {
+            ImGui::Text("Dest Clip   ");
+            ImGui::SameLine();
+            if (ImGui::BeginCombo("##DestClipCombo",
+                renderData.rdClipNames.at(renderData.rdCrossBlendDestAnimClip).c_str())) {
+                for (int i = 0; i < renderData.rdClipNames.size(); ++i) {
+                    const bool isSelected = (renderData.rdCrossBlendDestAnimClip == i);
+                    if (ImGui::Selectable(renderData.rdClipNames.at(i).c_str(), isSelected)) {
+                        renderData.rdCrossBlendDestAnimClip = i;
+                    }
 
-		if (!renderData.rdAdditiveBlending) {
-			ImGui::BeginDisabled();
-		}
-		ImGui::Text("Split Node  ");
-		ImGui::SameLine();
-		ImGui::SliderInt("##SplitNode", &renderData.rdSkelSplitNode, 0,
-			renderData.rdModelNodeCount - 1, "%d", flags);
-		ImGui::Text("Split Node Name: %s", renderData.rdSkelSplitNodeName.c_str());
+                    if (isSelected) {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
 
-		if (!renderData.rdAdditiveBlending) {
-			ImGui::EndDisabled();
-		}
-		if (!renderData.rdCrossBlending) {
-			ImGui::EndDisabled();
-		}
-	}
+            ImGui::Text("Cross Blend ");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##CrossBlendFactor", &renderData.rdAnimCrossBlendFactor, 0.0f, 1.0f,
+                "%.3f", flags);
+        }
 
+        if (renderData.rdBlendingMode == blendMode::additive) {
+            ImGui::Text("Split Node  ");
+            ImGui::SameLine();
+            if (ImGui::BeginCombo("##SplitNodeCombo",
+                renderData.rdSkelSplitNodeNames.at(renderData.rdSkelSplitNode).c_str())) {
+                for (int i = 0; i < renderData.rdSkelSplitNodeNames.size(); ++i) {
+                    if (renderData.rdSkelSplitNodeNames.at(i).compare("(invalid)") != 0) {
+                        const bool isSelected = (renderData.rdSkelSplitNode == i);
+                        if (ImGui::Selectable(renderData.rdSkelSplitNodeNames.at(i).c_str(), isSelected)) {
+                            renderData.rdSkelSplitNode = i;
+                        }
 
-	ImGui::End();
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                }
+                ImGui::EndCombo();
+            }
+        }
+
+    }
+
+    ImGui::End();
 }
 
 void UserInterface::render()

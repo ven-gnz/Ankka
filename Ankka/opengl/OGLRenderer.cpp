@@ -259,69 +259,50 @@ void OGLRenderer::draw()
 	mUniformBuffer.uploadUboData(renderMatrices, 0);
 	renderMatrices.clear();
 
-	mRenderData.rdClipName = mGltfModel->getClipName(mRenderData.rdAnimClip);
-	mRenderData.rdCrossBlendDestClipName = mGltfModel->getClipName(mRenderData.rdCrossBlendDestAnimClip);
-	static bool blendingChanged = mRenderData.rdCrossBlending;
-	if (blendingChanged != mRenderData.rdCrossBlending) {
-		blendingChanged = mRenderData.rdCrossBlending;
-		if (!mRenderData.rdCrossBlending) {
-			mRenderData.rdAdditiveBlending = false;
-		}
-		mGltfModel->resetNodeData();
-	}
-	static bool additiveBlendingChanged = mRenderData.rdAdditiveBlending;
-	if (additiveBlendingChanged != mRenderData.rdAdditiveBlending) {
-		additiveBlendingChanged = mRenderData.rdAdditiveBlending;
-		if (!mRenderData.rdAdditiveBlending) {
+	static blendMode lastBlendMode = mRenderData.rdBlendingMode;
+	if (lastBlendMode != mRenderData.rdBlendingMode) {
+		lastBlendMode = mRenderData.rdBlendingMode;
+		if (mRenderData.rdBlendingMode != blendMode::additive) {
 			mRenderData.rdSkelSplitNode = mRenderData.rdModelNodeCount - 1;
 		}
 		mGltfModel->resetNodeData();
 	}
+
 	static int skelSplitNode = mRenderData.rdSkelSplitNode;
 	if (skelSplitNode != mRenderData.rdSkelSplitNode) {
 		mGltfModel->setSkeletonSplitNode(mRenderData.rdSkelSplitNode);
-		mRenderData.rdSkelSplitNodeName = mGltfModel->getnodeName(mRenderData.rdSkelSplitNode);
 		skelSplitNode = mRenderData.rdSkelSplitNode;
 		mGltfModel->resetNodeData();
 	}
-	
-	if (mRenderData.rdPlayAnimation)
-	{
-		if (mRenderData.rdCrossBlending)
-		{
+
+	if (mRenderData.rdPlayAnimation) {
+		if (mRenderData.rdBlendingMode == blendMode::crossfade ||
+			mRenderData.rdBlendingMode == blendMode::additive) {
 			mGltfModel->playAnimation(mRenderData.rdAnimClip,
-				mRenderData.rdCrossBlendDestAnimClip,
-				mRenderData.rdAnimSpeed,
+				mRenderData.rdCrossBlendDestAnimClip, mRenderData.rdAnimSpeed,
+				mRenderData.rdAnimCrossBlendFactor,
+				mRenderData.rdAnimationPlayDirection);
+		}
+		else {
+			mGltfModel->playAnimation(mRenderData.rdAnimClip, mRenderData.rdAnimSpeed,
+				mRenderData.rdAnimBlendFactor,
+				mRenderData.rdAnimationPlayDirection);
+		}
+	}
+	else {
+		mRenderData.rdAnimEndTime = mGltfModel->getAnimationEndTime(mRenderData.rdAnimClip);
+		if (mRenderData.rdBlendingMode == blendMode::crossfade ||
+			mRenderData.rdBlendingMode == blendMode::additive) {
+			mGltfModel->crossBlendAnimationFrame(mRenderData.rdAnimClip,
+				mRenderData.rdCrossBlendDestAnimClip, mRenderData.rdAnimTimePosition,
 				mRenderData.rdAnimCrossBlendFactor);
 		}
 		else {
-			mGltfModel->playAnimation(mRenderData.rdAnimClip,
-				mRenderData.rdAnimSpeed,
+			mGltfModel->blendAnimationFrame(mRenderData.rdAnimClip, mRenderData.rdAnimTimePosition,
 				mRenderData.rdAnimBlendFactor);
 		}
 	}
-	else
-	{
-		mRenderData.rdAnimEndTime = mGltfModel->getAnimationEndTime(mRenderData.rdAnimClip);
 
-		if (mRenderData.rdCrossBlending)
-		{
-			mGltfModel->crossBlendAnimationFrame(
-				mRenderData.rdAnimClip,
-				mRenderData.rdCrossBlendDestAnimClip,
-				mRenderData.rdAnimTimePosition,
-				mRenderData.rdAnimCrossBlendFactor
-			);
-		}
-		else
-		{
-			mGltfModel->blendAnimationFrame(
-				mRenderData.rdAnimClip,
-				mRenderData.rdAnimTimePosition,
-				mRenderData.rdAnimBlendFactor);
-		}
-		
-	}
 
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
