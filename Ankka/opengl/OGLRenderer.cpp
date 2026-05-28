@@ -90,7 +90,7 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos)
 
 void OGLRenderer::toggleVsync()
 {
-	int bool_Vsync = mRenderData.isVSYNC ? 1 : 0;
+	int bool_Vsync = old_VSync ? 1 : 0;
 	glfwSwapInterval(bool_Vsync);
 	old_VSync = bool_Vsync;
 }
@@ -100,7 +100,7 @@ void OGLRenderer::reorient_camera()
 	mRenderData.rdCameraWorldPosition = glm::vec3(3.5, 2.5, 2.5);
 	mRenderData.rdViewAzimuth = 300.0f;
 	mRenderData.rdViewElevation = -15.0f;
-	mRenderData.rdFielfOfView = 90;
+	mRenderData.rdFieldOfView = 90;
 	Logger::log(1, " re-oriented camera ");
 }
 
@@ -114,13 +114,7 @@ OGLRenderer::OGLRenderer(GLFWwindow* window) {
 
 void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 {
-	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
-	{
-		mRenderData.rdUseChangedShader = !mRenderData.rdUseChangedShader;
-		Logger::log(1, "using shader : %s\n",
-			mRenderData.rdUseChangedShader ? "changed" : "normal",
-			__FUNCTION__);
-	}
+	
 
 	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_ENTER) == GLFW_PRESS)
 	{
@@ -159,6 +153,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
+	if (!mLineShader.loadShaders("shaders/line.vert", "shaders/line.frag"))
+	{
+		Logger::log(1, "%s : cannot find shaders\n", __FUNCTION__);
+		return false;
+	}
+	mLineMesh = std::make_shared<OGLMesh>();
+
 
 	if (!mGltfShader.loadShaders("shaders/gltf_gpu_dquat.vert", "shaders/gltf_gpu_dquat.frag"))
 	{
@@ -171,7 +172,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mUniformBuffer.init(2 * sizeof(glm::mat4));
 	mShaderStorageBuffer.init(42 * sizeof(glm::mat4));
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
 	mRenderData.rdWidth = width;
@@ -179,11 +180,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mUserInterface.init(mRenderData);
 
+	
+	glLineWidth(3.0);
+	glDisable(GL_FRAMEBUFFER_SRGB);
+
 	mGltfModels.reserve(3 * sizeof(GltfModel));
 
 	mGltfModel = std::make_shared<GltfModel>();
-
-
 
 	std::string modelFilename = "assets/Woman.gltf";
 	std::string modelTexFilename = "tex/Woman.png";
@@ -200,6 +203,11 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	//mGltfModel->uploadVertexBuffers();
 	mGltfModel->uploadIndexBuffer();
 	mRenderData.rdSkelSplitNode = mRenderData.rdModelNodeCount - 1;
+
+	mRenderData.rdIkEffectorNode = 19;
+	mRenderData.rdIkRootNode = 26;
+	mGltfModel->setInverseKinematicsNodes(mRenderData.rdIkEffectorNode, mRenderData.rdIkRootNode);
+	mGltfModel->setNumIKIterations(mRenderData.rdIkIterations);
 	mFrameTimer.start();
 	return true;
 
@@ -213,7 +221,7 @@ void OGLRenderer::setSize(unsigned int width, unsigned int height)
 
 void OGLRenderer::uploadData(OGLMesh vertexData)
 {
-	mRenderData.rdTriangelCount = vertexData.vertices.size();
+	mRenderData.rdTriangleCount = vertexData.vertices.size();
 	mVertexBuffer.uploadData(vertexData);
 }
 
@@ -232,10 +240,7 @@ void OGLRenderer::draw()
 	static float prevFrameStartTime = 0.0f;
 	float frameStartTime = glfwGetTime();
 
-	if (mRenderData.isVSYNC != old_VSync)
-	{
-		toggleVsync();
-	}
+	
 
 	mFramebuffer.bind();
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
@@ -243,7 +248,7 @@ void OGLRenderer::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mProjectionMatrix = glm::perspective(
-		glm::radians(static_cast<float>(mRenderData.rdFielfOfView)),
+		glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
 		static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
 		0.01f,
 		120.0f);
@@ -256,75 +261,131 @@ void OGLRenderer::draw()
 	mViewMatrix = mCamera.getViewMatrix(mRenderData);
 	renderMatrices.push_back(mViewMatrix);
 	renderMatrices.push_back(mProjectionMatrix);
-	mUniformBuffer.uploadUboData(renderMatrices, 0);
-	renderMatrices.clear();
+	
+	
 
-	mRenderData.rdClipName = mGltfModel->getClipName(mRenderData.rdAnimClip);
-	mRenderData.rdCrossBlendDestClipName = mGltfModel->getClipName(mRenderData.rdCrossBlendDestAnimClip);
-	static bool blendingChanged = mRenderData.rdCrossBlending;
-	if (blendingChanged != mRenderData.rdCrossBlending) {
-		blendingChanged = mRenderData.rdCrossBlending;
-		if (!mRenderData.rdCrossBlending) {
-			mRenderData.rdAdditiveBlending = false;
-		}
-		mGltfModel->resetNodeData();
-	}
-	static bool additiveBlendingChanged = mRenderData.rdAdditiveBlending;
-	if (additiveBlendingChanged != mRenderData.rdAdditiveBlending) {
-		additiveBlendingChanged = mRenderData.rdAdditiveBlending;
-		if (!mRenderData.rdAdditiveBlending) {
+	static blendMode lastBlendMode = mRenderData.rdBlendingMode;
+	if (lastBlendMode != mRenderData.rdBlendingMode) {
+		lastBlendMode = mRenderData.rdBlendingMode;
+		if (mRenderData.rdBlendingMode != blendMode::additive) {
 			mRenderData.rdSkelSplitNode = mRenderData.rdModelNodeCount - 1;
 		}
 		mGltfModel->resetNodeData();
 	}
+
 	static int skelSplitNode = mRenderData.rdSkelSplitNode;
 	if (skelSplitNode != mRenderData.rdSkelSplitNode) {
 		mGltfModel->setSkeletonSplitNode(mRenderData.rdSkelSplitNode);
-		mRenderData.rdSkelSplitNodeName = mGltfModel->getnodeName(mRenderData.rdSkelSplitNode);
 		skelSplitNode = mRenderData.rdSkelSplitNode;
 		mGltfModel->resetNodeData();
 	}
+
+	static ikMode lastIkMode = mRenderData.rdIkMode;
+	if (lastIkMode != mRenderData.rdIkMode) {
+		mGltfModel->resetNodeData();
+		lastIkMode = mRenderData.rdIkMode;
+		/* clear timer */
+		if (mRenderData.rdIkMode == ikMode::off) {
+			mRenderData.rdIKTime = 0.0f;
+		}
+	}
+
+	static int numIKIterations = mRenderData.rdIkIterations;
+	if (numIKIterations != mRenderData.rdIkIterations) {
+		mGltfModel->setNumIKIterations(mRenderData.rdIkIterations);
+		mGltfModel->resetNodeData();
+		numIKIterations = mRenderData.rdIkIterations;
+	}
+
+	static int ikEffectorNode = mRenderData.rdIkEffectorNode;
+	static int ikRootNode = mRenderData.rdIkRootNode;
+	if (ikEffectorNode != mRenderData.rdIkEffectorNode ||
+		ikRootNode != mRenderData.rdIkRootNode) {
+		mGltfModel->setInverseKinematicsNodes(mRenderData.rdIkEffectorNode,
+			mRenderData.rdIkRootNode);
+		mGltfModel->resetNodeData();
+		ikEffectorNode = mRenderData.rdIkEffectorNode;
+		ikRootNode = mRenderData.rdIkRootNode;
+	}
 	
-	if (mRenderData.rdPlayAnimation)
-	{
-		if (mRenderData.rdCrossBlending)
-		{
+	if (mRenderData.rdPlayAnimation) {
+		if (mRenderData.rdBlendingMode == blendMode::crossfade ||
+			mRenderData.rdBlendingMode == blendMode::additive) {
 			mGltfModel->playAnimation(mRenderData.rdAnimClip,
-				mRenderData.rdCrossBlendDestAnimClip,
-				mRenderData.rdAnimSpeed,
+				mRenderData.rdCrossBlendDestAnimClip, mRenderData.rdAnimSpeed,
+				mRenderData.rdAnimCrossBlendFactor,
+				mRenderData.rdAnimationPlayDirection);
+		}
+		else {
+			mGltfModel->playAnimation(mRenderData.rdAnimClip, mRenderData.rdAnimSpeed,
+				mRenderData.rdAnimBlendFactor,
+				mRenderData.rdAnimationPlayDirection);
+		}
+	}
+	else {
+		mRenderData.rdAnimEndTime = mGltfModel->getAnimationEndTime(mRenderData.rdAnimClip);
+		if (mRenderData.rdBlendingMode == blendMode::crossfade ||
+			mRenderData.rdBlendingMode == blendMode::additive) {
+			mGltfModel->crossBlendAnimationFrame(mRenderData.rdAnimClip,
+				mRenderData.rdCrossBlendDestAnimClip, mRenderData.rdAnimTimePosition,
 				mRenderData.rdAnimCrossBlendFactor);
 		}
 		else {
-			mGltfModel->playAnimation(mRenderData.rdAnimClip,
-				mRenderData.rdAnimSpeed,
+			mGltfModel->blendAnimationFrame(mRenderData.rdAnimClip, mRenderData.rdAnimTimePosition,
 				mRenderData.rdAnimBlendFactor);
 		}
 	}
-	else
-	{
-		mRenderData.rdAnimEndTime = mGltfModel->getAnimationEndTime(mRenderData.rdAnimClip);
 
-		if (mRenderData.rdCrossBlending)
-		{
-			mGltfModel->crossBlendAnimationFrame(
-				mRenderData.rdAnimClip,
-				mRenderData.rdCrossBlendDestAnimClip,
-				mRenderData.rdAnimTimePosition,
-				mRenderData.rdAnimCrossBlendFactor
-			);
-		}
-		else
-		{
-			mGltfModel->blendAnimationFrame(
-				mRenderData.rdAnimClip,
-				mRenderData.rdAnimTimePosition,
-				mRenderData.rdAnimBlendFactor);
-		}
-		
+
+
+	if (mRenderData.rdIkMode == ikMode::ccd) {
+		mIKTimer.start();
+		mGltfModel->solveIKByCCD(mRenderData.rdIkTargetPos);
+		mRenderData.rdIKTime = mIKTimer.stop();
 	}
+
+
+	mLineMesh->vertices.clear();
+	mSkeletonLineIndexCount = 0;
+	if (mRenderData.rdDrawSkeleton)
+	{
+		std::shared_ptr<OGLMesh> mesh = mGltfModel->getSkeleton();
+		mSkeletonLineIndexCount += mesh->vertices.size();
+		mLineMesh->vertices.insert(mLineMesh->vertices.begin(),
+			mesh->vertices.begin(), mesh->vertices.end());
+	}
+
+	mCoordArrowsLineIndexCount = 0;
+	if (mRenderData.rdIkMode == ikMode::ccd)
+	{
+		mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
+		mCoordArrowsLineIndexCount = mCoordArrowsMesh.vertices.size();
+		std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
+			[=](auto& n)
+			{
+				n.color /= 2.0f;
+				n.position += mRenderData.rdIkTargetPos;
+			});
+
+		mLineMesh->vertices.insert(mLineMesh->vertices.end()
+			, mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
+
+	}
+
+
+
+	std::vector<glm::mat4> matrixData;
+	matrixData.push_back(mViewMatrix);
+	matrixData.push_back(mProjectionMatrix);
+	mUniformBuffer.uploadUboData(matrixData, 0);
 
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
+
+	if (mRenderData.rdDrawSkeleton ||
+		mRenderData.rdIkMode == ikMode::ccd) {
+		uploadData(*mLineMesh);
+	}
 
 	if (mModelUploadRequired) {
 		mGltfModel->uploadVertexBuffers();
@@ -334,6 +395,28 @@ void OGLRenderer::draw()
 	//mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
 	//mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw(mGltfShader);
+
+
+
+	
+
+
+
+	if (mCoordArrowsLineIndexCount > 0) {
+		mLineShader.use();
+		mVertexBuffer.bindAndDraw(GL_LINES, mSkeletonLineIndexCount, mCoordArrowsLineIndexCount);
+	}
+
+
+
+	if (mSkeletonLineIndexCount > 0) {
+		glDisable(GL_DEPTH_TEST);
+		mLineShader.use();
+		mVertexBuffer.bindAndDraw(GL_LINES, 0, mSkeletonLineIndexCount);
+		glEnable(GL_DEPTH_TEST);
+	}
+
+
 
 	
 	mFramebuffer.unbind();
