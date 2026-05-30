@@ -44,3 +44,9 @@ void VertexBuffer::draw(GLuint mode, unsigned int start, unsigned int num)
 {
 	glDrawArrays(mode, start, num);
 }
+
+void VertexBuffer::bindAndDraw(GLuint mode, unsigned int start, unsigned int num) {
+	bind();
+	glDrawArrays(mode, start, num);
+	unbind();
+}

@@ -2,8 +2,15 @@
 #include <Ankka/Logger.h>
 
 
-void GltfNode::calculateNodeMatrix(glm::mat4 parentNodeMatrix)
+void GltfNode::calculateNodeMatrix()
 {
+	calculateLocalTRSMatrix();
+	glm::mat4 parentNodeMatrix = glm::mat4(1.0f);
+	std::shared_ptr<GltfNode> pNode = mParentNode.lock();
+	if (pNode)
+	{
+		parentNodeMatrix = pNode->getNodeMatrix();
+	}
 	mNodeMatrix = parentNodeMatrix * mLocalTRSMatrix;
 }
 
@@ -28,6 +35,7 @@ void GltfNode::addChilds(std::vector<int> childNodes)
 	{
 		std::shared_ptr<GltfNode> child = std::make_shared<GltfNode>();
 		child->mNodeNum = childNode;
+		child->mParentNode = shared_from_this();
 		mChildNodes.push_back(child);
 	}
 }
@@ -116,4 +124,60 @@ int GltfNode::getNodeNum()
 glm::mat4 GltfNode::getNodeMatrix()
 {
 	return mNodeMatrix;
+}
+
+std::shared_ptr<GltfNode> GltfNode::getParentNode()
+{
+	std::shared_ptr<GltfNode> pNode = mParentNode.lock();
+	if (pNode)
+	{
+		return pNode;
+	}
+	return nullptr;
+}
+
+void GltfNode::updateNodeAndChildMatrices()
+{
+	calculateNodeMatrix();
+	for (auto& node : mChildNodes)
+	{
+		if (node)
+		{
+			node->updateNodeAndChildMatrices();
+		}
+	}
+}
+
+glm::quat GltfNode::getLocalRotation()
+{
+	return mBlendRotation;
+}
+
+glm::quat GltfNode::getGlobalRotation()
+{
+	glm::quat orientation;
+	glm::vec3 scale;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	if (!glm::decompose(mNodeMatrix, scale, orientation, translation, skew, perspective))
+	{
+		return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+	}
+	return glm::inverse(orientation);
+}
+
+glm::vec3 GltfNode::getGlobalPosition()
+{
+	glm::quat orientation;
+	glm::vec3 scale;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+
+	if (!glm::decompose(mNodeMatrix, scale, orientation, translation, skew, perspective))
+	{
+		return glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	return translation;
 }

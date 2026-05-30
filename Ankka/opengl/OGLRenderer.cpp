@@ -90,7 +90,7 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos)
 
 void OGLRenderer::toggleVsync()
 {
-	int bool_Vsync = mRenderData.isVSYNC ? 1 : 0;
+	int bool_Vsync = old_VSync ? 1 : 0;
 	glfwSwapInterval(bool_Vsync);
 	old_VSync = bool_Vsync;
 }
@@ -100,7 +100,7 @@ void OGLRenderer::reorient_camera()
 	mRenderData.rdCameraWorldPosition = glm::vec3(3.5, 2.5, 2.5);
 	mRenderData.rdViewAzimuth = 300.0f;
 	mRenderData.rdViewElevation = -15.0f;
-	mRenderData.rdFielfOfView = 90;
+	mRenderData.rdFieldOfView = 90;
 	Logger::log(1, " re-oriented camera ");
 }
 
@@ -114,13 +114,7 @@ OGLRenderer::OGLRenderer(GLFWwindow* window) {
 
 void OGLRenderer::handleKeyEvents(int key, int scancode, int action, int mods)
 {
-	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
-	{
-		mRenderData.rdUseChangedShader = !mRenderData.rdUseChangedShader;
-		Logger::log(1, "using shader : %s\n",
-			mRenderData.rdUseChangedShader ? "changed" : "normal",
-			__FUNCTION__);
-	}
+	
 
 	if (glfwGetKey(mRenderData.rdWindow, GLFW_KEY_ENTER) == GLFW_PRESS)
 	{
@@ -159,6 +153,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
+	if (!mLineShader.loadShaders("shaders/line.vert", "shaders/line.frag"))
+	{
+		Logger::log(1, "%s : cannot find shaders\n", __FUNCTION__);
+		return false;
+	}
+	mLineMesh = std::make_shared<OGLMesh>();
+
 
 	if (!mGltfShader.loadShaders("shaders/gltf_gpu_dquat.vert", "shaders/gltf_gpu_dquat.frag"))
 	{
@@ -171,7 +172,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mUniformBuffer.init(2 * sizeof(glm::mat4));
 	mShaderStorageBuffer.init(42 * sizeof(glm::mat4));
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
 	mRenderData.rdWidth = width;
@@ -179,11 +180,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mUserInterface.init(mRenderData);
 
+	
+	glLineWidth(3.0);
+	glDisable(GL_FRAMEBUFFER_SRGB);
+
 	mGltfModels.reserve(3 * sizeof(GltfModel));
 
 	mGltfModel = std::make_shared<GltfModel>();
-
-
 
 	std::string modelFilename = "assets/Woman.gltf";
 	std::string modelTexFilename = "tex/Woman.png";
@@ -200,6 +203,11 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	//mGltfModel->uploadVertexBuffers();
 	mGltfModel->uploadIndexBuffer();
 	mRenderData.rdSkelSplitNode = mRenderData.rdModelNodeCount - 1;
+
+	mRenderData.rdIkEffectorNode = 19;
+	mRenderData.rdIkRootNode = 26;
+	mGltfModel->setInverseKinematicsNodes(mRenderData.rdIkEffectorNode, mRenderData.rdIkRootNode);
+	mGltfModel->setNumIKIterations(mRenderData.rdIkIterations);
 	mFrameTimer.start();
 	return true;
 
@@ -213,7 +221,7 @@ void OGLRenderer::setSize(unsigned int width, unsigned int height)
 
 void OGLRenderer::uploadData(OGLMesh vertexData)
 {
-	mRenderData.rdTriangelCount = vertexData.vertices.size();
+	mRenderData.rdTriangleCount = vertexData.vertices.size();
 	mVertexBuffer.uploadData(vertexData);
 }
 
@@ -232,10 +240,7 @@ void OGLRenderer::draw()
 	static float prevFrameStartTime = 0.0f;
 	float frameStartTime = glfwGetTime();
 
-	if (mRenderData.isVSYNC != old_VSync)
-	{
-		toggleVsync();
-	}
+	
 
 	mFramebuffer.bind();
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
@@ -243,7 +248,7 @@ void OGLRenderer::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mProjectionMatrix = glm::perspective(
-		glm::radians(static_cast<float>(mRenderData.rdFielfOfView)),
+		glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
 		static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
 		0.01f,
 		120.0f);
@@ -307,6 +312,11 @@ void OGLRenderer::draw()
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
 
+	if (mRenderData.rdDrawSkeleton ||
+		mRenderData.rdIkMode == ikMode::ccd) {
+		uploadData(*mLineMesh);
+	}
+
 	if (mModelUploadRequired) {
 		mGltfModel->uploadVertexBuffers();
 		mModelUploadRequired = false;
@@ -315,6 +325,28 @@ void OGLRenderer::draw()
 	//mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
 	//mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
 	mGltfModel->draw(mGltfShader);
+
+
+
+	
+
+
+
+	if (mCoordArrowsLineIndexCount > 0) {
+		mLineShader.use();
+		mVertexBuffer.bindAndDraw(GL_LINES, mSkeletonLineIndexCount, mCoordArrowsLineIndexCount);
+	}
+
+
+
+	if (mSkeletonLineIndexCount > 0) {
+		glDisable(GL_DEPTH_TEST);
+		mLineShader.use();
+		mVertexBuffer.bindAndDraw(GL_LINES, 0, mSkeletonLineIndexCount);
+		glEnable(GL_DEPTH_TEST);
+	}
+
+
 
 	
 	mFramebuffer.unbind();

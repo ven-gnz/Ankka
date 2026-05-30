@@ -13,6 +13,7 @@
 #include "opengl/Shader.h"
 #include "opengl/UniformBuffer.h"
 #include "opengl/ShaderStorageBuffer.h"
+#include "opengl/CoordArrowsModel.h"
 
 #include "model/GltfModel.h"
 
@@ -86,8 +87,21 @@ private:
 
 	UserInterface mUserInterface{};
 
-	Timer mUIGenerateTimer{};
 	Timer mFrameTimer{};
+	Timer mMatrixGenerateTimer{};
+	Timer mIKTimer{};
+	Timer mUploadToVBOTimer{};
+	Timer mUploadToUBOTimer{};
+	Timer mUIGenerateTimer{};
+	Timer mUIDrawTimer{};
+
+	//Debug drawing stuffs
+	Shader mLineShader{};
+	CoordArrowsModel mCoordArrowsModel{};
+	OGLMesh mCoordArrowsMesh{};
+	std::shared_ptr<OGLMesh> mLineMesh = nullptr;
+	unsigned int mSkeletonLineIndexCount = 0;
+	unsigned int mCoordArrowsLineIndexCount = 0;
 
 	Shader mGltfShader{};
 	std::shared_ptr<GltfModel> mGltfModel = nullptr;

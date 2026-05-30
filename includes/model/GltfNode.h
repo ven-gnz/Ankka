@@ -6,11 +6,13 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include<algorithm>
+#include <glm/gtx/matrix_decompose.hpp>
 
-class GltfNode {
+class GltfNode : public std::enable_shared_from_this<GltfNode> {
 
-public:
+	public:
 	static std::shared_ptr<GltfNode> createRoot(int rootNodeNum);
+	std::shared_ptr<GltfNode> getParentNode();
 	void addChilds(std::vector<int> childNodes);
 	std::vector<std::shared_ptr<GltfNode>> getChilds();
 	int getNodeNum();
@@ -21,7 +23,7 @@ public:
 	void setRotation(glm::quat rotation);
 
 	void calculateLocalTRSMatrix();
-	void calculateNodeMatrix(glm::mat4 parentNodeMatrix);
+	void calculateNodeMatrix();
 	glm::mat4 getNodeMatrix();
 
 	void printTree();
@@ -30,6 +32,12 @@ public:
 	void blendTranslation(glm::vec3 translation, float blendFactor);
 	void blendRotation(glm::quat rotation, float blendFactor);
 	std::string getNodeName();
+
+	glm::quat getLocalRotation();
+	glm::quat getGlobalRotation();
+	glm::vec3 getGlobalPosition();
+
+	void updateNodeAndChildMatrices();
 
 private:
 
@@ -47,6 +55,7 @@ private:
 
 	glm::mat4 mLocalTRSMatrix = glm::mat4(1.0f);
 	glm::mat4 mNodeMatrix = glm::mat4(1.0f);
+	std::weak_ptr<GltfNode> mParentNode;
 	
 
 	void printNodes(std::shared_ptr<GltfNode> startNode, int indent);

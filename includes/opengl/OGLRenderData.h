@@ -33,18 +33,29 @@ struct OGLRenderData
 	unsigned int rdTriangelCount = 0;
 	unsigned int rdGltfTriangleCount = 0;
 
-	float rdFrameTime = 0.0f;
-	float rdUIGenerateTime = 0.0f;
+	int rdFieldOfView = 60;
 
-	float rdViewAzimuth = 300.0f;
-	float rdViewElevation = -15.0f;
+	float rdFrameTime = 0.0f;
+	float rdMatrixGenerateTime = 0.0f;
+	float rdIKTime = 0.0f;
+	float rdUploadToVBOTime = 0.0f;
+	float rdUploadToUBOTime = 0.0f;
+	float rdUIGenerateTime = 0.0f;
+	float rdUIDrawTime = 0.0f;
 
 	int rdMoveForward = 0;
 	int rdMoveRight = 0;
 	int rdMoveUp = 0;
 
 	float rdTickDiff = 0.0f;
-	glm::vec3 rdCameraWorldPosition = glm::vec3(3.5, 2.5, 2.5);
+
+	float rdViewAzimuth = 0.0f;
+	float rdViewElevation = 0.0f;
+	glm::vec3 rdCameraWorldPosition = glm::vec3(-0.5f, 2.5f, 6.0f);
+
+	bool rdDrawGltfModel = true;
+	bool rdDrawSkeleton = true;
+	skinningMode rdGPUDualQuatVertexSkinning = skinningMode::linear;
 
 	skinningMode rdGPUDualQuatVertexSkinning = skinningMode::linear;
 	blendMode rdBlendingMode = blendMode::fadeinout;
@@ -58,6 +69,9 @@ struct OGLRenderData
 	float rdAnimSpeed = 1.0f;
 	float rdAnimTimePosition = 0.0f;
 	float rdAnimEndTime = 0.0f;
+	int rdModelNodeCount = 0;
+
+	replayDirection rdAnimationPlayDirection = replayDirection::forward;
 
 	float rdAnimBlendFactor = 1.0f;
 
@@ -71,16 +85,9 @@ struct OGLRenderData
 
 	int rdModelNodeCount = 0;
 
-};
-
-struct OGLVertex
-{
-	glm::vec3 position;
-	glm::vec3 color;
-	glm::vec2 uv;
-};
-
-struct OGLMesh
-{
-	std::vector<OGLVertex> vertices;
+	ikMode rdIkMode = ikMode::off;
+	int rdIkIterations = 10;
+	glm::vec3 rdIkTargetPos = glm::vec3(0.0f, 3.0f, 1.0f);
+	int rdIkEffectorNode = 0;
+	int rdIkRootNode = 0;
 };

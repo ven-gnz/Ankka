@@ -11,6 +11,7 @@
 #include "model/ModelLoader.h"
 #include "model/MeshPrimitive.h"
 #include "model/GltfAnimationClip.h"
+#include "IKSolver.h"
 
 class GltfModel {
 public:
@@ -25,7 +26,7 @@ public:
 	void uploadPositionBuffer();
 	glm::mat4& modelMatrix();
 
-	std::shared_ptr<OGLMesh> getSkeleton(bool enableSkinning);
+	std::shared_ptr<OGLMesh> getSkeleton();
 	void applyCPUVertexSkinning();
 	std::vector<glm::mat4> getJointMatrices();
 	std::vector<glm::mat2x4> getJointDualQuats();
@@ -50,31 +51,34 @@ public:
 	std::string getClipName(int animNum);
 	void updateAdditiveMask(std::shared_ptr<GltfNode> treeNode, int splitNodeNum);
 
-	void playAnimation(int sourceAnimNum, int destAnimNum, float speedDivider, float blendFactor);
 	void crossBlendAnimationFrame(int sourceAnimNumber, int destAnimNumber, float time, float blendFactor);
 	void resetNodeData();
 
 	void setSkeletonSplitNode(int nodeNum);
 	std::string getnodeName(int nodeNum);
 
+	void setInverseKinematicsNodes(int effectorNodeNum, int ikChainRootNodeNum);
+	void setNumIKIterations(int iterations);
+	void solveIKByCCD(glm::vec3 target);
+
 private:
 
 	std::vector<bool> mAdditiveAnimationMask{};
 	std::vector<bool> mInvertedAdditiveAnimationMask{};
 
-	void resetNodeData(std::shared_ptr<GltfNode> treenode, glm::mat4 parentNodeMatrix);
+	void resetNodeData(std::shared_ptr<GltfNode> treenode);
 	void createVertexBuffers();
 	void createIndexBuffer();
 	int getTriangleCount();
 	ModelLoader mModelLoader{};
 
-	void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode, bool enableSkinning);
+	void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode);
 
 	void getJointData();
 	void getWeightData();
 	void getInvBindMatrices();
 	void getNodes(std::shared_ptr<GltfNode> treeNode);
-	void getNodeData(std::shared_ptr<GltfNode> treeNode, glm::mat4 parentNodeMatrix);
+	void getNodeData(std::shared_ptr<GltfNode> treeNode);
 	void drawNode(std::shared_ptr<GltfNode> node, glm::mat4 parentMatrix, Shader s);
 
 	std::vector < glm::mat2x4> mJointDualQuats{};
@@ -88,9 +92,7 @@ private:
 	
 	std::vector<glm::vec3> mAlteredPositions{};
 	std::vector<std::shared_ptr<GltfNode>> mNodeList{};
-	void updateNodesMatrices(
-		std::shared_ptr<GltfNode> node,
-		glm::mat4 parentNodeMatrix);
+	void updateNodesMatrices(std::shared_ptr<GltfNode> node);
 	void updateJointMatricesAndQuats(std::shared_ptr<GltfNode> treeNode);
 
 	std::vector<glm::vec3> mNormals{};
@@ -123,6 +125,8 @@ private:
 
 	glm::vec3 mLocalAABBmin;
 	glm::vec3 mLocalAABBmax;
+
+	IKSolver mIKSolver{};
 
 	Texture mTex{};
 	

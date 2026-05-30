@@ -1,9 +1,13 @@
 #include <string>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
+
 #include <glm/glm.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 #include "Ankka/UserInterface.h"
 
 void UserInterface::init(OGLRenderData& renderData)
@@ -16,17 +20,24 @@ void UserInterface::init(OGLRenderData& renderData)
     mFPSValues.resize(mNumFPSValues);
 }
 
-void UserInterface::cleanup()
-{
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-}
+    ImGui::CreateContext();
 
-static std::string trim_float(float f, int l)
-{
-	std::string s = std::to_string(f);
-	return s.substr(0, s.length() - l);
+    ImGui_ImplGlfw_InitForOpenGL(renderData.rdWindow, true);
+
+    const char* glslVersion = "#version 460 core";
+    ImGui_ImplOpenGL3_Init(glslVersion);
+
+    ImGui::StyleColorsDark();
+
+    /* init plot vectors */
+    mFPSValues.resize(mNumFPSValues);
+    mFrameTimeValues.resize(mNumFrameTimeValues);
+    mModelUploadValues.resize(mNumModelUploadValues);
+    mMatrixGenerationValues.resize(mNumMatrixGenerationValues);
+    mIKValues.resize(mNumIKValues);
+    mMatrixUploadValues.resize(mNumMatrixUploadValues);
+    mUiGenValues.resize(mNumUiGenValues);
+    mUiDrawValues.resize(mNumUiDrawValues);
 }
 
 void UserInterface::createFrame(OGLRenderData& renderData)
@@ -266,9 +277,13 @@ void UserInterface::createFrame(OGLRenderData& renderData)
     ImGui::End();
 }
 
-void UserInterface::render()
-{
-	ImGui::Render();
+void UserInterface::render() {
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
 
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+void UserInterface::cleanup() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
