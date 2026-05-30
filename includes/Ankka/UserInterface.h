@@ -10,10 +10,9 @@ public:
     void cleanup();
 
 private:
-	std::vector<float> mFPSValues{};
-	int mNumFPSValues = 90;
-	float mFramesPerSecond = 0.0f;
-	float averagingAlpha = 0.96f;
+    float mFramesPerSecond = 0.0f;
+    /* averaging speed */
+    float mAveragingAlpha = 0.96f;
 
     std::vector<float> mFPSValues{};
     int mNumFPSValues = 90;

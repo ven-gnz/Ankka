@@ -5,6 +5,16 @@
 #include <string>
 #include <GLFW/glfw3.h>
 
+struct OGLVertex {
+	glm::vec3 position;
+	glm::vec3 color;
+	glm::vec2 uv;
+};
+
+struct OGLMesh {
+	std::vector<OGLVertex> vertices;
+};
+
 enum class skinningMode {
 	linear = 0,
 	dualQuat
@@ -22,15 +32,18 @@ enum class replayDirection {
 	backward
 };
 
-struct OGLRenderData
-{
-	GLFWwindow *rdWindow = nullptr;
-	bool rdUseChangedShader = false;
-	bool isVSYNC = true;
-	int rdFielfOfView = 90;
-	unsigned int rdWidth = 0;
-	unsigned int rdHeight = 0;
-	unsigned int rdTriangelCount = 0;
+enum class ikMode {
+	off = 0,
+	ccd
+};
+
+struct OGLRenderData {
+	GLFWwindow* rdWindow = nullptr;
+
+	int rdWidth = 0;
+	int rdHeight = 0;
+
+	unsigned int rdTriangleCount = 0;
 	unsigned int rdGltfTriangleCount = 0;
 
 	int rdFieldOfView = 60;
@@ -57,12 +70,7 @@ struct OGLRenderData
 	bool rdDrawSkeleton = true;
 	skinningMode rdGPUDualQuatVertexSkinning = skinningMode::linear;
 
-	skinningMode rdGPUDualQuatVertexSkinning = skinningMode::linear;
-	blendMode rdBlendingMode = blendMode::fadeinout;
-	replayDirection rdAnimationPlayDirection = replayDirection::forward;
-
 	bool rdPlayAnimation = true;
-	//std::string rdClipName = "None";
 	std::vector<std::string> rdClipNames{};
 	int rdAnimClip = 0;
 	int rdAnimClipSize = 0;
@@ -75,15 +83,12 @@ struct OGLRenderData
 
 	float rdAnimBlendFactor = 1.0f;
 
+	blendMode rdBlendingMode = blendMode::fadeinout;
 	int rdCrossBlendDestAnimClip = 0;
-	//std::string rdCrossBlendDestClipName = "None";
 	float rdAnimCrossBlendFactor = 0.0f;
 
 	int rdSkelSplitNode = 0;
-	//std::string rdSkelSplitNodeName = "None";
-	std::vector<std::string> rdSkelSplitNodeNames{};
-
-	int rdModelNodeCount = 0;
+	std::vector<std::string> rdSkelNodeNames{};
 
 	ikMode rdIkMode = ikMode::off;
 	int rdIkIterations = 10;

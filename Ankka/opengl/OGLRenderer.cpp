@@ -308,6 +308,45 @@ void OGLRenderer::draw()
 		}
 	}
 
+	if (mRenderData.rdIkMode == ikMode::ccd) {
+		mIKTimer.start();
+		mGltfModel->solveIKByCCD(mRenderData.rdIkTargetPos);
+		mRenderData.rdIKTime = mIKTimer.stop();
+	}
+
+	mLineMesh->vertices.clear();
+	/* get gltTF skeleton */
+	mSkeletonLineIndexCount = 0;
+	if (mRenderData.rdDrawSkeleton) {
+		std::shared_ptr<OGLMesh> mesh = mGltfModel->getSkeleton();
+		mSkeletonLineIndexCount += mesh->vertices.size();
+		mLineMesh->vertices.insert(mLineMesh->vertices.begin(),
+			mesh->vertices.begin(), mesh->vertices.end());
+	}
+
+	/* draw coordiante arrows on target position */
+	mCoordArrowsLineIndexCount = 0;
+	if (mRenderData.rdIkMode == ikMode::ccd) {
+		mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
+		mCoordArrowsLineIndexCount = mCoordArrowsMesh.vertices.size();
+		std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
+			[=](auto& n) {
+				n.color /= 2.0f;
+				n.position += mRenderData.rdIkTargetPos;
+			});
+
+		mLineMesh->vertices.insert(mLineMesh->vertices.end(),
+			mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
+	}
+
+	mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
+
+	mUploadToUBOTimer.start();
+	std::vector<glm::mat4> matrixData;
+	matrixData.push_back(mViewMatrix);
+	matrixData.push_back(mProjectionMatrix);
+	mUniformBuffer.uploadUboData(matrixData, 0);
+
 
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
