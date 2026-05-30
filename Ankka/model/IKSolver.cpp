@@ -48,7 +48,7 @@ bool IKSolver::solveCCD(const glm::vec3 target)
 			glm::vec3 toTarget = glm::normalize(target - position);
 			glm::quat effectorToTarget = glm::rotation(toEffector, toTarget);
 
-			glm::quat localRotation = rotation * effector * glm::conjugate(rotation);
+			glm::quat localRotation = rotation * effectorToTarget * glm::conjugate(rotation);
 			glm::quat currentRotation = node->getLocalRotation();
 			node->blendRotation(currentRotation * localRotation, 1.0f);
 			node->updateNodeAndChildMatrices();
