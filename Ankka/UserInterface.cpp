@@ -10,8 +10,15 @@
 
 #include "Ankka/UserInterface.h"
 
-void UserInterface::init(OGLRenderData& renderData) {
-    IMGUI_CHECKVERSION();
+void UserInterface::init(OGLRenderData& renderData)
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui_ImplGlfw_InitForOpenGL(renderData.rdWindow, true);
+	const char* glslVersion = "#version 460 core";
+	ImGui_ImplOpenGL3_Init(glslVersion);
+    mFPSValues.resize(mNumFPSValues);
+}
 
     ImGui::CreateContext();
 
@@ -33,74 +40,37 @@ void UserInterface::init(OGLRenderData& renderData) {
     mUiDrawValues.resize(mNumUiDrawValues);
 }
 
-void UserInterface::createFrame(OGLRenderData& renderData) {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    ImGuiWindowFlags imguiWindowFlags = 0;
-    //imguiWindowFlags |= ImGuiWindowFlags_NoCollapse;
-    //imguiWindowFlags |= ImGuiWindowFlags_NoResize;
-    //imguiWindowFlags |= ImGuiWindowFlags_NoMove;
-
-    ImGui::SetNextWindowBgAlpha(0.8f);
-
-    ImGui::Begin("Control", nullptr, imguiWindowFlags);
-
-    static float newFps = 0.0f;
-    /* avoid inf values (division by zero) */
-    if (renderData.rdFrameTime > 0.0) {
-        newFps = 1.0f / renderData.rdFrameTime * 1000.f;
-    }
-    /* make an averge value to avoid jumps */
-    mFramesPerSecond = (mAveragingAlpha * mFramesPerSecond) + (1.0f - mAveragingAlpha) * newFps;
-
-    /* clamp manual input on all sliders to min/max */
-    ImGuiSliderFlags flags = ImGuiSliderFlags_ClampOnInput;
+void UserInterface::createFrame(OGLRenderData& renderData)
+{
 
     static double updateTime = 0.0;
-
-    /* avoid literal double compares */
-    if (updateTime < 0.000001) {
+    if (updateTime < 0.000001)
+    {
         updateTime = ImGui::GetTime();
     }
-
     static int fpsOffset = 0;
-    static int frameTimeOffset = 0;
-    static int modelUploadOffset = 0;
-    static int matrixGenOffset = 0;
-    static int ikOffset = 0;
-    static int matrixUploadOffset = 0;
-    static int uiGenOffset = 0;
-    static int uiDrawOffset = 0;
 
-    while (updateTime < ImGui::GetTime()) {
+    while (updateTime < ImGui::GetTime())
+    {
         mFPSValues.at(fpsOffset) = mFramesPerSecond;
-        fpsOffset = ++fpsOffset % mNumFPSValues;
-
-        mFrameTimeValues.at(frameTimeOffset) = renderData.rdFrameTime;
-        frameTimeOffset = ++frameTimeOffset % mNumFrameTimeValues;
-
-        mModelUploadValues.at(modelUploadOffset) = renderData.rdUploadToVBOTime;
-        modelUploadOffset = ++modelUploadOffset % mNumModelUploadValues;
-
-        mMatrixGenerationValues.at(matrixGenOffset) = renderData.rdMatrixGenerateTime;
-        matrixGenOffset = ++matrixGenOffset % mNumMatrixGenerationValues;
-
-        mIKValues.at(ikOffset) = renderData.rdIKTime;
-        ikOffset = ++ikOffset % mNumIKValues;
-
-        mMatrixUploadValues.at(matrixUploadOffset) = renderData.rdUploadToUBOTime;
-        matrixUploadOffset = ++matrixUploadOffset % mNumMatrixUploadValues;
-
-        mUiGenValues.at(uiGenOffset) = renderData.rdUIGenerateTime;
-        uiGenOffset = ++uiGenOffset % mNumUiGenValues;
-
-        mUiDrawValues.at(uiDrawOffset) = renderData.rdUIDrawTime;
-        uiDrawOffset = ++uiDrawOffset % mNumUiDrawValues;
-
+        fpsOffset = ++fpsOffset & mNumFPSValues;
         updateTime += 1.0 / 30.0;
     }
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	ImGuiWindowFlags imguiWindowFlags  = 0;
+	ImGui::SetNextWindowBgAlpha(0.8f);
+	ImGui::Begin("Control", nullptr, imguiWindowFlags);
+
+	static float newFps = 0.0f;
+	if (renderData.rdFrameTime > 0.0)
+	{
+		newFps = 1.0f / renderData.rdFrameTime;
+	}
+
+    mFramesPerSecond = (averagingAlpha * mFramesPerSecond) + (1.0f - averagingAlpha) * newFps;
 
     ImGui::BeginGroup();
     ImGui::Text("FPS:");
@@ -126,7 +96,7 @@ void UserInterface::createFrame(OGLRenderData& renderData) {
     if (ImGui::CollapsingHeader("Info")) {
         ImGui::Text("Triangles:");
         ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdTriangleCount + renderData.rdGltfTriangleCount).c_str());
+        ImGui::Text("%s", std::to_string(renderData.rdTriangelCount + renderData.rdGltfTriangleCount).c_str());
 
         std::string windowDims = std::to_string(renderData.rdWidth) + "x" + std::to_string(renderData.rdHeight);
         ImGui::Text("Window Dimensions:");
@@ -139,211 +109,44 @@ void UserInterface::createFrame(OGLRenderData& renderData) {
         ImGui::Text("%s", imgWindowPos.c_str());
     }
 
+	ImGui::Checkbox("Vsync", &renderData.isVSYNC);
 
-    if (ImGui::CollapsingHeader("Timers")) {
-        ImGui::BeginGroup();
-        ImGui::Text("Frame Time:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdFrameTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-        ImGui::EndGroup();
+	if (checkBoxChecked)
+	{
+		ImGui::SameLine();
+		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 2550, 2, 255));
+		ImGui::Text("VSYNC is on");
+		ImGui::PopStyleColor();
+		renderData.isVSYNC = !renderData.isVSYNC;
+	}
+	
 
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            float averageFrameTime = 0.0f;
-            for (const auto value : mFrameTimeValues) {
-                averageFrameTime += value;
-            }
-            averageFrameTime /= static_cast<float>(mNumMatrixGenerationValues);
-            std::string frameTimeOverlay = "now:     " + std::to_string(renderData.rdFrameTime)
-                + " ms\n30s avg: " + std::to_string(averageFrameTime) + " ms";
-            ImGui::Text("Frame Time       ");
-            ImGui::SameLine();
-            ImGui::PlotLines("##FrameTime", mFrameTimeValues.data(), mFrameTimeValues.size(), frameTimeOffset,
-                frameTimeOverlay.c_str(), 0.0f, FLT_MAX, ImVec2(0, 80));
-            ImGui::EndTooltip();
-        }
+	if (ImGui::Button("Toggle Shader"))
+	{
+		renderData.rdUseChangedShader = !renderData.rdUseChangedShader;
+	}
+	ImGui::SameLine();
+	std::string shader_string = renderData.rdUseChangedShader ? "Changed Shader" : "Basic Shader";
+	ImGui::Text(shader_string.c_str());
 
-        ImGui::BeginGroup();
-        ImGui::Text("Model Upload Time:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdUploadToVBOTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-        ImGui::EndGroup();
+	ImGui::Text("Field of view");
+	ImGui::SameLine();
+	ImGui::SliderInt("##FOX", &renderData.rdFielfOfView, 40, 150);
 
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            float averageModelUpload = 0.0f;
-            for (const auto value : mModelUploadValues) {
-                averageModelUpload += value;
-            }
-            averageModelUpload /= static_cast<float>(mNumModelUploadValues);
-            std::string modelUploadOverlay = "now:     " + std::to_string(renderData.rdUploadToVBOTime)
-                + " ms\n30s avg: " + std::to_string(averageModelUpload) + " ms";
-            ImGui::Text("VBO Upload");
-            ImGui::SameLine();
-            ImGui::PlotLines("##ModelUploadTimes", mModelUploadValues.data(), mModelUploadValues.size(), modelUploadOffset,
-                modelUploadOverlay.c_str(), 0.0f, FLT_MAX, ImVec2(0, 80));
-            ImGui::EndTooltip();
-        }
+	ImGui::Text("View azi:");
+	ImGui::SameLine();
+	ImGui::Text("%s", trim_float(renderData.rdViewAzimuth, 4).c_str());
 
-        ImGui::BeginGroup();
-        ImGui::Text("Matrix Generation Time:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdMatrixGenerateTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-        ImGui::EndGroup();
+	ImGui::Text("View elev::");
+	ImGui::SameLine();
+	ImGui::Text("%s", trim_float(renderData.rdViewElevation, 4).c_str());
+	ImGui::Separator();
 
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            float averageMatGen = 0.0f;
-            for (const auto value : mMatrixGenerationValues) {
-                averageMatGen += value;
-            }
-            averageMatGen /= static_cast<float>(mNumMatrixGenerationValues);
-            std::string matrixGenOverlay = "now:     " + std::to_string(renderData.rdMatrixGenerateTime)
-                + " ms\n30s avg: " + std::to_string(averageMatGen) + " ms";
-            ImGui::Text("Matrix Generation");
-            ImGui::SameLine();
-            ImGui::PlotLines("##MatrixGenTimes", mMatrixGenerationValues.data(), mMatrixGenerationValues.size(), matrixGenOffset,
-                matrixGenOverlay.c_str(), 0.0f, FLT_MAX, ImVec2(0, 80));
-            ImGui::EndTooltip();
-        }
+	ImGui::Text("Camera Position");
+	ImGui::SameLine();
+	ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());
 
-        ImGui::BeginGroup();
-        ImGui::Text("(IK Generation Time)  :");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdIKTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-        ImGui::EndGroup();
-
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            float averageIKTime = 0.0f;
-            for (const auto value : mIKValues) {
-                averageIKTime += value;
-            }
-            averageIKTime /= static_cast<float>(mNumIKValues);
-            std::string ikOverlay = "now:     " + std::to_string(renderData.rdIKTime)
-                + " ms\n30s avg: " + std::to_string(averageIKTime) + " ms";
-            ImGui::Text("(IK Generation)");
-            ImGui::SameLine();
-            ImGui::PlotLines("##IKTimes", mIKValues.data(), mIKValues.size(), ikOffset,
-                ikOverlay.c_str(), 0.0f, FLT_MAX, ImVec2(0, 80));
-            ImGui::EndTooltip();
-        }
-
-        ImGui::BeginGroup();
-        ImGui::Text("Matrix Upload Time:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdUploadToUBOTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-        ImGui::EndGroup();
-
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            float averageMatrixUpload = 0.0f;
-            for (const auto value : mMatrixUploadValues) {
-                averageMatrixUpload += value;
-            }
-            averageMatrixUpload /= static_cast<float>(mNumMatrixUploadValues);
-            std::string matrixUploadOverlay = "now:     " + std::to_string(renderData.rdUploadToVBOTime)
-                + " ms\n30s avg: " + std::to_string(averageMatrixUpload) + " ms";
-            ImGui::Text("UBO Upload");
-            ImGui::SameLine();
-            ImGui::PlotLines("##MatrixUploadTimes", mMatrixUploadValues.data(), mMatrixUploadValues.size(), matrixUploadOffset,
-                matrixUploadOverlay.c_str(), 0.0f, FLT_MAX, ImVec2(0, 80));
-            ImGui::EndTooltip();
-        }
-
-        ImGui::BeginGroup();
-        ImGui::Text("UI Generation Time:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdUIGenerateTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-        ImGui::EndGroup();
-
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            float averageUiGen = 0.0f;
-            for (const auto value : mUiGenValues) {
-                averageUiGen += value;
-            }
-            averageUiGen /= static_cast<float>(mNumUiGenValues);
-            std::string uiGenOverlay = "now:     " + std::to_string(renderData.rdUIGenerateTime)
-                + " ms\n30s avg: " + std::to_string(averageUiGen) + " ms";
-            ImGui::Text("UI Generation");
-            ImGui::SameLine();
-            ImGui::PlotLines("##UIGenTimes", mUiGenValues.data(), mUiGenValues.size(), uiGenOffset,
-                uiGenOverlay.c_str(), 0.0f, FLT_MAX, ImVec2(0, 80));
-            ImGui::EndTooltip();
-        }
-
-        ImGui::BeginGroup();
-        ImGui::Text("UI Draw Time:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdUIDrawTime).c_str());
-        ImGui::SameLine();
-        ImGui::Text("ms");
-        ImGui::EndGroup();
-
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            float averageUiDraw = 0.0f;
-            for (const auto value : mUiDrawValues) {
-                averageUiDraw += value;
-            }
-            averageUiDraw /= static_cast<float>(mNumUiDrawValues);
-            std::string uiDrawOverlay = "now:     " + std::to_string(renderData.rdUIDrawTime)
-                + " ms\n30s avg: " + std::to_string(averageUiDraw) + " ms";
-            ImGui::Text("UI Draw");
-            ImGui::SameLine();
-            ImGui::PlotLines("##UIDrawTimes", mUiDrawValues.data(), mUiDrawValues.size(), uiDrawOffset,
-                uiDrawOverlay.c_str(), 0.0f, FLT_MAX, ImVec2(0, 80));
-            ImGui::EndTooltip();
-        }
-    }
-
-    if (ImGui::CollapsingHeader("Camera")) {
-        ImGui::Text("Camera Position:");
-        ImGui::SameLine();
-        ImGui::Text("%s", glm::to_string(renderData.rdCameraWorldPosition).c_str());
-
-        ImGui::Text("View Azimuth:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdViewAzimuth).c_str());
-
-        ImGui::Text("View Elevation:");
-        ImGui::SameLine();
-        ImGui::Text("%s", std::to_string(renderData.rdViewElevation).c_str());
-
-        ImGui::Text("Field of View");
-        ImGui::SameLine();
-        ImGui::SliderInt("##FOV", &renderData.rdFieldOfView, 40, 150, "%d", flags);
-    }
-
-    if (ImGui::CollapsingHeader("glTF Model")) {
-        ImGui::Checkbox("Draw Model", &renderData.rdDrawGltfModel);
-        ImGui::Checkbox("Draw Skeleton", &renderData.rdDrawSkeleton);
-
-        ImGui::Text("Vertex Skinning:");
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Linear",
-            renderData.rdGPUDualQuatVertexSkinning == skinningMode::linear)) {
-            renderData.rdGPUDualQuatVertexSkinning = skinningMode::linear;
-        }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Dual Quaternion",
-            renderData.rdGPUDualQuatVertexSkinning == skinningMode::dualQuat)) {
-            renderData.rdGPUDualQuatVertexSkinning = skinningMode::dualQuat;
-        }
-    }
+	ImGuiSliderFlags flags = ImGuiSliderFlags_ClampOnInput;
 
     if (ImGui::CollapsingHeader("glTF Animation")) {
         ImGui::Checkbox("Play Animation", &renderData.rdPlayAnimation);
@@ -452,11 +255,11 @@ void UserInterface::createFrame(OGLRenderData& renderData) {
             ImGui::Text("Split Node  ");
             ImGui::SameLine();
             if (ImGui::BeginCombo("##SplitNodeCombo",
-                renderData.rdSkelNodeNames.at(renderData.rdSkelSplitNode).c_str())) {
-                for (int i = 0; i < renderData.rdSkelNodeNames.size(); ++i) {
-                    if (renderData.rdSkelNodeNames.at(i).compare("(invalid)") != 0) {
+                renderData.rdSkelSplitNodeNames.at(renderData.rdSkelSplitNode).c_str())) {
+                for (int i = 0; i < renderData.rdSkelSplitNodeNames.size(); ++i) {
+                    if (renderData.rdSkelSplitNodeNames.at(i).compare("(invalid)") != 0) {
                         const bool isSelected = (renderData.rdSkelSplitNode == i);
-                        if (ImGui::Selectable(renderData.rdSkelNodeNames.at(i).c_str(), isSelected)) {
+                        if (ImGui::Selectable(renderData.rdSkelSplitNodeNames.at(i).c_str(), isSelected)) {
                             renderData.rdSkelSplitNode = i;
                         }
 
@@ -468,64 +271,7 @@ void UserInterface::createFrame(OGLRenderData& renderData) {
                 ImGui::EndCombo();
             }
         }
-    }
 
-    if (ImGui::CollapsingHeader("glTF Inverse Kinematic")) {
-        ImGui::Text("Inverse Kinematics");
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Off",
-            renderData.rdIkMode == ikMode::off)) {
-            renderData.rdIkMode = ikMode::off;
-        }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("CCD",
-            renderData.rdIkMode == ikMode::ccd)) {
-            renderData.rdIkMode = ikMode::ccd;
-        }
-
-        if (renderData.rdIkMode == ikMode::ccd) {
-            ImGui::Text("IK Iterations  :");
-            ImGui::SameLine();
-            ImGui::SliderInt("##IKITER", &renderData.rdIkIterations, 0, 15, "%d", flags);
-
-            ImGui::Text("Target Position:");
-            ImGui::SameLine();
-            ImGui::SliderFloat3("##IKTargetPOS", glm::value_ptr(renderData.rdIkTargetPos), -10.0f, 10.0f, "%.3f", flags);
-
-            ImGui::Text("Effector Node  :");
-            ImGui::SameLine();
-            if (ImGui::BeginCombo("##EffectorNodeCombo",
-                renderData.rdSkelNodeNames.at(renderData.rdIkEffectorNode).c_str())) {
-                for (int i = 0; i < renderData.rdSkelNodeNames.size(); ++i) {
-                    const bool isSelected = (renderData.rdIkEffectorNode == i);
-                    if (ImGui::Selectable(renderData.rdSkelNodeNames.at(i).c_str(), isSelected)) {
-                        renderData.rdIkEffectorNode = i;
-                    }
-
-                    if (isSelected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-
-            ImGui::Text("IK Root Node   :");
-            ImGui::SameLine();
-            if (ImGui::BeginCombo("##RootNodeCombo",
-                renderData.rdSkelNodeNames.at(renderData.rdIkRootNode).c_str())) {
-                for (int i = 0; i < renderData.rdSkelNodeNames.size(); ++i) {
-                    const bool isSelected = (renderData.rdIkRootNode == i);
-                    if (ImGui::Selectable(renderData.rdSkelNodeNames.at(i).c_str(), isSelected)) {
-                        renderData.rdIkRootNode = i;
-                    }
-
-                    if (isSelected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-        }
     }
 
     ImGui::End();

@@ -1,5 +1,6 @@
 #pragma once
 #include "opengl/OGLRenderData.h"
+#include <vector>
 
 class UserInterface {
 public:
@@ -9,9 +10,10 @@ public:
     void cleanup();
 
 private:
-    float mFramesPerSecond = 0.0f;
-    /* averaging speed */
-    float mAveragingAlpha = 0.96f;
+	std::vector<float> mFPSValues{};
+	int mNumFPSValues = 90;
+	float mFramesPerSecond = 0.0f;
+	float averagingAlpha = 0.96f;
 
     std::vector<float> mFPSValues{};
     int mNumFPSValues = 90;

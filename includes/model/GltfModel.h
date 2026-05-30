@@ -44,6 +44,7 @@ public:
 		replayDirection direction);
 	void playAnimation(int sourceAnimNum, int destAnimNum, float speedDivider,
 		float blendFactor, replayDirection direction);
+
 	void blendAnimationFrame(int animNum, float time, float blenFactor);
 	void setAnimationFrame(int animNumber, float time);
 	float getAnimationEndTime(int animNum);

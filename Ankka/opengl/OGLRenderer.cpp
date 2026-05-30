@@ -261,8 +261,8 @@ void OGLRenderer::draw()
 	mViewMatrix = mCamera.getViewMatrix(mRenderData);
 	renderMatrices.push_back(mViewMatrix);
 	renderMatrices.push_back(mProjectionMatrix);
-	
-	
+	mUniformBuffer.uploadUboData(renderMatrices, 0);
+	renderMatrices.clear();
 
 	static blendMode lastBlendMode = mRenderData.rdBlendingMode;
 	if (lastBlendMode != mRenderData.rdBlendingMode) {
@@ -280,34 +280,6 @@ void OGLRenderer::draw()
 		mGltfModel->resetNodeData();
 	}
 
-	static ikMode lastIkMode = mRenderData.rdIkMode;
-	if (lastIkMode != mRenderData.rdIkMode) {
-		mGltfModel->resetNodeData();
-		lastIkMode = mRenderData.rdIkMode;
-		/* clear timer */
-		if (mRenderData.rdIkMode == ikMode::off) {
-			mRenderData.rdIKTime = 0.0f;
-		}
-	}
-
-	static int numIKIterations = mRenderData.rdIkIterations;
-	if (numIKIterations != mRenderData.rdIkIterations) {
-		mGltfModel->setNumIKIterations(mRenderData.rdIkIterations);
-		mGltfModel->resetNodeData();
-		numIKIterations = mRenderData.rdIkIterations;
-	}
-
-	static int ikEffectorNode = mRenderData.rdIkEffectorNode;
-	static int ikRootNode = mRenderData.rdIkRootNode;
-	if (ikEffectorNode != mRenderData.rdIkEffectorNode ||
-		ikRootNode != mRenderData.rdIkRootNode) {
-		mGltfModel->setInverseKinematicsNodes(mRenderData.rdIkEffectorNode,
-			mRenderData.rdIkRootNode);
-		mGltfModel->resetNodeData();
-		ikEffectorNode = mRenderData.rdIkEffectorNode;
-		ikRootNode = mRenderData.rdIkRootNode;
-	}
-	
 	if (mRenderData.rdPlayAnimation) {
 		if (mRenderData.rdBlendingMode == blendMode::crossfade ||
 			mRenderData.rdBlendingMode == blendMode::additive) {
@@ -336,48 +308,6 @@ void OGLRenderer::draw()
 		}
 	}
 
-
-
-	if (mRenderData.rdIkMode == ikMode::ccd) {
-		mIKTimer.start();
-		mGltfModel->solveIKByCCD(mRenderData.rdIkTargetPos);
-		mRenderData.rdIKTime = mIKTimer.stop();
-	}
-
-
-	mLineMesh->vertices.clear();
-	mSkeletonLineIndexCount = 0;
-	if (mRenderData.rdDrawSkeleton)
-	{
-		std::shared_ptr<OGLMesh> mesh = mGltfModel->getSkeleton();
-		mSkeletonLineIndexCount += mesh->vertices.size();
-		mLineMesh->vertices.insert(mLineMesh->vertices.begin(),
-			mesh->vertices.begin(), mesh->vertices.end());
-	}
-
-	mCoordArrowsLineIndexCount = 0;
-	if (mRenderData.rdIkMode == ikMode::ccd)
-	{
-		mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
-		mCoordArrowsLineIndexCount = mCoordArrowsMesh.vertices.size();
-		std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
-			[=](auto& n)
-			{
-				n.color /= 2.0f;
-				n.position += mRenderData.rdIkTargetPos;
-			});
-
-		mLineMesh->vertices.insert(mLineMesh->vertices.end()
-			, mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
-
-	}
-
-
-
-	std::vector<glm::mat4> matrixData;
-	matrixData.push_back(mViewMatrix);
-	matrixData.push_back(mProjectionMatrix);
-	mUniformBuffer.uploadUboData(matrixData, 0);
 
 
 	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
