@@ -308,9 +308,20 @@ void OGLRenderer::draw()
 		}
 	}
 
-	if (mRenderData.rdIkMode == ikMode::ccd) {
+	if (mRenderData.rdIkMode != ikMode::off) {
 		mIKTimer.start();
-		mGltfModel->solveIKByCCD(mRenderData.rdIkTargetPos);
+		switch (mRenderData.rdIkMode)
+		{
+		case ikMode::ccd:
+			mGltfModel->solveIKByCCD(mRenderData.rdIkTargetPos);
+			break;
+		case ikMode::fabrik:
+			mGltfModel->solveIKByFABRIK(mRenderData.rdIkTargetPos);
+			break;
+		default:
+			break;
+		}
+		
 		mRenderData.rdIKTime = mIKTimer.stop();
 	}
 

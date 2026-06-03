@@ -60,6 +60,7 @@ public:
 	void setInverseKinematicsNodes(int effectorNodeNum, int ikChainRootNodeNum);
 	void setNumIKIterations(int iterations);
 	void solveIKByCCD(glm::vec3 target);
+	void solveIKByFABRIK(glm::vec3 target);
 
 private:
 

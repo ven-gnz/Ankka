@@ -34,7 +34,7 @@ enum class replayDirection {
 
 enum class ikMode {
 	off = 0,
-	ccd
+	ccd, fabrik
 };
 
 struct OGLRenderData {

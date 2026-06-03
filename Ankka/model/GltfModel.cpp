@@ -615,6 +615,12 @@ void GltfModel::solveIKByCCD(glm::vec3 target)
 	updateNodesMatrices(mIKSolver.getIkChainRootNode());
 }
 
+void GltfModel::solveIKByFABRIK(glm::vec3 target)
+{
+	mIKSolver.solveFABRIK(target);
+	updateNodesMatrices(mIKSolver.getIkChainRootNode());
+}
+
 glm::mat4& GltfModel::modelMatrix()
 {
 	return mModelMatrix;

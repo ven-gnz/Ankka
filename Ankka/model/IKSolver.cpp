@@ -105,7 +105,7 @@ void IKSolver::solveFABRIKbackward(glm::vec3 base)
 
 void IKSolver::adjustFABRIKNodes()
 {
-	for (size_t i = mFABRIKNodePositions.size() - 1; i < 0; --i)
+	for (size_t i = mFABRIKNodePositions.size() - 1; i > 0; --i)
 	{
 		std::shared_ptr<GltfNode> node = mNodes.at(i);
 		std::shared_ptr<GltfNode> nextNode = mNodes.at(i - 1);
