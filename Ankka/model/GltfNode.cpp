@@ -181,3 +181,20 @@ glm::vec3 GltfNode::getGlobalPosition()
 	}
 	return translation;
 }
+
+void GltfNode::setWorldPosition(glm::vec3 worldPos)
+{
+	mWorldPosition = worldPos;
+	updateNodeAndChildMatrices();
+}
+
+glm::vec3 GltfNode::getWorldPosition()
+{
+	return mWorldPosition;
+}
+
+void GltfNode::setWorldRotation(glm::vec3 ro)
+{
+	mWorldRotation = ro;
+	updateNodeAndChildMatrices();
+}

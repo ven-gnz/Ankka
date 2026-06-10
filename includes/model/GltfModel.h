@@ -13,122 +13,68 @@
 #include "model/GltfAnimationClip.h"
 #include "IKSolver.h"
 
+struct GltfNodeData
+{
+	std::shared_ptr<GltfNode> rootNode;
+	std::vector<std::shared_ptr<GltfNode>> nodeList;
+};
+
 class GltfModel {
 public:
-	bool loadModel(OGLRenderData& renderData,
-		std::string modelfilename,
-		std::string textureFilename);
+    bool loadModel(OGLRenderData& renderData, std::string modelFilename,
+        std::string textureFilename);
+    void draw();
+    void cleanup();
 
-	void draw(Shader s);
-	void cleanup();
-	void uploadVertexBuffers();
-	void uploadIndexBuffer();
-	void uploadPositionBuffer();
-	glm::mat4& modelMatrix();
+    std::string getModelFilename();
+    int getNodeCount();
+    GltfNodeData getGltfNodes();
+    int getTriangleCount();
 
-	std::shared_ptr<OGLMesh> getSkeleton();
-	void applyCPUVertexSkinning();
-	std::vector<glm::mat4> getJointMatrices();
-	std::vector<glm::mat2x4> getJointDualQuats();
-	int getJointDualQuatsSize(); 
+    void uploadVertexBuffers();
+    void uploadIndexBuffer();
 
-	int getJointMatrixSize();
-	bool mSkinned;
+    std::vector<glm::mat4> getInverseBindMatrices();
+    std::vector<int> getNodeToJoint();
 
-	glm::vec3 calculateAABB(const tinygltf::Accessor& accessor,
-		const tinygltf::BufferView& bufferView,
-		const tinygltf::Buffer& buffer,
-		glm::vec3& maxi);
+    std::vector<std::shared_ptr<GltfAnimationClip>> getAnimClips();
 
-	void playAnimation(int animNum, float speedDivider, float blendFactor,
-		replayDirection direction);
-	void playAnimation(int sourceAnimNum, int destAnimNum, float speedDivider,
-		float blendFactor, replayDirection direction);
-
-	void blendAnimationFrame(int animNum, float time, float blenFactor);
-	void setAnimationFrame(int animNumber, float time);
-	float getAnimationEndTime(int animNum);
-	std::string getClipName(int animNum);
-	void updateAdditiveMask(std::shared_ptr<GltfNode> treeNode, int splitNodeNum);
-
-	void crossBlendAnimationFrame(int sourceAnimNumber, int destAnimNumber, float time, float blendFactor);
-	void resetNodeData();
-
-	void setSkeletonSplitNode(int nodeNum);
-	std::string getnodeName(int nodeNum);
-
-	void setInverseKinematicsNodes(int effectorNodeNum, int ikChainRootNodeNum);
-	void setNumIKIterations(int iterations);
-	void solveIKByCCD(glm::vec3 target);
-	void solveIKByFABRIK(glm::vec3 target);
+    void resetNodeData(std::shared_ptr<GltfNode> treeNode);
 
 private:
+    void createVertexBuffers();
+    void createIndexBuffer();
 
-	std::vector<bool> mAdditiveAnimationMask{};
-	std::vector<bool> mInvertedAdditiveAnimationMask{};
+    void getJointData();
+    void getWeightData();
+    void getInvBindMatrices();
+    void getAnimations();
+    void getNodes(std::shared_ptr<GltfNode> treeNode);
+    void getNodeData(std::shared_ptr<GltfNode> treeNode);
+    std::vector<std::shared_ptr<GltfNode>> getNodeList(std::vector<std::shared_ptr<GltfNode>>
+        & nodeList, int nodeNum);
 
-	void resetNodeData(std::shared_ptr<GltfNode> treenode);
-	void createVertexBuffers();
-	void createIndexBuffer();
-	int getTriangleCount();
-	ModelLoader mModelLoader{};
+    std::string mModelFilename;
+    int mNodeCount = 0;
 
-	void getSkeletonPerNode(std::shared_ptr<GltfNode> treeNode);
+    std::shared_ptr<tinygltf::Model> mModel = nullptr;
 
-	void getJointData();
-	void getWeightData();
-	void getInvBindMatrices();
-	void getNodes(std::shared_ptr<GltfNode> treeNode);
-	void getNodeData(std::shared_ptr<GltfNode> treeNode);
-	void drawNode(std::shared_ptr<GltfNode> node, glm::mat4 parentMatrix, Shader s);
+    std::vector<glm::tvec4<uint16_t>> mJointVec{};
+    std::vector<glm::vec4> mWeightVec{};
+    std::vector<glm::mat4> mInverseBindMatrices{};
 
-	std::vector < glm::mat2x4> mJointDualQuats{};
-	std::vector<glm::tvec4<uint16_t>> mJointVec{};
-	std::vector<glm::vec4> mWeightVec{};
-	std::vector<glm::mat4> mInverseBindMatrices{};
-	std::vector<glm::mat4> mJointMatrices{};
+    std::vector<int> mAttribAccessors{};
+    std::vector<int> mNodeToJoint{};
 
-	std::vector<int> mAttribAccessors{};
-	std::vector<int> mNodeToJoint{};
-	
-	std::vector<glm::vec3> mAlteredPositions{};
-	std::vector<std::shared_ptr<GltfNode>> mNodeList{};
-	void updateNodesMatrices(std::shared_ptr<GltfNode> node);
-	void updateJointMatricesAndQuats(std::shared_ptr<GltfNode> treeNode);
+    std::vector<std::shared_ptr<GltfAnimationClip>> mAnimClips{};
 
-	std::vector<glm::vec3> mNormals{};
-	void calculateNormals(std::string modelFileName);
+    GLuint mVAO = 0;
+    std::vector<GLuint> mVertexVBO{};
+    GLuint mIndexVBO = 0;
+    std::map<std::string, GLint> attributes =
+    { {"POSITION", 0}, {"NORMAL", 1}, {"TEXCOORD_0", 2}, {"JOINTS_0", 3}, {"WEIGHTS_0", 4} };
 
-	glm::mat4 mModelMatrix = glm::mat4(1.0f);
-	std::shared_ptr<tinygltf::Model> mModel = nullptr;
+    Texture mTex{};
 
-	std::shared_ptr<GltfNode> mRootNode = nullptr;
-	
-	std::shared_ptr<OGLMesh> mSkeletonMesh = nullptr;
-
-	std::vector<std::shared_ptr<GltfAnimationClip>> mAnimClips{};
-	void getAnimations();
-	
-
-	GLuint mVAO = 0;
-	std::vector<GLuint> mVertexVBO{};
-	GLuint mIndexVBO = 0;
-	std::string mTexNameStr;
-
-	std::map<std::string, GLint> attributes = {
-		{"POSITION", 0},
-		{"NORMAL", 1 },
-		{"TEXCOORD_0" , 2},
-		{"JOINTS_0" , 3},
-		{"WEIGHTS_0", 4} };
-
-	int mVertexCount;
-
-	glm::vec3 mLocalAABBmin;
-	glm::vec3 mLocalAABBmax;
-
-	IKSolver mIKSolver{};
-
-	Texture mTex{};
-	
+    ModelLoader mModelLoader{};
 };

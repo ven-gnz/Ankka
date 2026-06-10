@@ -37,6 +37,10 @@ class GltfNode : public std::enable_shared_from_this<GltfNode> {
 	glm::quat getGlobalRotation();
 	glm::vec3 getGlobalPosition();
 
+	void setWorldPosition(glm::vec3 pos);
+	glm::vec3 getWorldPosition();
+	void setWorldRotation(glm::vec3 rot);
+
 	void updateNodeAndChildMatrices();
 
 private:
@@ -44,6 +48,9 @@ private:
 	glm::vec3 mBlendScale = glm::vec3(1.0f);
 	glm::vec3 mBlendTranslation = glm::vec3(0.0f);
 	glm::quat mBlendRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+
+	glm::vec3 mWorldPosition = glm::vec3(0.0f);
+	glm::vec3 mWorldRotation = glm::vec3(0.0f);
 
 	int mNodeNum = 0;
 	std::string mNodeName;
