@@ -15,7 +15,8 @@
 #include "opengl/ShaderStorageBuffer.h"
 #include "opengl/CoordArrowsModel.h"
 
-#include "model/GltfModel.h"
+#include <model/GltfInstance.h>
+#include <model/GltfModel.h>
 
 
 #include "imgui_impl_opengl3.h"
@@ -58,12 +59,15 @@ private:
 
 	void handleMovementKeys();
 
-	Shader mBasicShader{};
+	Shader mGltfGPUShader{};
 	Shader mChangedShader{};
 	Framebuffer mFramebuffer{};
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer{};
-	ShaderStorageBuffer mShaderStorageBuffer{};
+	
+	ShaderStorageBuffer mGltfShaderStorageBuffer{};
+
+	// deprecated?
 	ShaderStorageBuffer mShaderStorageBuffer1{};
 	ShaderStorageBuffer mShaderStorageBuffer2{};
 
@@ -100,14 +104,22 @@ private:
 	CoordArrowsModel mCoordArrowsModel{};
 	OGLMesh mCoordArrowsMesh{};
 	std::shared_ptr<OGLMesh> mLineMesh = nullptr;
+
+	std::vector <std::shared_ptr<GltfInstance>> mGltfInstances{};
+
+	std::vector<glm::mat4> mModelJointMatrices{};
+	std::vector<glm::mat2x4>mModelJointDualQuats{};
+
 	unsigned int mSkeletonLineIndexCount = 0;
 	unsigned int mCoordArrowsLineIndexCount = 0;
 
-	Shader mGltfShader{};
+	Shader mGltfGPUDualQuatShader{};
 	std::shared_ptr<GltfModel> mGltfModel = nullptr;
 	std::shared_ptr<GltfModel> mGltfModel1 = nullptr;
 	std::shared_ptr<GltfModel> mGltfModel2 = nullptr;
 	std::vector<GltfModel> mGltfModels;
 	std::vector<glm::mat4> renderMatrices{};
+
+	double mLastTickTime = 0.0;
 
 };

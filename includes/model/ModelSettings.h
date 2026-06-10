@@ -2,11 +2,11 @@
 struct ModelSettings
 {
 	glm::vec2 msWorldPosition = glm::vec2(0.0f);
-	glm::Vec3 msWorldRotation = glm::vec3(0.0f);
+	glm::vec3 msWorldRotation = glm::vec3(0.0f);
 
 	bool msDrawModel = true;
 	bool msDrawSkeleton = false;
-	skinningMOde msVertexSkinningMode = skinningMode::linear;
+	skinningMode msVertexSkinningMode = skinningMode::linear;
 
 	bool msPlayAnimation = true;
 	replayDirection msAnimationPlayDirection = replayDirection::forward;
@@ -33,10 +33,6 @@ struct ModelSettings
 	std::vector<std::string> msClipNames{};
 	std::vector<std::string> msSkelNodeNames{};
 
-	ikMode msIkMode = ikMode::off;
-	int msIkIterations = 10;
-	glm::vec3 msIkTargetPos = glm::vec3(0.0f, 3.0f, 1.0f);
 	glm::vec3 msIkTargetWorldPos = glm::vec3(0.0f, 0.0f, 01.0f);
-	int msIkEffectorNode = 0;
-	int msIkRootNode = 0;
+
 };

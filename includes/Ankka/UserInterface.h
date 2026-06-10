@@ -1,11 +1,13 @@
 #pragma once
-#include "opengl/OGLRenderData.h"
 #include <vector>
+
+#include <opengl/OGLRenderData.h>
+#include <model/ModelSettings.h>
 
 class UserInterface {
 public:
     void init(OGLRenderData& renderData);
-    void createFrame(OGLRenderData& renderData);
+    void createFrame(OGLRenderData& renderData, ModelSettings& settings);
     void render();
     void cleanup();
 

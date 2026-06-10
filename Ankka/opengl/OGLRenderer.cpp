@@ -79,11 +79,6 @@ void OGLRenderer::handleMousePositionEvents(double xPos, double yPos)
 	mMouseXPos = static_cast<int>(xPos);
 	mMouseYPos = static_cast<int>(yPos);
 
-	if (isMove)
-	{
-		glm::vec3 h = rc.screenToWorld(xPos, yPos, mRenderData.rdCameraWorldPosition.z, mRenderData.rdWindow, mCamera.getViewMatrix(mRenderData), mProjectionMatrix);
-		mGltfModel->modelMatrix()[3] = glm::vec4(h, 1.0f);
-	}
 
 }
 
@@ -141,12 +136,15 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
+	std::srand(static_cast<int>(time(NULL)));
+	mRenderData.rdWidth = width;
+	mRenderData.rdHeight = height;
 	
 	
 
 	mVertexBuffer.init();
 
-	if (!mBasicShader.loadShaders("shaders/basic.vert", "shaders/basic.frag"))
+	if (!mGltfGPUShader.loadShaders("shaders/gltf_gpu.vert", "shaders/gltf_gpu.frag"))
 	{
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);
@@ -161,22 +159,25 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mLineMesh = std::make_shared<OGLMesh>();
 
 
-	if (!mGltfShader.loadShaders("shaders/gltf_gpu_dquat.vert", "shaders/gltf_gpu_dquat.frag"))
+	if (!mGltfGPUDualQuatShader.loadShaders("shaders/gltf_gpu_dquat.vert", "shaders/gltf_gpu_dquat.frag"))
 	{
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);
 		return false;
 	}
 
+	if (!mGltfGPUDualQuatShader.getuniformLocation("aModelStride"))
+	{
+		return false;
+	}
+
 
 
 	mUniformBuffer.init(2 * sizeof(glm::mat4));
-	mShaderStorageBuffer.init(42 * sizeof(glm::mat4));
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
-	mRenderData.rdWidth = width;
-	mRenderData.rdHeight = height;
+
 
 	mUserInterface.init(mRenderData);
 
@@ -194,20 +195,39 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	{
 		return false;
 	}
+	
+	mGltfModel->uploadVertexBuffers();
+	mGltfModel->uploadIndexBuffer();
 
-	size_t modelJointDualQuatBufferSize = mGltfModel->getJointDualQuatsSize() * sizeof(glm::mat2x4);
+	int numTriangles = 0;
+
+	
+	for (int i = 0; i < 5; ++i) {
+		int xPos = std::rand() % 40 - 20;
+		int zPos = std::rand() % 40 - 20;
+		mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModel, glm::vec2(static_cast<float>(xPos),
+			static_cast<float>(zPos)), true));
+		numTriangles += mGltfModel->getTriangleCount();
+	}
+
+	mRenderData.rdTriangleCount = numTriangles;
+
+	mRenderData.rdNumberOfInstances = mGltfInstances.size();
+
+	size_t modelJointMatrixBufferSize = mRenderData.rdNumberOfInstances * mGltfInstances.at(0)->getJointMatrixSize() *
+		sizeof(glm::mat4);
+	size_t modelJointDualQuatBufferSize = mRenderData.rdNumberOfInstances * mGltfInstances.at(0)->getJointDualQuatsSize() *
+		sizeof(glm::mat2x4);
+
+	mGltfShaderStorageBuffer.init(modelJointMatrixBufferSize);
+	Logger::log(1, "%s: glTF joint matrix shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointMatrixBufferSize);
+
 	mGltfDualQuatSSBuffer.init(modelJointDualQuatBufferSize);
 	Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
 
-	
-	//mGltfModel->uploadVertexBuffers();
-	mGltfModel->uploadIndexBuffer();
-	mRenderData.rdSkelSplitNode = mRenderData.rdModelNodeCount - 1;
+	mLineMesh = std::make_shared<OGLMesh>();
+	Logger::log(1, "%s: line mesh storage initialized\n", __FUNCTION__);
 
-	mRenderData.rdIkEffectorNode = 19;
-	mRenderData.rdIkRootNode = 26;
-	mGltfModel->setInverseKinematicsNodes(mRenderData.rdIkEffectorNode, mRenderData.rdIkRootNode);
-	mGltfModel->setNumIKIterations(mRenderData.rdIkIterations);
 	mFrameTimer.start();
 	return true;
 
@@ -228,127 +248,102 @@ void OGLRenderer::uploadData(OGLMesh vertexData)
 
 void OGLRenderer::setModelMatrix(const glm::mat4& model)
 {
-	mGltfShader.setM4_Uniform("model", model);
+	
 }
 
 
-void OGLRenderer::draw()
-{
-	double ticktime = glfwGetTime();
-	mRenderData.rdTickDiff = ticktime - lastTickTime;
+void OGLRenderer::draw() {
+	/* handle minimize */
+	while (mRenderData.rdWidth == 0 || mRenderData.rdHeight == 0) {
+		glfwGetFramebufferSize(mRenderData.rdWindow, &mRenderData.rdWidth, &mRenderData.rdHeight);
+		glfwWaitEvents();
+	}
 
-	static float prevFrameStartTime = 0.0f;
-	float frameStartTime = glfwGetTime();
+	/* get time difference for movement */
+	double tickTime = glfwGetTime();
+	mRenderData.rdTickDiff = tickTime - mLastTickTime;
 
-	
+	mRenderData.rdFrameTime = mFrameTimer.stop();
+	mFrameTimer.start();
 
+	handleMovementKeys();
+
+	/* draw to framebuffer */
 	mFramebuffer.bind();
-	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+
+	glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 	glClearDepth(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	mMatrixGenerateTimer.start();
 	mProjectionMatrix = glm::perspective(
 		glm::radians(static_cast<float>(mRenderData.rdFieldOfView)),
 		static_cast<float>(mRenderData.rdWidth) / static_cast<float>(mRenderData.rdHeight),
-		0.01f,
-		120.0f);
-
-	float t = glfwGetTime();
-
-
-	mGltfShader.use();
+		0.01f, 500.0f);
 
 	mViewMatrix = mCamera.getViewMatrix(mRenderData);
-	renderMatrices.push_back(mViewMatrix);
-	renderMatrices.push_back(mProjectionMatrix);
-	mUniformBuffer.uploadUboData(renderMatrices, 0);
-	renderMatrices.clear();
 
-	static blendMode lastBlendMode = mRenderData.rdBlendingMode;
-	if (lastBlendMode != mRenderData.rdBlendingMode) {
-		lastBlendMode = mRenderData.rdBlendingMode;
-		if (mRenderData.rdBlendingMode != blendMode::additive) {
-			mRenderData.rdSkelSplitNode = mRenderData.rdModelNodeCount - 1;
-		}
-		mGltfModel->resetNodeData();
-	}
+	/* animate and update inverse kinematics */
+	mRenderData.rdIKTime = 0.0f;
+	for (auto& instance : mGltfInstances) {
+		instance->updateAnimation();
 
-	static int skelSplitNode = mRenderData.rdSkelSplitNode;
-	if (skelSplitNode != mRenderData.rdSkelSplitNode) {
-		mGltfModel->setSkeletonSplitNode(mRenderData.rdSkelSplitNode);
-		skelSplitNode = mRenderData.rdSkelSplitNode;
-		mGltfModel->resetNodeData();
-	}
-
-	if (mRenderData.rdPlayAnimation) {
-		if (mRenderData.rdBlendingMode == blendMode::crossfade ||
-			mRenderData.rdBlendingMode == blendMode::additive) {
-			mGltfModel->playAnimation(mRenderData.rdAnimClip,
-				mRenderData.rdCrossBlendDestAnimClip, mRenderData.rdAnimSpeed,
-				mRenderData.rdAnimCrossBlendFactor,
-				mRenderData.rdAnimationPlayDirection);
-		}
-		else {
-			mGltfModel->playAnimation(mRenderData.rdAnimClip, mRenderData.rdAnimSpeed,
-				mRenderData.rdAnimBlendFactor,
-				mRenderData.rdAnimationPlayDirection);
-		}
-	}
-	else {
-		mRenderData.rdAnimEndTime = mGltfModel->getAnimationEndTime(mRenderData.rdAnimClip);
-		if (mRenderData.rdBlendingMode == blendMode::crossfade ||
-			mRenderData.rdBlendingMode == blendMode::additive) {
-			mGltfModel->crossBlendAnimationFrame(mRenderData.rdAnimClip,
-				mRenderData.rdCrossBlendDestAnimClip, mRenderData.rdAnimTimePosition,
-				mRenderData.rdAnimCrossBlendFactor);
-		}
-		else {
-			mGltfModel->blendAnimationFrame(mRenderData.rdAnimClip, mRenderData.rdAnimTimePosition,
-				mRenderData.rdAnimBlendFactor);
-		}
-	}
-
-	if (mRenderData.rdIkMode != ikMode::off) {
 		mIKTimer.start();
-		switch (mRenderData.rdIkMode)
-		{
-		case ikMode::ccd:
-			mGltfModel->solveIKByCCD(mRenderData.rdIkTargetPos);
-			break;
-		case ikMode::fabrik:
-			mGltfModel->solveIKByFABRIK(mRenderData.rdIkTargetPos);
-			break;
-		default:
-			break;
-		}
-		
-		mRenderData.rdIKTime = mIKTimer.stop();
+		instance->solveIK();
+		mRenderData.rdIKTime += mIKTimer.stop();
 	}
+
+	/* save value to avoid changes during later call */
+	int selectedInstance = mRenderData.rdCurrentSelectedInstance;
+	glm::vec2 modelWorldPos = mGltfInstances.at(selectedInstance)->getWorldPosition();
+	glm::quat modelWorldRot = mGltfInstances.at(selectedInstance)->getWorldRotation();
 
 	mLineMesh->vertices.clear();
+
 	/* get gltTF skeleton */
 	mSkeletonLineIndexCount = 0;
-	if (mRenderData.rdDrawSkeleton) {
-		std::shared_ptr<OGLMesh> mesh = mGltfModel->getSkeleton();
-		mSkeletonLineIndexCount += mesh->vertices.size();
-		mLineMesh->vertices.insert(mLineMesh->vertices.begin(),
-			mesh->vertices.begin(), mesh->vertices.end());
+	for (const auto& instance : mGltfInstances) {
+		ModelSettings settings = instance->getInstanceSettings();
+		if (settings.msDrawSkeleton) {
+			std::shared_ptr<OGLMesh> mesh = instance->getSkeleton();
+			mSkeletonLineIndexCount += mesh->vertices.size();
+			mLineMesh->vertices.insert(mLineMesh->vertices.begin(),
+				mesh->vertices.begin(), mesh->vertices.end());
+		}
 	}
 
-	/* draw coordiante arrows on target position */
+	/* get coordinate arrows for the IK target of current instance only */
 	mCoordArrowsLineIndexCount = 0;
-	if (mRenderData.rdIkMode == ikMode::ccd) {
-		mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
-		mCoordArrowsLineIndexCount = mCoordArrowsMesh.vertices.size();
-		std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
-			[=](auto& n) {
-				n.color /= 2.0f;
-				n.position += mRenderData.rdIkTargetPos;
-			});
+	{
+		ModelSettings ikSettings = mGltfInstances.at(selectedInstance)->getInstanceSettings();
+		if (ikSettings.msIkMode == ikMode::ccd ||
+			ikSettings.msIkMode == ikMode::fabrik) {
+			mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
+			mCoordArrowsLineIndexCount += mCoordArrowsMesh.vertices.size();
+			std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
+				[=](auto& n) {
+					n.color /= 2.0f;
+					n.position = modelWorldRot * n.position;
+					n.position += ikSettings.msIkTargetWorldPos;
+				});
 
-		mLineMesh->vertices.insert(mLineMesh->vertices.end(),
-			mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
+			mLineMesh->vertices.insert(mLineMesh->vertices.end(),
+				mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
+		}
 	}
+
+	/* draw coordiante arrows*/
+	mCoordArrowsMesh = mCoordArrowsModel.getVertexData();
+	mCoordArrowsLineIndexCount += mCoordArrowsMesh.vertices.size();
+	std::for_each(mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end(),
+		[=](auto& n) {
+			n.color /= 2.0f;
+			n.position = modelWorldRot * n.position;
+			n.position += glm::vec3(modelWorldPos.x, 0.0f, modelWorldPos.y);
+		});
+
+	mLineMesh->vertices.insert(mLineMesh->vertices.end(),
+		mCoordArrowsMesh.vertices.begin(), mCoordArrowsMesh.vertices.end());
 
 	mRenderData.rdMatrixGenerateTime = mMatrixGenerateTimer.stop();
 
@@ -358,37 +353,77 @@ void OGLRenderer::draw()
 	matrixData.push_back(mProjectionMatrix);
 	mUniformBuffer.uploadUboData(matrixData, 0);
 
+	mModelJointMatrices.clear();
+	mModelJointDualQuats.clear();
 
+	unsigned int matrixInstances = 0;
+	unsigned int dualQuatInstances = 0;
+	unsigned int numTriangles = 0;
 
-	mGltfDualQuatSSBuffer.uploadSsboData(mGltfModel->getJointDualQuats(), 2);
+	for (const auto& instance : mGltfInstances) {
+		ModelSettings settings = instance->getInstanceSettings();
+		if (!settings.msDrawModel) {
+			continue;
+		}
 
-	if (mRenderData.rdDrawSkeleton ||
-		mRenderData.rdIkMode == ikMode::ccd) {
-		uploadData(*mLineMesh);
+		if (settings.msVertexSkinningMode == skinningMode::dualQuat) {
+			std::vector<glm::mat2x4> quats = instance->getJointDualQuats();
+			mModelJointDualQuats.insert(mModelJointDualQuats.end(),
+				quats.begin(), quats.end());
+			++dualQuatInstances;
+		}
+		else {
+			std::vector<glm::mat4> mats = instance->getJointMatrices();
+			mModelJointMatrices.insert(mModelJointMatrices.end(),
+				mats.begin(), mats.end());
+			++matrixInstances;
+		}
+		numTriangles += mGltfModel->getTriangleCount();
 	}
 
-	if (mModelUploadRequired) {
-		mGltfModel->uploadVertexBuffers();
-		mModelUploadRequired = false;
+	mRenderData.rdTriangleCount = numTriangles;
+
+	mGltfShaderStorageBuffer.uploadSsboData(mModelJointMatrices, 1);
+	mGltfDualQuatSSBuffer.uploadSsboData(mModelJointDualQuats, 2);
+
+	mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
+
+	/* upload vertex data */
+	mUploadToVBOTimer.start();
+
+	uploadData(*mLineMesh);
+
+	mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
+
+	/* draw the glTF models */
+	unsigned int jointMatrixSize = mGltfInstances.at(0)->getJointMatrixSize();
+	unsigned int matrixPos = 0;
+
+	mGltfGPUShader.use();
+	for (int i = 0; i < matrixInstances; ++i) {
+		/* set position inside the SSBO */
+		mGltfGPUShader.setUniformValue(matrixPos);
+		mGltfModel->draw();
+		matrixPos += jointMatrixSize;
 	}
-	
-	//mShaderStorageBuffer.uploadSsboData(mGltfModel->getJointMatrices(), 1);
-	//mGltfShader.setM4_Uniform("model", mGltfModel->modelMatrix());
-	mGltfModel->draw(mGltfShader);
 
+	unsigned int jointDQSize = mGltfInstances.at(0)->getJointDualQuatsSize();
+	unsigned int dqPos = 0;
 
+	mGltfGPUDualQuatShader.use();
+	for (int i = 0; i < dualQuatInstances; ++i) {
+		mGltfGPUDualQuatShader.setUniformValue(dqPos);
+		mGltfModel->draw();
+		dqPos += jointDQSize;
+	}
 
-	
-
-
-
+	/* draw the coordinate arrow WITH depth buffer */
 	if (mCoordArrowsLineIndexCount > 0) {
 		mLineShader.use();
 		mVertexBuffer.bindAndDraw(GL_LINES, mSkeletonLineIndexCount, mCoordArrowsLineIndexCount);
 	}
 
-
-
+	/* draw the skeleton, disable depth test to overlay */
 	if (mSkeletonLineIndexCount > 0) {
 		glDisable(GL_DEPTH_TEST);
 		mLineShader.use();
@@ -396,33 +431,35 @@ void OGLRenderer::draw()
 		glEnable(GL_DEPTH_TEST);
 	}
 
-
-
-	
 	mFramebuffer.unbind();
 
+	/* blit color buffer to screen */
 	mFramebuffer.drawToScreen();
+
 	mUIGenerateTimer.start();
 
-	handleMovementKeys();
+	ModelSettings settings = mGltfInstances.at(selectedInstance)->getInstanceSettings();
+	mUserInterface.createFrame(mRenderData, settings);
+	mGltfInstances.at(selectedInstance)->setInstanceSettings(settings);
+	mGltfInstances.at(selectedInstance)->checkForUpdates();
 
-	mUserInterface.createFrame(mRenderData);
-	mUserInterface.render();
 	mRenderData.rdUIGenerateTime = mUIGenerateTimer.stop();
-	mRenderData.rdFrameTime = frameStartTime - prevFrameStartTime;
-	prevFrameStartTime = frameStartTime;
 
-	lastTickTime = ticktime;
+	mUIDrawTimer.start();
+	mUserInterface.render();
+	mRenderData.rdUIDrawTime = mUIDrawTimer.stop();
+
+	mLastTickTime = tickTime;
 }
 
 void OGLRenderer::cleanup()
 {
 	mUserInterface.cleanup();
-	mBasicShader.cleanup();
+	
 	mChangedShader.cleanup();
 
 	mGltfModel->cleanup();
 	mGltfModel.reset();
-	mGltfShader.cleanup();
+	mGltfGPUDualQuatShader.cleanup();
 
 }

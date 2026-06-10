@@ -323,7 +323,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 	if (!result)
 	{
-		Logger::log(1, "s error : could not load file '%s'\n", __FUNCTION__, modelFileName.c_str());
+		Logger::log(1, "s error : could not load file '%s'\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
 
@@ -364,6 +364,17 @@ void GltfModel::cleanup()
 	glDeleteBuffers(1, &mIndexVBO);
 	mTex.cleanup();
 	mModel.reset();
+}
+
+void GltfModel::getAnimations() {
+	for (const auto& anim : mModel->animations) {
+		Logger::log(1, "%s: loading animation '%s' with %i channels\n", __FUNCTION__, anim.name.c_str(), anim.channels.size());
+		std::shared_ptr<GltfAnimationClip> clip = std::make_shared<GltfAnimationClip>(anim.name);
+		for (const auto& channel : anim.channels) {
+			clip->addChannel(mModel, anim, channel);
+		}
+		mAnimClips.push_back(clip);
+	}
 }
 
 
