@@ -43,7 +43,6 @@ mat2x4 getJointTransform(ivec4 joints, vec4 weights)
 
 }
 
-uniform mat4 model;
 
 
 

@@ -185,8 +185,6 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	glLineWidth(3.0);
 	glDisable(GL_FRAMEBUFFER_SRGB);
 
-	mGltfModels.reserve(3 * sizeof(GltfModel));
-
 	mGltfModel = std::make_shared<GltfModel>();
 
 	std::string modelFilename = "assets/Woman.gltf";

@@ -8,6 +8,7 @@
 
 #include <model/GltfInstance.h>
 #include <Ankka/Logger.h>
+#include <iostream>
 
 GltfInstance::~GltfInstance()
 {

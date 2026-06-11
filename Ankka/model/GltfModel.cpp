@@ -295,21 +295,23 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string textureFilename)
 {
 
-	std::string loaderErrors;
-	std::string loaderWarnings;
-	bool result = false;
+
 
 	if (!mTex.loadTexture(textureFilename, false)) {
 		Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
 		return false;
 	}
 	
-	result = mModelLoader.loadGltfModel(
-		modelFilename,
-		mModel,
-		loaderErrors,
-		loaderWarnings
-	);
+	
+	mModel = std::make_shared<tinygltf::Model>();
+
+	tinygltf::TinyGLTF gltfLoader;
+	std::string loaderErrors;
+	std::string loaderWarnings;
+	bool result = false;
+
+	result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings,
+		modelFilename);
 
 	if (!loaderWarnings.empty())
 	{
@@ -329,9 +331,6 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 	mModelFilename = modelFilename;
 
-	const tinygltf::Primitive& primitive = mModel->meshes.at(0).primitives.at(0);
-	bool hasNormals = primitive.attributes.find("NORMAL") != primitive.attributes.end();
-
 	glGenVertexArrays(1, &mVAO);
 	glBindVertexArray(mVAO);
 	createVertexBuffers();
@@ -339,17 +338,12 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 	glBindVertexArray(0);
 
-	bool hasJoints = primitive.attributes.find("JOINTS_0") != primitive.attributes.end();
-	if (hasJoints)
-	{
-		getJointData();
-		bool hasWeights = primitive.attributes.find("WEIGHTS_0") != primitive.attributes.end();
-		if (hasWeights)
-		{
-			getWeightData();
-			getInvBindMatrices();
-		}
-	}
+
+	getJointData();
+	getWeightData();
+	getInvBindMatrices();
+		
+	
 
 	mNodeCount = mModel->nodes.size();
 	getAnimations();
@@ -416,9 +410,10 @@ void GltfModel::resetNodeData(
 	std::shared_ptr<GltfNode> treeNode
 )
 {
+	getNodeData(treeNode);
 	for (auto& childNode : treeNode->getChilds())
 	{
-		getNodeData(childNode);
+		
 		resetNodeData(childNode);
 	}
 }
