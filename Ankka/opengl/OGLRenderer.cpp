@@ -144,10 +144,19 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	mVertexBuffer.init();
 
+	size_t uniformMatrixBufferSize = 2 * sizeof(glm::mat4);
+	mUniformBuffer.init(uniformMatrixBufferSize);
+	Logger::log(1, "%s: matrix uniform buffer (size %i bytes) successfully created\n", __FUNCTION__, uniformMatrixBufferSize);
+
 	if (!mGltfGPUShader.loadShaders("shaders/gltf_gpu.vert", "shaders/gltf_gpu.frag"))
 	{
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);
+		return false;
+	}
+
+	if (!mGltfGPUShader.getuniformLocation("aModelStride"))
+	{
 		return false;
 	}
 
@@ -170,6 +179,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	{
 		return false;
 	}
+
+	
 
 
 
@@ -216,7 +227,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		sizeof(glm::mat4);
 	size_t modelJointDualQuatBufferSize = mRenderData.rdNumberOfInstances * mGltfInstances.at(0)->getJointDualQuatsSize() *
 		sizeof(glm::mat2x4);
-
+	
 	mGltfShaderStorageBuffer.init(modelJointMatrixBufferSize);
 	Logger::log(1, "%s: glTF joint matrix shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointMatrixBufferSize);
 
