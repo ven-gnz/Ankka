@@ -19,7 +19,13 @@ void GltfNode::calculateLocalTRSMatrix()
 	glm::mat4 sMatrix = glm::scale(glm::mat4(1.0f), mBlendScale);
 	glm::mat4 rMatrix = glm::mat4_cast(mBlendRotation);
 	glm::mat4 tMatrix = glm::translate(glm::mat4(1.0f), mBlendTranslation);
-	mLocalTRSMatrix = tMatrix * rMatrix * sMatrix;
+	glm::mat4 tWorldMatrix = glm::translate(glm::mat4(1.0f), mWorldPosition);
+	glm::mat4 rWorldMatrix = glm::mat4_cast(glm::quat(glm::vec3(
+		glm::radians(mWorldRotation.x),
+		glm::radians(mWorldRotation.y),
+		glm::radians(mWorldRotation.z)
+	)));
+	mLocalTRSMatrix = tWorldMatrix * rWorldMatrix * tMatrix * rMatrix * sMatrix;
 }
 
 std::shared_ptr<GltfNode> GltfNode::createRoot(int rootNodeNum)
@@ -123,6 +129,7 @@ int GltfNode::getNodeNum()
 
 glm::mat4 GltfNode::getNodeMatrix()
 {
+	calculateNodeMatrix();
 	return mNodeMatrix;
 }
 
@@ -177,6 +184,7 @@ glm::vec3 GltfNode::getGlobalPosition()
 
 	if (!glm::decompose(mNodeMatrix, scale, orientation, translation, skew, perspective))
 	{
+		Logger::log(1, "Error : could not decompose matrix for node %i\n", __FUNCTION__, mNodeNum);
 		return glm::vec3(0.0f, 0.0f, 0.0f);
 	}
 	return translation;

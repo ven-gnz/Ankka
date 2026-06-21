@@ -6,7 +6,7 @@ struct ModelSettings
 
 	bool msDrawModel = true;
 	bool msDrawSkeleton = false;
-	skinningMode msVertexSkinningMode = skinningMode::linear;
+	skinningMode msVertexSkinningMode = skinningMode::dualQuat;
 
 	bool msPlayAnimation = true;
 	replayDirection msAnimationPlayDirection = replayDirection::forward;
