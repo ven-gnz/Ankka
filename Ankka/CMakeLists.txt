@@ -68,6 +68,18 @@ target_link_libraries(Ankka
 	imgui
 	tinygltf)
 
+	if(MSVC)
+		target_compile_options(Ankka PRIVATE
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:Release>:/Ob2>
+        $<$<CONFIG:Release>:/GL>
+		)
+
+		target_link_options(Ankka PRIVATE
+		$<$<CONFIG:Release>:/LTCG>
+		)
+	endif()
+
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Ankka PROPERTY CXX_STANDARD 20)

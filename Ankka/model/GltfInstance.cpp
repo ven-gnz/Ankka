@@ -84,8 +84,8 @@ GltfInstance::GltfInstance(std::shared_ptr<GltfModel> model, glm::vec2 worldPos,
 	
 	/* set values for inverse kinematics */
 	/* hard-code right arm here for startup as in the example*/
-	mModelSettings.msIkEffectorNode = 19;
-	mModelSettings.msIkRootNode = 26;
+	mModelSettings.msIkEffectorNode = 0;
+	mModelSettings.msIkRootNode = 0;
 	setInverseKinematicsNodes(mModelSettings.msIkEffectorNode, mModelSettings.msIkRootNode);
 	setNumIKIterations(mModelSettings.msIkIterations);
 
@@ -451,4 +451,9 @@ void GltfInstance::solveIKByCCD(glm::vec3 target) {
 void GltfInstance::solveIKByFABRIK(glm::vec3 target) {
     mIKSolver.solveFABRIK(target);
     updateNodeMatrices(mIKSolver.getIkChainRootNode());
+}
+
+std::shared_ptr<GltfModel> GltfInstance::getModel()
+{
+    return mGltfModel;
 }

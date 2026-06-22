@@ -105,7 +105,10 @@ private:
 	OGLMesh mCoordArrowsMesh{};
 	std::shared_ptr<OGLMesh> mLineMesh = nullptr;
 
-	std::vector <std::shared_ptr<GltfInstance>> mGltfInstances{};
+	std::vector<std::shared_ptr<GltfModel>> mGltfModels{};
+	std::vector<std::shared_ptr<GltfInstance>> mGltfInstances{};
+	std::vector<std::shared_ptr<GltfInstance>> mGltfMatrixInstances{};
+	std::vector<std::shared_ptr<GltfInstance>> mGltfDQInstances{};
 
 	std::vector<glm::mat4> mModelJointMatrices{};
 	std::vector<glm::mat2x4>mModelJointDualQuats{};
@@ -117,7 +120,6 @@ private:
 	std::shared_ptr<GltfModel> mGltfModel = nullptr;
 	std::shared_ptr<GltfModel> mGltfModel1 = nullptr;
 	std::shared_ptr<GltfModel> mGltfModel2 = nullptr;
-	std::vector<GltfModel> mGltfModels;
 	std::vector<glm::mat4> renderMatrices{};
 
 	double mLastTickTime = 0.0;

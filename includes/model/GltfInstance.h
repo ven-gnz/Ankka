@@ -40,6 +40,7 @@ public:
     void solveIK();
     void setInverseKinematicsNodes(int effectorNodeNum, int ikChainRootNodeNum);
     void setNumIKIterations(int iterations);
+    std::shared_ptr<GltfModel> getModel();
 
 private:
     void playAnimation(int animNum, float speedDivider, float blendFactor,
