@@ -2,6 +2,8 @@
 layout (location = 0) in vec3 normal;
 layout (location = 1) in vec2 texCoord;
 
+uniform int aModelStride;
+
 out vec4 FragColor;
 
 uniform sampler2D tex;

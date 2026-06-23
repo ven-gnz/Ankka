@@ -18,7 +18,7 @@ void ShaderStorageBuffer::uploadSsboData(
 {
 	if (bufferData.size() == 0)
 	{
-		Logger::log(1, "%s: trying to upload an empty ssbo buffer s\n",
+		Logger::log(1, "%s: trying to upload an empty ssbo mat4 buffer s\n",
 			__FUNCTION__);
 		return;
 	}
@@ -39,7 +39,7 @@ void ShaderStorageBuffer::uploadSsboData(const std::vector<glm::mat2x4>& bufferD
 	size_t bufferSize = bufferData.size() * sizeof(glm::mat2x4);
 	if (bufferData.size() == 0)
 	{
-		Logger::log(1, "%s: trying to upload an empty ssbo buffer s\n",
+		Logger::log(1, "%s: trying to upload an empty ssbo mat2x4 buffer s\n",
 			__FUNCTION__);
 		return;
 	}

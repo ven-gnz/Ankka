@@ -18,10 +18,19 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage)
 	}
 
 	GLenum format = 3;
-	if (mNumberOfChannels == 1) format = GL_RED;
-	if (mNumberOfChannels == 3) format = GL_RGB;
-	if (mNumberOfChannels == 4) format = GL_RGBA;
-
+	switch (mNumberOfChannels)
+	{
+	case 1: format = GL_RED;  break;
+	case 2: format = GL_RG;   break;
+	case 3: format = GL_RGB;  break;
+	case 4: format = GL_RGBA; break;
+	default:
+		
+		stbi_image_free(textureData);
+		system("pause");
+		return false;
+	}
+	Logger::log(1, " channel count: %d", mNumberOfChannels);
 	glGenTextures(1, &mTexture);
 	glBindTexture(GL_TEXTURE_2D, mTexture);
 

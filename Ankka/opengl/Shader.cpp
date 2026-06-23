@@ -92,3 +92,25 @@ void Shader::setM4_Uniform(const std::string& name, glm::mat4 m)
 	glUniformMatrix4fv(mLoc, 1, GL_FALSE, glm::value_ptr(m));
 
 }
+
+bool Shader::getuniformLocation(std::string uniformName)
+{
+	if (mShaderProgram > 0)
+	{
+		mUniformLocation = glGetUniformLocation(mShaderProgram, uniformName.c_str());
+		return mUniformLocation > -1;
+	}
+	return false;
+}
+
+
+void Shader::setUniformValue(int value)
+{
+	if (mShaderProgram > 0)
+	{
+		if (mUniformLocation > -1)
+		{
+			glUniform1i(mUniformLocation, value);
+		}
+	}
+}

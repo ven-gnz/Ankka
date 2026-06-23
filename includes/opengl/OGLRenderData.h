@@ -62,37 +62,10 @@ struct OGLRenderData {
 
 	float rdTickDiff = 0.0f;
 
-	float rdViewAzimuth = 0.0f;
-	float rdViewElevation = 0.0f;
-	glm::vec3 rdCameraWorldPosition = glm::vec3(-0.5f, 2.5f, 6.0f);
+	float rdViewAzimuth = 15.0f;
+	float rdViewElevation = -25.0f;
+	glm::vec3 rdCameraWorldPosition = glm::vec3(-10.0f, 16.0f, 35.0f);
 
-	bool rdDrawGltfModel = true;
-	bool rdDrawSkeleton = true;
-	skinningMode rdGPUDualQuatVertexSkinning = skinningMode::linear;
-
-	bool rdPlayAnimation = true;
-	std::vector<std::string> rdClipNames{};
-	int rdAnimClip = 0;
-	int rdAnimClipSize = 0;
-	float rdAnimSpeed = 1.0f;
-	float rdAnimTimePosition = 0.0f;
-	float rdAnimEndTime = 0.0f;
-	int rdModelNodeCount = 0;
-
-	replayDirection rdAnimationPlayDirection = replayDirection::forward;
-
-	float rdAnimBlendFactor = 1.0f;
-
-	blendMode rdBlendingMode = blendMode::fadeinout;
-	int rdCrossBlendDestAnimClip = 0;
-	float rdAnimCrossBlendFactor = 0.0f;
-
-	int rdSkelSplitNode = 0;
-	std::vector<std::string> rdSkelNodeNames{};
-
-	ikMode rdIkMode = ikMode::off;
-	int rdIkIterations = 10;
-	glm::vec3 rdIkTargetPos = glm::vec3(0.0f, 3.0f, 1.0f);
-	int rdIkEffectorNode = 0;
-	int rdIkRootNode = 0;
+	int rdNumberOfInstances = 0;
+	int rdCurrentSelectedInstance = 0;
 };

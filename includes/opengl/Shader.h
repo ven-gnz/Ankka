@@ -12,8 +12,11 @@ public:
 	void use();
 	void cleanup();
 	void setM4_Uniform(const std::string& name, glm::mat4 m);
+	bool getuniformLocation(std::string uniformName);
+	void setUniformValue(int value);
 
 private:
 	GLuint mShaderProgram = 0;
+	GLint mUniformLocation = -1;
 	GLuint readShader(const std::string shaderFileName, GLuint shaderType);
 };

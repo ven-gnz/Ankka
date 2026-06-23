@@ -31,7 +31,7 @@ add_executable (Ankka
 	"../includes/vulkan/VkRenderer.h" 
 	"vulkan/VkRenderer.cpp"
 	"tools/Timer.cpp"
-	"tools/Camera.cpp" "model/GltfModel.cpp" "tools/Raycaster.cpp" "model/GltfNode.cpp" "opengl/ShaderStorageBuffer.cpp" "model/ModelLoader.cpp" "model/GltfAnimationChannel.cpp" "model/GltfAnimationClip.cpp" "model/IKSolver.cpp" "opengl/CoorArrowsModel.cpp")
+	"tools/Camera.cpp" "model/GltfModel.cpp" "tools/Raycaster.cpp" "model/GltfNode.cpp" "opengl/ShaderStorageBuffer.cpp" "model/ModelLoader.cpp" "model/GltfAnimationChannel.cpp" "model/GltfAnimationClip.cpp" "model/IKSolver.cpp" "opengl/CoorArrowsModel.cpp" "model/GltfInstance.cpp" "opengl/TextureBuffer.cpp")
 
 # Shaders
 
@@ -67,6 +67,18 @@ target_link_libraries(Ankka
 	Vulkan::Vulkan
 	imgui
 	tinygltf)
+
+	if(MSVC)
+		target_compile_options(Ankka PRIVATE
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:Release>:/Ob2>
+        $<$<CONFIG:Release>:/GL>
+		)
+
+		target_link_options(Ankka PRIVATE
+		$<$<CONFIG:Release>:/LTCG>
+		)
+	endif()
 
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
