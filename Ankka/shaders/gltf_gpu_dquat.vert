@@ -23,10 +23,10 @@ uniform int aModelStride;
 
 mat2x4 getJointTransform(ivec4 joints, vec4 weights)
 {
-	mat2x4 dq0 = jointDQs[joints.x + aModelStride];
-	mat2x4 dq1 = jointDQs[joints.y + aModelStride];
-	mat2x4 dq2 = jointDQs[joints.z + aModelStride];
-	mat2x4 dq3 = jointDQs[joints.w + aModelStride];
+	mat2x4 dq0 = jointDQs[joints.x + gl_InstanceID * aModelStride];
+	mat2x4 dq1 = jointDQs[joints.y + gl_InstanceID * aModelStride];
+	mat2x4 dq2 = jointDQs[joints.z + gl_InstanceID * aModelStride];
+	mat2x4 dq3 = jointDQs[joints.w + gl_InstanceID * aModelStride];
 	
 	weights.y *= sign(dot(dq0[0], dq1[0]));
 	weights.z *= sign(dot(dq0[0], dq2[0]));

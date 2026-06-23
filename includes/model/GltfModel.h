@@ -24,6 +24,7 @@ public:
     bool loadModel(OGLRenderData& renderData, std::string modelFilename,
         std::string textureFilename);
     void draw();
+    void drawInstanced(int instanceCount);
     void cleanup();
 
     std::string getModelFilename();
