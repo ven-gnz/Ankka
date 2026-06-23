@@ -288,9 +288,12 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		jointQuatSize = instance->getJointDualQuatsSize();
 		modelJointDualQuatBufferSize += instance->getJointDualQuatsSize() * sizeof(glm::mat2x4);
 	}
-	
-	mGltfShaderStorageBuffer.init(modelJointMatrixBufferSize);
-	Logger::log(1, "%s: glTF joint matrix shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointMatrixBufferSize);
+	//
+	//mGltfShaderStorageBuffer.init(modelJointMatrixBufferSize);
+	//Logger::log(1, "%s: glTF joint matrix shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointMatrixBufferSize);
+
+	mGltfTextureBuffer.init(modelJointMatrixBufferSize);
+	Logger::log(1, "%s: glTF joint matrix texture buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointMatrixBufferSize);
 
 	mGltfDualQuatSSBuffer.init(modelJointDualQuatBufferSize);
 	Logger::log(1, "%s: glTF joint dual quaternions shader storage buffer (size %i bytes) successfully created\n", __FUNCTION__, modelJointDualQuatBufferSize);
@@ -455,7 +458,7 @@ void OGLRenderer::draw() {
 
 	mRenderData.rdTriangleCount = numTriangles;
 
-	mGltfShaderStorageBuffer.uploadSsboData(mModelJointMatrices, 1);
+	mGltfTextureBuffer.uploadTboData(mModelJointMatrices, 1);
 	mGltfDualQuatSSBuffer.uploadSsboData(mModelJointDualQuats, 2);
 
 	mRenderData.rdUploadToUBOTime = mUploadToUBOTimer.stop();
@@ -466,6 +469,10 @@ void OGLRenderer::draw() {
 	uploadData(*mLineMesh);
 
 	mRenderData.rdUploadToVBOTime = mUploadToVBOTimer.stop();
+
+	mGltfGPUShader.use();
+
+	mGltfTextureBuffer.bind();
 
 	mGltfGPUShader.setUniformValue(mGltfInstances.at(0)->getJointMatrixSize());
 	mGltfModel->drawInstanced(matrixInstances);

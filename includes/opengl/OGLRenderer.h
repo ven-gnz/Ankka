@@ -14,6 +14,7 @@
 #include "opengl/UniformBuffer.h"
 #include "opengl/ShaderStorageBuffer.h"
 #include "opengl/CoordArrowsModel.h"
+#include "opengl/TextureBuffer.h"
 
 #include <model/GltfInstance.h>
 #include <model/GltfModel.h>
@@ -66,6 +67,7 @@ private:
 	UniformBuffer mUniformBuffer{};
 	
 	ShaderStorageBuffer mGltfShaderStorageBuffer{};
+	TextureBuffer mGltfTextureBuffer{};
 
 	// deprecated?
 	ShaderStorageBuffer mShaderStorageBuffer1{};
