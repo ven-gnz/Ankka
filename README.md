@@ -14,15 +14,10 @@ Currently not accepting contributions.
 
 ### Status
 
+Looking for a suitably scoped example app next after finishing book
 
-<img width =600 height=400 alt="screenshot of a model in bindpose, with dual quaternion lerping" src="scrshot.png">
+ #### Milestone update : 27.06.2026
 
-As of 28.04., some painful decision have been made to simplify and clean away some non-working abstractions.
-Now following the book more closely in order to finish in timely manner ie over the summer for a university programming exercise project.
+Milestone update on 27.6. Finished book, did some optimizations and GPU instancing of model
 
-More sophisticated glTF loading on the roadmap after finishing the book or as a separate effort from the main branch.
-
- #### Milestone update : 07.05.2026
-
-
-<img width=400 height=400 alt="animated gif of a woman running" src="progress.gif">
+<img width=400 height=400 alt="animated gif of a woman running" src="Milestone_2.gif">
