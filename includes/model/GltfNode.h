@@ -63,6 +63,18 @@ private:
 	glm::mat4 mLocalTRSMatrix = glm::mat4(1.0f);
 	glm::mat4 mNodeMatrix = glm::mat4(1.0f);
 	std::weak_ptr<GltfNode> mParentNode;
+
+	//OPTIMIZATIONS : promoted to member variables for less loadop on claculate localTRSMatrix
+	glm::mat4 mTranslationMatrix = glm::mat4(1.0f);
+	glm::mat4 mRotationMatrix = glm::mat4(1.0f);
+	glm::mat4 mScaleMatrix = glm::mat4(1.0f);
+
+
+	glm::mat4 mWorldTranslationMatrix = glm::mat4(1.0f);
+	glm::mat4 mWorldRotationMatrix = glm::mat4(1.0f);
+	glm::mat4 mWorldTRMatrix = glm::mat4(1.0f);
+
+	bool mLocalMatrixNeedsUpdate = true;
 	
 
 	void printNodes(std::shared_ptr<GltfNode> startNode, int indent);
