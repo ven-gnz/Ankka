@@ -8,7 +8,6 @@
 
 #include <Ankka/Logger.h>
 #include "opengl/OGLRenderer.h"
-#include "vulkan/VkRenderer.h"
 #include "Model.h"
 
 class Window {
@@ -25,7 +24,6 @@ private:
 	VkInstance mInstance{};
 	VkSurfaceKHR mSurface{};
 	std::unique_ptr<OGLRenderer> mOGLRenderer;
-	std::unique_ptr<VkRenderer> mVkRenderer;
 	std::unique_ptr<Model> mModel;
 	bool isVulkan;
 };

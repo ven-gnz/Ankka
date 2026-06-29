@@ -28,8 +28,6 @@ add_executable (Ankka
 	"opengl/Shader.cpp" 
 	"opengl/UniformBuffer.cpp"
 	
-	"../includes/vulkan/VkRenderer.h" 
-	"vulkan/VkRenderer.cpp"
 	"tools/Timer.cpp"
 	"tools/Camera.cpp" "model/GltfModel.cpp" "tools/Raycaster.cpp" "model/GltfNode.cpp" "opengl/ShaderStorageBuffer.cpp" "model/ModelLoader.cpp" "model/GltfAnimationChannel.cpp" "model/GltfAnimationClip.cpp" "model/IKSolver.cpp" "opengl/CoorArrowsModel.cpp" "model/GltfInstance.cpp" "opengl/TextureBuffer.cpp")
 
