@@ -1,6 +1,6 @@
 #include <fstream>
 #include "opengl/Shader.h"
-#include "Ankka/Logger.h"
+#include "tools/Logger.h"
 
 bool Shader::loadShaders(std::string vertexShaderFileName, std::string fragmentShaderFileName)
 {

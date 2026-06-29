@@ -23,11 +23,11 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
 
-#include "Ankka/UserInterface.h"
+#include <tools/UserInterface.h>
 
-#include "Ankka/tools/Timer.h"
-#include "Ankka/tools/Camera.h"
-#include "Ankka/tools/Raycaster.h"
+#include <tools/Timer.h>
+#include <tools/Camera.h>
+#include <tools/Raycaster.h>
 
 #include "OGLRenderData.h"
 

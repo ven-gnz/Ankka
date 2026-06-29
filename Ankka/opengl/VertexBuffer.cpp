@@ -1,5 +1,5 @@
 #include "opengl/VertexBuffer.h"
-#include "Ankka/Logger.h"
+#include "tools/Logger.h"
 
 void VertexBuffer::init()
 {

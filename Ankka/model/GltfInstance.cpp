@@ -7,7 +7,7 @@
 #include <cstdlib>
 
 #include <model/GltfInstance.h>
-#include <Ankka/Logger.h>
+#include <tools/Logger.h>
 #include <iostream>
 
 GltfInstance::~GltfInstance()

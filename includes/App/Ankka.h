@@ -10,5 +10,5 @@
 #include <GLFW/glfw3.h>
 
 // TODO: Reference additional headers your program requires here.
-#include "Ankka/Window.h"
-#include "Ankka/Logger.h"
+#include "App/Window.h"
+#include "tools/Logger.h"

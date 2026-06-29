@@ -1,6 +1,6 @@
 
 #include "opengl/Texture.h"
-#include "Ankka/Logger.h"
+#include "tools/Logger.h"
 #include <../external/tinygltf/stb_image.h>
 
 bool Texture::loadTexture(std::string textureFilename, bool flipImage)

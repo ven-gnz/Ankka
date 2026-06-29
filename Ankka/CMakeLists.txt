@@ -5,16 +5,16 @@
 
 # Add source to this project's executable.
 add_executable (Ankka
-	"Ankka.cpp"
-	"../includes/Ankka/Ankka.h"
-	"../includes/Ankka/Logger.h"
-	"../includes/Ankka/Model.h"
-	"../includes/Ankka/UserInterface.h"
-	"../includes/Ankka/Window.h"
-	"Window.cpp"
-	"Logger.cpp"
-	"Model.cpp" 
-	"UserInterface.cpp"
+	"App/Ankka.cpp"
+	"../includes/App/Ankka.h"
+	"../includes/tools/Logger.h"
+	
+	"../includes/tools/UserInterface.h"
+	"../includes/App/Window.h"
+	"App/Window.cpp"
+	"tools/Logger.cpp"
+	 
+	"tools/UserInterface.cpp"
 	"../includes/opengl/OGLRenderer.h"
 	"../includes/opengl/Framebuffer.h"
 	"../includes/opengl/VertexBuffer.h"
