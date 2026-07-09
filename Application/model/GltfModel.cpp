@@ -132,7 +132,33 @@ void GltfModel::uploadPrimitiveBuffers(GltfPrimitive& primitive)
 	}
 }
 
+void GltfModel::createIndexBuffer(
+	const tinygltf::Primitive& tinyPrimitive,
+	GltfPrimitive& primitive)
+{
+	if (tinyPrimitive.indices < 0)
+	{
+		primitive.indexCount = 0;
+		return;
+	}
 
+	const tinygltf::Accessor& indexAccessor = mModel->accessors.at(tinyPrimitive.indices);
+	const tinygltf::BufferView& indexBufferView = mModel->bufferViews[indexAccessor.bufferView];
+	const tinygltf::Buffer& indexBuffer = mModel->buffers[indexBufferView.buffer];
+	primitive.indexType = indexAccessor.componentType; // use of getGLComponent helper necessary?
+	primitive.indexCount = indexAccessor.count;
+
+	glGenBuffers(1, &primitive.ebo);
+	glBindVertexArray(primitive.vao);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, primitive.ebo);
+	glBufferData(
+		GL_ELEMENT_ARRAY_BUFFER,
+		indexAccessor.count * tinygltf::GetComponentSizeInBytes(indexAccessor.componentType),
+		indexBuffer.data.data() + indexBufferView.byteOffset + indexAccessor.byteOffset,
+		GL_STATIC_DRAW);
+
+
+}
 
 
 void GltfModel::createVertexBuffers()
@@ -222,36 +248,6 @@ void GltfModel::uploadIndexBuffer()
 			&indexBuffer.data.at(0) + indexBufferView.byteOffset,
 			GL_STATIC_DRAW);
 	}
-}
-
-void GltfModel::createIndexBuffer(
-const tinygltf::Primitive& tinyPrimitive,
-GltfPrimitive& primitive)
-{
-	if (tinyPrimitive.indices < 0)
-	{
-		primitive.indexCount = 0;
-		return;
-	}
-
-	const tinygltf::Accessor& indexAccessor = mModel->accessors.at(tinyPrimitive.indices);
-	const tinygltf::BufferView& indexBufferView = mModel->bufferViews[indexAccessor.bufferView];
-	const tinygltf::Buffer& indexBuffer = mModel->buffers[indexBufferView.buffer];
-	primitive.indexType = indexAccessor.componentType; // use of getGLComponent helper necessary?
-	primitive.indexCount = indexAccessor.count;
-
-	glGenBuffers(1, &primitive.ebo);
-	glBindVertexArray(primitive.vao);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, primitive.ebo);
-	glBufferData(
-		GL_ELEMENT_ARRAY_BUFFER,
-		indexAccessor.count * tinygltf::GetComponentSizeInBytes(indexAccessor.componentType),
-		indexBuffer.data.data() + indexBufferView.byteOffset + indexAccessor.byteOffset,
-		GL_STATIC_DRAW);
-
-
-
-
 }
 
 void GltfModel::getJointData()
