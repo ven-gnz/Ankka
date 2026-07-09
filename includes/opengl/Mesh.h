@@ -17,9 +17,28 @@ struct GltfPrimitive
 
 	GLuint ebo = 0;
 	uint32_t indexCount = 0;
+	uint32_t vertexCount = 0;
 
 	GLenum indexType = GL_UNSIGNED_SHORT;
 	int material = -1;
+
+	void render()
+	{
+		glBindVertexArray(vao);
+		if (ebo != 0)
+		{
+			glDrawElements(
+				GL_TRIANGLES,
+				indexCount,
+				indexType,
+				nullptr
+			);
+		}
+		else
+		{
+			glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+		}
+	}
 };
 
 struct GltfMesh : public Mesh
@@ -27,6 +46,9 @@ struct GltfMesh : public Mesh
 	std::vector<GltfPrimitive> primitives;
 	void render() const override
 	{
-
+		for (GltfPrimitive p : primitives)
+		{
+			p.render();
+		}
 	}
 };

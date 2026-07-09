@@ -75,6 +75,8 @@ private:
     GLenum getGLComponentType(const tinygltf::Accessor& accessor, int accessorNum);
     int getComponentCount(const tinygltf::Accessor& accessor, int accessorNum);
     void createPrimitive(const tinygltf::Primitive& gltfPrimitive, GltfPrimitive& primitive);
+    void uploadPrimitiveBuffers(GltfPrimitive& primitive);
+    void createIndexBuffer(const tinygltf::Primitive& tinyPrimitive, GltfPrimitive& primitive);
 
 
     GLuint mVAO = 0;

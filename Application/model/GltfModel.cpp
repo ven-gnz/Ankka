@@ -76,13 +76,63 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 			continue;
 		}
 
+		if (attribType == "POSITION") primitive.vertexCount = accessor.count;
+
 		int location = attributes.at(attribType);
+		primitive.accessors[location] = accessorNum;
+
 		glGenBuffers(1, &primitive.vbos[location]);
 		glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[location]);
 
+		glVertexAttribPointer(
+			location,
+			getComponentCount(accessor, accessorNum),
+			getGLComponentType(accessor, accessorNum),
+			accessor.normalized ? GL_TRUE : GL_FALSE, // might need conversion since the tinygltf enum size might differ?
+			bufferView.byteStride,
+			(void*)0
+		);
 
+		glEnableVertexAttribArray(location);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	glBindVertexArray(0);
+}
+
+void GltfModel::uploadPrimitiveBuffers(GltfPrimitive& primitive)
+{
+	for (size_t i = 0; i < primitive.vbos.size(); ++i)
+	{
+		if (primitive.vbos[i] == 0) continue;
+
+		const tinygltf::Accessor& accessor =
+			mModel->accessors.at(primitive.accessors[i]);
+
+		const tinygltf::BufferView& bufferView =
+			mModel->bufferViews.at(accessor.bufferView);
+
+		const tinygltf::Buffer& buffer =
+			mModel->buffers.at(bufferView.buffer);
+
+		glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[i]);
+
+		// the accessors bytestride itself is handled by the vertex attrib pointer
+		glBufferData(
+			GL_ARRAY_BUFFER,
+			accessor.count *
+			getComponentCount(accessor, primitive.accessors[i]) *
+			tinygltf::GetComponentSizeInBytes(accessor.componentType),
+			buffer.data.data() +
+			bufferView.byteOffset +
+			accessor.byteOffset,
+			GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
+
+
 
 
 void GltfModel::createVertexBuffers()
@@ -127,7 +177,7 @@ void GltfModel::createVertexBuffers()
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(attributes.at(attribType)));
 
 		glVertexAttribPointer(attributes.at(attribType), dataSize, dataType, GL_FALSE,
-			0, (void*)0);
+			bufferView.byteStride, (void*)0);
 		glEnableVertexAttribArray(attributes.at(attribType));
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -172,6 +222,36 @@ void GltfModel::uploadIndexBuffer()
 			&indexBuffer.data.at(0) + indexBufferView.byteOffset,
 			GL_STATIC_DRAW);
 	}
+}
+
+void GltfModel::createIndexBuffer(
+const tinygltf::Primitive& tinyPrimitive,
+GltfPrimitive& primitive)
+{
+	if (tinyPrimitive.indices < 0)
+	{
+		primitive.indexCount = 0;
+		return;
+	}
+
+	const tinygltf::Accessor& indexAccessor = mModel->accessors.at(tinyPrimitive.indices);
+	const tinygltf::BufferView& indexBufferView = mModel->bufferViews[indexAccessor.bufferView];
+	const tinygltf::Buffer& indexBuffer = mModel->buffers[indexBufferView.buffer];
+	primitive.indexType = indexAccessor.componentType; // use of getGLComponent helper necessary?
+	primitive.indexCount = indexAccessor.count;
+
+	glGenBuffers(1, &primitive.ebo);
+	glBindVertexArray(primitive.vao);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, primitive.ebo);
+	glBufferData(
+		GL_ELEMENT_ARRAY_BUFFER,
+		indexAccessor.count * tinygltf::GetComponentSizeInBytes(indexAccessor.componentType),
+		indexBuffer.data.data() + indexBufferView.byteOffset + indexAccessor.byteOffset,
+		GL_STATIC_DRAW);
+
+
+
+
 }
 
 void GltfModel::getJointData()
