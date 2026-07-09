@@ -23,7 +23,7 @@ struct GltfNodeData
 class GltfModel {
 public:
     bool loadModel(OGLRenderData& renderData, std::string modelFilename,
-        std::string textureFilename);
+        std::string textureFilename, bool useMeshPrimitiveApproach);
     void draw();
     void drawInstanced(int instanceCount);
     void cleanup();
@@ -77,6 +77,7 @@ private:
     void createPrimitive(const tinygltf::Primitive& gltfPrimitive, GltfPrimitive& primitive);
     void uploadPrimitiveBuffers(GltfPrimitive& primitive);
     void createIndexBuffer(const tinygltf::Primitive& tinyPrimitive, GltfPrimitive& primitive);
+    void createMeshes();
 
 
     GLuint mVAO = 0;

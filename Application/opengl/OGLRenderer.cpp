@@ -232,7 +232,8 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModel = std::make_shared<GltfModel>();
 	std::string modelFilename = "assets/Woman.gltf";
 	std::string modelTexFilename = "tex/Woman.png";
-	if (!mGltfModel->loadModel(mRenderData, modelFilename, modelTexFilename)) {
+	bool useMeshPrimitiveApproach = false;
+	if (!mGltfModel->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach)) {
 		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
@@ -240,12 +241,18 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModel->uploadIndexBuffer();
 	
 
+	useMeshPrimitiveApproach = true;
+	mGltfModel1 = std::make_shared<GltfModel>();
+	if (!mGltfModel1->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach)) {
+		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+		return false;
+	}
 	
 	
 
 	int numTriangles = 0;
 
-	for (int i = 0; i < 200; ++i) {
+	for (int i = 0; i < 2; ++i) {
 		int xPos = std::rand() % 40 - 20;
 		int zPos = std::rand() % 40 - 20;
 		mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModel, glm::vec2(static_cast<float>(xPos),

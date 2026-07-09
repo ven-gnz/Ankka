@@ -157,7 +157,24 @@ void GltfModel::createIndexBuffer(
 		indexBuffer.data.data() + indexBufferView.byteOffset + indexAccessor.byteOffset,
 		GL_STATIC_DRAW);
 
+}
 
+void GltfModel::createMeshes()
+{
+	for (const tinygltf::Mesh tinyMesh : mModel->meshes)
+	{
+		GltfMesh mesh;
+		for (const tinygltf::Primitive& tinyPrimitive : tinyMesh.primitives)
+		{
+			GltfPrimitive primitive;
+			createPrimitive(tinyPrimitive, primitive);
+			uploadPrimitiveBuffers(primitive);
+			createIndexBuffer(tinyPrimitive, primitive);
+
+			mesh.primitives.push_back(std::move(primitive));
+		}
+		mMeshes.push_back(std::move(mesh));
+	}
 }
 
 
@@ -404,7 +421,8 @@ void GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
 
 bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string modelFilename,
-	std::string textureFilename)
+	std::string textureFilename,
+	bool useMeshPrimitiveApproach)
 {
 
 
@@ -437,18 +455,29 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 	if (!result)
 	{
-		Logger::log(1, "s error : could not load file '%s'\n", __FUNCTION__, modelFilename.c_str());
+		Logger::log(1, "%s error : could not load file '%s'\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
 
 	mModelFilename = modelFilename;
+	if (!useMeshPrimitiveApproach)
+	{
+		glGenVertexArrays(1, &mVAO);
+		glBindVertexArray(mVAO);
+		createVertexBuffers();
+		createIndexBuffer();
 
-	glGenVertexArrays(1, &mVAO);
-	glBindVertexArray(mVAO);
-	createVertexBuffers();
-	createIndexBuffer();
+		glBindVertexArray(0);
+	}
+	else
+	{
+		createMeshes();
 
-	glBindVertexArray(0);
+		for (auto& mesh : mMeshes)
+		{
+			Logger::log(1, "GltfModel::loading Mesh contains %zu primitives\n", mesh.primitives.size());
+		}
+	}
 
 
 	getJointData();
