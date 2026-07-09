@@ -21,6 +21,7 @@ add_executable (Ankka
 	"../includes/opengl/Texture.h"
 	"../includes/opengl/Shader.h" 
 	"../includes/opengl/OGLRenderData.h"
+	"../includes/opengl/Mesh.h"
 	"opengl/OGLRenderer.cpp" 
 	"opengl/Framebuffer.cpp" 
 	"opengl/VertexBuffer.cpp" 

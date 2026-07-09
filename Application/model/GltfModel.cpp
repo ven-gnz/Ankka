@@ -54,6 +54,36 @@ int GltfModel::getComponentCount(const tinygltf::Accessor& accessor, int accesso
 	
 }
 
+void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPrimitive& primitive)
+{
+	glGenVertexArrays(1, &primitive.vao);
+	glBindVertexArray(primitive.vao);
+
+	for (const auto& attrib : tinyPrimitive.attributes)
+	{
+
+		const std::string& attribType = attrib.first;
+		int accessorNum = attrib.second;
+
+		const tinygltf::Accessor& accessor = mModel->accessors.at(accessorNum);
+		const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
+		const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
+
+		if ((attribType.compare("POSITION") != 0) && (attribType.compare("NORMAL") != 0)
+			&& (attribType.compare("TEXCOORD_0") != 0) && (attribType.compare("JOINTS_0") != 0
+				&& (attribType.compare("WEIGHTS_0") != 0))) {
+			Logger::log(1, "%s: skipping attribute type %s\n", __FUNCTION__, attribType.c_str());
+			continue;
+		}
+
+		int location = attributes.at(attribType);
+		glGenBuffers(1, &primitive.vbos[location]);
+		glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[location]);
+
+
+	}
+}
+
 
 void GltfModel::createVertexBuffers()
 {

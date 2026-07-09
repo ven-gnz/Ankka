@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <array>
 
 
 class Mesh
@@ -11,8 +12,8 @@ public:
 struct GltfPrimitive
 {
 	GLuint vao = 0;
-std:array<GLuint, AttributeCount> vbos{};
-	std::array<int, ATTRIBUTE_COUNT> accessors{};
+	std::array<GLuint, 5> vbos{};
+	std::array<int, 5> accessors{};
 
 	GLuint ebo = 0;
 	uint32_t indexCount = 0;
@@ -24,5 +25,8 @@ std:array<GLuint, AttributeCount> vbos{};
 struct GltfMesh : public Mesh
 {
 	std::vector<GltfPrimitive> primitives;
-	void render() const override;
+	void render() const override
+	{
+
+	}
 };
