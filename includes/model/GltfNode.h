@@ -43,6 +43,8 @@ class GltfNode : public std::enable_shared_from_this<GltfNode> {
 
 	void updateNodeAndChildMatrices();
 
+	int meshIndex = -1; // default for no mesh yet
+
 private:
 
 	glm::vec3 mBlendScale = glm::vec3(1.0f);

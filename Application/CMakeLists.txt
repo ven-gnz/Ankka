@@ -5,8 +5,8 @@
 
 # Add source to this project's executable.
 add_executable (Ankka
-	"App/Ankka.cpp"
-	"../includes/App/Ankka.h"
+	"App/Appmain.cpp"
+	"../includes/App/Appmain.h"
 	"../includes/tools/Logger.h"
 	
 	"../includes/tools/UserInterface.h"
@@ -55,14 +55,10 @@ target_include_directories(Ankka
 		${CMAKE_SOURCE_DIR}/external/imgui
 		${CMAKE_SOURCE_DIR}/external/)
 
-find_package(Vulkan REQUIRED)
-
 target_link_libraries(Ankka 
 	PRIVATE 
 	glfw
 	glad
-	vk-bootstrap
-	Vulkan::Vulkan
 	imgui
 	tinygltf)
 

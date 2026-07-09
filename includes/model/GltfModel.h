@@ -12,6 +12,7 @@
 #include "model/MeshPrimitive.h"
 #include "model/GltfAnimationClip.h"
 #include "IKSolver.h"
+#include <opengl/Mesh.h>
 
 struct GltfNodeData
 {
@@ -68,6 +69,13 @@ private:
     std::vector<int> mNodeToJoint{};
 
     std::vector<std::shared_ptr<GltfAnimationClip>> mAnimClips{};
+
+    std::vector<GltfMesh> mMeshes{};
+
+    GLenum getGLComponentType(const tinygltf::Accessor& accessor, int accessorNum);
+    int getComponentCount(const tinygltf::Accessor& accessor, int accessorNum);
+    void createPrimitive(const tinygltf::Primitive& gltfPrimitive, GltfPrimitive& primitive);
+
 
     GLuint mVAO = 0;
     std::vector<GLuint> mVertexVBO{};

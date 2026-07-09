@@ -13,4 +13,4 @@ project ("Animation")
 
 # Include sub-projects.
 add_subdirectory("external") # cascades down into its own
-add_subdirectory ("Ankka")
+add_subdirectory ("Application")

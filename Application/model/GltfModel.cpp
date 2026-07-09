@@ -18,6 +18,43 @@ void GltfModel::createIndexBuffer()
 }
 
 
+GLenum GltfModel::getGLComponentType(const tinygltf::Accessor& accessor, int accessorNum)
+{
+	GLuint dataType = GL_FLOAT;
+	switch (accessor.componentType) {
+	case TINYGLTF_COMPONENT_TYPE_FLOAT:
+		return GL_FLOAT;
+	case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+		return GL_UNSIGNED_SHORT;
+	default:
+		Logger::log(1, "%s error: accessor %i uses unknown data type %i\n", __FUNCTION__,
+			accessorNum, accessor.componentType);
+		break;
+	}
+	return dataType;
+}
+
+int GltfModel::getComponentCount(const tinygltf::Accessor& accessor, int accessorNum)
+{
+
+	switch (accessor.type) {
+	case TINYGLTF_TYPE_SCALAR:
+		return 1;
+	case TINYGLTF_TYPE_VEC2:
+		return 2;
+	case TINYGLTF_TYPE_VEC3:
+		return 3;
+	case TINYGLTF_TYPE_VEC4:
+		return 4;
+	default:
+		Logger::log(1, "%s error: accessor %i uses data size %i\n", __FUNCTION__,
+			accessorNum, accessor.type);
+		return -1;
+	}
+	
+}
+
+
 void GltfModel::createVertexBuffers()
 {
 
@@ -52,40 +89,9 @@ void GltfModel::createVertexBuffers()
 
 		mAttribAccessors.at(attributes.at(attribType)) = accessorNum;
 
-		int dataSize = 1;
-		switch (accessor.type) {
-		case TINYGLTF_TYPE_SCALAR:
-			dataSize = 1;
-			break;
-		case TINYGLTF_TYPE_VEC2:
-			dataSize = 2;
-			break;
-		case TINYGLTF_TYPE_VEC3:
-			dataSize = 3;
-			break;
-		case TINYGLTF_TYPE_VEC4:
-			dataSize = 4;
-			break;
-		default:
-			Logger::log(1, "%s error: accessor %i uses data size %i\n", __FUNCTION__,
-				accessorNum, accessor.type);
-			break;
-		}
-
-		GLuint dataType = GL_FLOAT;
-		switch (accessor.componentType) {
-		case TINYGLTF_COMPONENT_TYPE_FLOAT:
-			dataType = GL_FLOAT;
-			break;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
-			dataType = GL_UNSIGNED_SHORT;
-			break;
-		default:
-			Logger::log(1, "%s error: accessor %i uses unknown data type %i\n", __FUNCTION__,
-				accessorNum, accessor.componentType);
-			break;
-		}
-
+		int dataSize = getComponentCount(accessor, accessorNum);
+		GLenum dataType = getGLComponentType(accessor, accessorNum);
+		
 		/* buffers for position, normal and tex coordinates */
 		glGenBuffers(1, &mVertexVBO.at(attributes.at(attribType)));
 		glBindBuffer(GL_ARRAY_BUFFER, mVertexVBO.at(attributes.at(attribType)));
