@@ -155,6 +155,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
+	if (!mChangedShader.loadShaders("shaders/basic.vert", "shaders/basic.frag"))
+	{
+		Logger::log(1, "%s: cannot find shaders\n",
+			__FUNCTION__);
+		return false;
+	}
+
 	if (!mGltfGPUShader.getuniformLocation("aModelStride"))
 	{
 		return false;
@@ -233,7 +240,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	std::string modelFilename = "assets/Woman.gltf";
 	std::string modelTexFilename = "tex/Woman.png";
 	bool useMeshPrimitiveApproach = false;
-	if (!mGltfModel->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach)) {
+	if (!mGltfModel->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, true)) {
 		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
@@ -243,7 +250,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	useMeshPrimitiveApproach = true;
 	mGltfModel1 = std::make_shared<GltfModel>();
-	if (!mGltfModel1->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach)) {
+	if (!mGltfModel1->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, true)) {
 		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
@@ -253,7 +260,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModel2 = std::make_shared<GltfModel>();
 	modelFilename = "assets/CesiumMilkTruck.glb";
 	modelTexFilename = "";
-	if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach)) {
+	if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
 		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
@@ -441,6 +448,7 @@ void OGLRenderer::draw() {
 	std::vector<glm::mat4> matrixData;
 	matrixData.push_back(mViewMatrix);
 	matrixData.push_back(mProjectionMatrix);
+	matrixData.clear();
 	mUniformBuffer.uploadUboData(matrixData, 0);
 
 	mModelJointMatrices.clear();
@@ -513,7 +521,14 @@ void OGLRenderer::draw() {
 		mVertexBuffer.bindAndDraw(GL_LINES, 0, mSkeletonLineIndexCount);
 		glEnable(GL_DEPTH_TEST);
 	}
-
+	mChangedShader.use();
+	
+	matrixData.push_back(mViewMatrix);
+	matrixData.push_back(mProjectionMatrix);
+	mUniformBuffer.uploadUboData(matrixData, 0);
+	matrixData.clear();
+	
+	mGltfModel2->drawNodeApproach(mChangedShader); 
 	mFramebuffer.unbind();
 
 	/* blit color buffer to screen */

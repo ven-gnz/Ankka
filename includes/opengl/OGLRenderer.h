@@ -111,6 +111,7 @@ private:
 	std::vector<std::shared_ptr<GltfInstance>> mGltfInstances{};
 	std::vector<std::shared_ptr<GltfInstance>> mGltfMatrixInstances{};
 	std::vector<std::shared_ptr<GltfInstance>> mGltfDQInstances{};
+	GltfInstance *carInstance;
 
 	std::vector<glm::mat4> mModelJointMatrices{};
 	std::vector<glm::mat2x4>mModelJointDualQuats{};

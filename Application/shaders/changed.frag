@@ -18,6 +18,7 @@ vec3 sRGB(vec3 c) {
 }
 
 void main() {
-  FragColor = texture(Tex, texCoord) * texColor;
-  FragColor.rgb = sRGB(FragColor.rgb);
+  //FragColor = texture(Tex, texCoord) * texColor;
+  //FragColor.rgb = sRGB(FragColor.rgb);
+  FragColor = vec4(1,0,1,1);
 }

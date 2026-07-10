@@ -22,10 +22,18 @@ struct GltfNodeData
 
 class GltfModel {
 public:
-    bool loadModel(OGLRenderData& renderData, std::string modelFilename,
-        std::string textureFilename, bool useMeshPrimitiveApproach);
+    bool loadModel(OGLRenderData& renderData,
+        std::string modelFilename,
+        std::string textureFilename,
+        bool useMeshPrimitiveApproach,
+        bool isInstanced);
     void draw();
     void drawInstanced(int instanceCount);
+    void drawNodeApproach(Shader& s);
+    void drawNode(std::shared_ptr<GltfNode> node, Shader& s);
+   
+    std::shared_ptr<GltfNode> mDebugRootNode;
+    std::vector<std::shared_ptr<GltfNode>> mDebugNodeList{};
     void cleanup();
 
     std::string getModelFilename();

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <array>
+#include <tools/Logger.h>
 
 
 class Mesh
@@ -24,6 +25,7 @@ struct GltfPrimitive
 
 	void render()
 	{
+		Logger::log(1, "rendering a GLTF primitive indices: %zu ", indexCount);
 		glBindVertexArray(vao);
 		if (ebo != 0)
 		{

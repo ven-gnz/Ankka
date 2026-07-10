@@ -163,6 +163,7 @@ void GltfModel::createMeshes()
 {
 	for (const tinygltf::Mesh tinyMesh : mModel->meshes)
 	{
+
 		GltfMesh mesh;
 		for (const tinygltf::Primitive& tinyPrimitive : tinyMesh.primitives)
 		{
@@ -393,6 +394,17 @@ void GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode)
 	else {
 		treeNode->setScale(glm::vec3(1.0f));
 	}
+	if (node.mesh >= 0)
+	{
+		treeNode->setMeshIndex(node.mesh);
+		Logger::log(
+			1,
+			"Node %d '%s': mesh=%d children=%zu",
+			nodeNum,
+			node.name.c_str(),
+			node.mesh,
+			node.children.size());
+	}
 
 	treeNode->calculateNodeMatrix();
 
@@ -422,7 +434,8 @@ void GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
 bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string modelFilename,
 	std::string textureFilename,
-	bool useMeshPrimitiveApproach)
+	bool useMeshPrimitiveApproach,
+	bool isInstanced)
 {
 
 	if (textureFilename.empty() && modelFilename.ends_with(".glb"))
@@ -511,14 +524,26 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		}
 	}
 
-
-	getJointData(); //TODO : change all these to get all the information from all meshes
-	getWeightData();
-	getInvBindMatrices();
-		
-	
-
+	if (mModel->skins.empty())
+	{
+		Logger::log(1, "%s: model contains no skins\n", __FUNCTION__);
+	}
+	else
+	{
+		getJointData(); //TODO : change all these to get all the information from all meshes
+		getWeightData();
+		getInvBindMatrices();
+	}
 	mNodeCount = mModel->nodes.size();
+	if (!isInstanced)
+	{
+		GltfNodeData nodeData = getGltfNodes();
+		mDebugRootNode = nodeData.rootNode;
+		mDebugNodeList = std::move(nodeData.nodeList);
+	}
+
+
+	
 	getAnimations();
 
 	return true;
@@ -544,6 +569,26 @@ void GltfModel::getAnimations() {
 	}
 }
 
+void GltfModel::drawNodeApproach(Shader& s)
+{
+	drawNode(mDebugRootNode, s);
+}
+
+
+void GltfModel::drawNode(std::shared_ptr<GltfNode> node, Shader& s)
+{
+
+	s.setM4_Uniform("model", node->getNodeMatrix());
+	if (node->hasMesh())
+	{
+		
+		mMeshes[node->getMeshIndex()].render();
+	}
+	for (auto& child : node->getChilds())
+	{
+		drawNode(child, s);
+	}
+}
 
 
 void GltfModel::draw() {
@@ -649,6 +694,12 @@ GltfNodeData GltfModel::getGltfNodes()
 	getNodes(nodeData.rootNode);
 
 	nodeData.nodeList.resize(mNodeCount);
+	Logger::log(1,
+		"rootNodeNum = %d, mNodeCount = %d, scene nodes = %zu, total nodes = %zu",
+		rootNodeNum,
+		mNodeCount,
+		mModel->scenes.at(0).nodes.size(),
+		mModel->nodes.size());
 	nodeData.nodeList.at(rootNodeNum) = nodeData.rootNode;
 	getNodeList(nodeData.nodeList, rootNodeNum);
 
