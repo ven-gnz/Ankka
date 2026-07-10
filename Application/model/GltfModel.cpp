@@ -425,11 +425,18 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	bool useMeshPrimitiveApproach)
 {
 
+	if (textureFilename.empty() && modelFilename.ends_with(".glb"))
+	{
+		Logger::log(1, "implement binary texture loading again");
+	}
 
 
-	if (!mTex.loadTexture(textureFilename, false)) {
-		Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
-		return false;
+	else
+	{
+		if (!mTex.loadTexture(textureFilename, false)) {
+			Logger::log(1, "%s: texture loading failed\n", __FUNCTION__);
+			return false;
+		}
 	}
 	
 	
@@ -440,25 +447,50 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	std::string loaderWarnings;
 	bool result = false;
 
-	result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings,
-		modelFilename);
-
-	if (!loaderWarnings.empty())
+	if (modelFilename.ends_with(".gltf"))
 	{
-		Logger::log(1, "%s: warnings while loading glTF model :\n%s\n", __FUNCTION__, loaderWarnings.c_str());
+		result = gltfLoader.LoadASCIIFromFile(mModel.get(), &loaderErrors, &loaderWarnings,
+			modelFilename);
+
+		if (!loaderWarnings.empty())
+		{
+			Logger::log(1, "%s: warnings while loading glTF model :\n%s\n", __FUNCTION__, loaderWarnings.c_str());
+		}
+
+		if (!loaderErrors.empty())
+		{
+			Logger::log(1, "%s: errors while loading glTF model :\n%s\n", __FUNCTION__, loaderErrors.c_str());
+		}
+
+		if (!result)
+		{
+			Logger::log(1, "%s error : could not load file '%s'\n", __FUNCTION__, modelFilename.c_str());
+			return false;
+		}
+	}
+	else if (modelFilename.ends_with(".glb"))
+	{
+		result = gltfLoader.LoadBinaryFromFile(mModel.get(), &loaderErrors, &loaderWarnings, modelFilename, 0);
+
+		if (!loaderWarnings.empty())
+		{
+			Logger::log(1, "%s: warnings while loading glTF model :\n%s\n", __FUNCTION__, loaderWarnings.c_str());
+		}
+
+		if (!loaderErrors.empty())
+		{
+			Logger::log(1, "%s: errors while loading glTF model :\n%s\n", __FUNCTION__, loaderErrors.c_str());
+		}
+
+		if (!result)
+		{
+			Logger::log(1, "%s error : could not load file '%s'\n", __FUNCTION__, modelFilename.c_str());
+			return false;
+		}
 	}
 
-	if (!loaderErrors.empty())
-	{
-		Logger::log(1, "%s: errors while loading glTF model :\n%s\n", __FUNCTION__, loaderErrors.c_str());
-	}
-
-	if (!result)
-	{
-		Logger::log(1, "%s error : could not load file '%s'\n", __FUNCTION__, modelFilename.c_str());
-		return false;
-	}
-
+	
+	
 	mModelFilename = modelFilename;
 	if (!useMeshPrimitiveApproach)
 	{
@@ -475,12 +507,12 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 		for (auto& mesh : mMeshes)
 		{
-			Logger::log(1, "GltfModel::loading Mesh contains %zu primitives\n", mesh.primitives.size());
+			Logger::log(1, "%s: Mesh contains %zu primitives\n", modelFilename.c_str(), mesh.primitives.size());
 		}
 	}
 
 
-	getJointData();
+	getJointData(); //TODO : change all these to get all the information from all meshes
 	getWeightData();
 	getInvBindMatrices();
 		

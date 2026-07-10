@@ -247,6 +247,16 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
+
+	
+
+	mGltfModel2 = std::make_shared<GltfModel>();
+	modelFilename = "assets/CesiumMilkTruck.glb";
+	modelTexFilename = "";
+	if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach)) {
+		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+		return false;
+	}
 	
 	
 

@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
 	{
 		Logger::log(1, "$s error: Window init error\n",
 			__FUNCTION__);
+		system("pause");
 		return -1;
 	}
 
