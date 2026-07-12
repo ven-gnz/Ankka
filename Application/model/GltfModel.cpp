@@ -61,6 +61,42 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 
 	for (const auto& attrib : tinyPrimitive.attributes)
 	{
+		const std::string& attribType = attrib.first;
+		const tinygltf::Accessor& accessor = mModel->accessors.at(attrib.second);
+		Logger::log(1, " %-12s type=%d count=%zu component=%d\n",
+				attrib.first.c_str(),
+				accessor.type,
+				accessor.count,
+				accessor.componentType);
+	}
+
+	if (tinyPrimitive.material >= 0)
+	{
+		const tinygltf::Material& material = mModel->materials.at(tinyPrimitive.material);
+		int textureIndex = material.pbrMetallicRoughness.baseColorTexture.index;
+		if (textureIndex >= 0)
+		{
+			const tinygltf::Texture& texture = mModel->textures.at(textureIndex);
+			const tinygltf::Image& image = mModel->images.at(texture.source);
+			primitive.tex = Texture::loadTextureFromBinary(image);
+			Logger::log(1, "Texture id = %u\n", primitive.tex);
+
+			GLint w = 0;
+
+			glBindTexture(GL_TEXTURE_2D, primitive.tex);
+
+			glGetTexLevelParameteriv(
+				GL_TEXTURE_2D,
+				0,
+				GL_TEXTURE_WIDTH,
+				&w);
+
+			Logger::log(1, "Uploaded width = %d", w);
+		}
+	}
+
+	for (const auto& attrib : tinyPrimitive.attributes)
+	{
 
 		const std::string& attribType = attrib.first;
 		int accessorNum = attrib.second;
@@ -88,7 +124,7 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 			location,
 			getComponentCount(accessor, accessorNum),
 			getGLComponentType(accessor, accessorNum),
-			accessor.normalized ? GL_TRUE : GL_FALSE, // might need conversion since the tinygltf enum size might differ?
+			accessor.normalized ? GL_TRUE : GL_FALSE,
 			bufferView.byteStride,
 			(void*)0
 		);
@@ -102,6 +138,7 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 
 void GltfModel::uploadPrimitiveBuffers(GltfPrimitive& primitive)
 {
+	glBindVertexArray(primitive.vao);
 	for (size_t i = 0; i < primitive.vbos.size(); ++i)
 	{
 		if (primitive.vbos[i] == 0) continue;
@@ -130,6 +167,7 @@ void GltfModel::uploadPrimitiveBuffers(GltfPrimitive& primitive)
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+	glBindVertexArray(0);
 }
 
 void GltfModel::createIndexBuffer(
@@ -148,15 +186,16 @@ void GltfModel::createIndexBuffer(
 	primitive.indexType = indexAccessor.componentType; // use of getGLComponent helper necessary?
 	primitive.indexCount = indexAccessor.count;
 
-	glGenBuffers(1, &primitive.ebo);
 	glBindVertexArray(primitive.vao);
+	glGenBuffers(1, &primitive.ebo);
+	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, primitive.ebo);
 	glBufferData(
 		GL_ELEMENT_ARRAY_BUFFER,
 		indexAccessor.count * tinygltf::GetComponentSizeInBytes(indexAccessor.componentType),
 		indexBuffer.data.data() + indexBufferView.byteOffset + indexAccessor.byteOffset,
 		GL_STATIC_DRAW);
-
+	glBindVertexArray(0);
 }
 
 void GltfModel::createMeshes()
@@ -168,6 +207,7 @@ void GltfModel::createMeshes()
 		for (const tinygltf::Primitive& tinyPrimitive : tinyMesh.primitives)
 		{
 			GltfPrimitive primitive;
+			Logger::log(1, "Primitive attributes : \n");
 			createPrimitive(tinyPrimitive, primitive);
 			uploadPrimitiveBuffers(primitive);
 			createIndexBuffer(tinyPrimitive, primitive);
@@ -440,7 +480,8 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 	if (textureFilename.empty() && modelFilename.ends_with(".glb"))
 	{
-		Logger::log(1, "implement binary texture loading again");
+		Logger::log(1, " Loading binary file with textures hopefuly baked into the model \n");
+		
 	}
 
 

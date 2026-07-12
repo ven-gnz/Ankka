@@ -2,6 +2,7 @@
 #include <vector>
 #include <array>
 #include <tools/Logger.h>
+#include <opengl/Texture.h>
 
 
 class Mesh
@@ -19,14 +20,15 @@ struct GltfPrimitive
 	GLuint ebo = 0;
 	uint32_t indexCount = 0;
 	uint32_t vertexCount = 0;
+	GLuint tex;
 
 	GLenum indexType = GL_UNSIGNED_SHORT;
 	int material = -1;
 
 	void render()
 	{
-		Logger::log(1, "rendering a GLTF primitive indices: %zu ", indexCount);
 		glBindVertexArray(vao);
+		glBindTexture(GL_TEXTURE_2D, tex);
 		if (ebo != 0)
 		{
 			glDrawElements(

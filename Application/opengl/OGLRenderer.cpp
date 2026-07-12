@@ -155,7 +155,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 
-	if (!mChangedShader.loadShaders("shaders/basic.vert", "shaders/basic.frag"))
+	if (!mChangedShader.loadShaders("shaders/changed.vert", "shaders/changed.frag"))
 	{
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);

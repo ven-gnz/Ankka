@@ -9,7 +9,6 @@
 #include "opengl/Shader.h"
 #include "model/GltfNode.h"
 #include "model/ModelLoader.h"
-#include "model/MeshPrimitive.h"
 #include "model/GltfAnimationClip.h"
 #include "IKSolver.h"
 #include <opengl/Mesh.h>

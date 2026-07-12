@@ -65,6 +65,7 @@ void Texture::cleanup()
 
 /*
 	26.03. -> This might be a stupid idea but should lead to a relatively easy per primitive texture binding point storing
+	12.7. revisiting the primitive approach, seems to be for simple smoke test as of now.
 */
 GLuint Texture::loadTextureFromBinary(const tinygltf::Image& img)
 {
