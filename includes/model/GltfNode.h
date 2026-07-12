@@ -47,8 +47,13 @@ class GltfNode : public std::enable_shared_from_this<GltfNode> {
 	bool hasMesh() const { return meshIndex >= 0; }
 	int getMeshIndex() const { return meshIndex; }
 
+	void setSkinIndex(int i) { skinIndex = i; }
+	bool hasSking() const { return skinIndex >= 0; }
+	int getSkinIndex() const { return skinIndex; }
+
 private:
 	int meshIndex = -1; // default for no mesh yet
+	int skinIndex = -1;
 	glm::vec3 mBlendScale = glm::vec3(1.0f);
 	glm::vec3 mBlendTranslation = glm::vec3(0.0f);
 	glm::quat mBlendRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);

@@ -19,6 +19,14 @@ struct GltfNodeData
 	std::vector<std::shared_ptr<GltfNode>> nodeList;
 };
 
+struct GltfSkin
+{
+    std::string name;
+    std::vector<int> joints;
+    std::vector<glm::mat4> inverseBindMatrices;
+    std::vector<int> nodeToJoint;
+};
+
 class GltfModel {
 public:
     bool loadModel(OGLRenderData& renderData,
@@ -49,6 +57,7 @@ public:
     std::vector<std::shared_ptr<GltfAnimationClip>> getAnimClips();
 
     void resetNodeData(std::shared_ptr<GltfNode> treeNode);
+    void resizeSkinVec();
 
 private:
     void createVertexBuffers();
@@ -78,6 +87,7 @@ private:
     std::vector<std::shared_ptr<GltfAnimationClip>> mAnimClips{};
 
     std::vector<GltfMesh> mMeshes{};
+    std::vector<GltfSkin> mSkins{};
 
     GLenum getGLComponentType(const tinygltf::Accessor& accessor, int accessorNum);
     int getComponentCount(const tinygltf::Accessor& accessor, int accessorNum);

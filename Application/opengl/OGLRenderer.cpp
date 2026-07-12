@@ -249,6 +249,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	
 
 	useMeshPrimitiveApproach = true;
+	modelTexFilename = "tex/Woman2.png"; // change to texture 2 for verifying the result later
 	mGltfModel1 = std::make_shared<GltfModel>();
 	if (!mGltfModel1->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, true)) {
 		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());

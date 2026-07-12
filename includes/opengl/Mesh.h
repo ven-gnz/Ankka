@@ -16,11 +16,12 @@ struct GltfPrimitive
 	GLuint vao = 0;
 	std::array<GLuint, 5> vbos{};
 	std::array<int, 5> accessors{};
-
+	std::vector<glm::u16vec4> joints{};
+	std::vector<glm::vec4> weights;
 	GLuint ebo = 0;
 	uint32_t indexCount = 0;
 	uint32_t vertexCount = 0;
-	GLuint tex;
+	GLuint tex = 0;
 
 	GLenum indexType = GL_UNSIGNED_SHORT;
 	int material = -1;
