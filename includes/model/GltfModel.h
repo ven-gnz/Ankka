@@ -23,6 +23,7 @@ struct GltfSkin
 {
     std::string name;
     std::vector<int> joints;
+    std::vector<glm::mat4> jointMatrices;
     std::vector<glm::mat4> inverseBindMatrices;
     std::vector<int> nodeToJoint;
 };
@@ -57,7 +58,6 @@ public:
     std::vector<std::shared_ptr<GltfAnimationClip>> getAnimClips();
 
     void resetNodeData(std::shared_ptr<GltfNode> treeNode);
-    void resizeSkinVec();
 
 private:
     void createVertexBuffers();
@@ -95,7 +95,8 @@ private:
     void uploadPrimitiveBuffers(GltfPrimitive& primitive);
     void createIndexBuffer(const tinygltf::Primitive& tinyPrimitive, GltfPrimitive& primitive);
     void createMeshes();
-
+    void calculateBindPose();
+    void loadSkins();
 
     GLuint mVAO = 0;
     std::vector<GLuint> mVertexVBO{};

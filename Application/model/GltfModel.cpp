@@ -483,24 +483,59 @@ void GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
 
 }
 
-void GltfModel::resizeSkinVec()
+
+// debug method
+void GltfModel::calculateBindPose()
+{
+	for (auto& skin : mSkins)
+	{
+		skin.jointMatrices.resize(skin.joints.size());
+		for (size_t i = 0; i < skin.joints.size(); ++i)
+		{
+			int nodeIndex = skin.joints[i];
+			skin.jointMatrices[i] = 
+				mDebugNodeList[nodeIndex]->getNodeMatrix() * skin.inverseBindMatrices[i];
+
+		}
+	}
+}
+
+void GltfModel::loadSkins()
 {
 	mSkins.resize(mModel->skins.size());
-	Logger::log(1, "Resized skins to %zu\n" , mSkins.size());
 
-	for (size_t i = 0; i < mModel->skins.size(); ++i)
+	for (size_t skinIndex = 0; skinIndex < mModel->skins.size(); ++skinIndex)
 	{
-		const tinygltf::Skin& srcSkin = mModel->skins[i];
-		GltfSkin& dstSkin = mSkins[i];
+		const tinygltf::Skin& source = mModel->skins[skinIndex];
+		GltfSkin& destination = mSkins[skinIndex];
 
-		dstSkin.joints = srcSkin.joints;
+		destination.name = source.name;
+		destination.joints = source.joints;
 
-		Logger::log(
-			1,
-			"Skin %zu has %zu joints\n",
-			i,
-			dstSkin.joints.size());
+		if (source.inverseBindMatrices >= 0)
+		{
+			const tinygltf::Accessor& accessor =
+				mModel->accessors[source.inverseBindMatrices];
+
+			const tinygltf::BufferView& view =
+				mModel->bufferViews[accessor.bufferView];
+
+			const tinygltf::Buffer& buffer =
+				mModel->buffers[view.buffer];
+
+			destination.inverseBindMatrices.resize(accessor.count);
+
+			std::memcpy(
+				destination.inverseBindMatrices.data(),
+				buffer.data.data() +
+				view.byteOffset +
+				accessor.byteOffset,
+				accessor.count * sizeof(glm::mat4));
+
+		}
+		destination.jointMatrices.resize(destination.joints.size());
 	}
+
 }
 
 
@@ -592,7 +627,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	else
 	{
 		createMeshes();
-		resizeSkinVec(); // currently only resized buffer
+		loadSkins();
 	}
 
 	if (mModel->skins.empty())
@@ -609,7 +644,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		}
 		else
 		{
-			createSkinData();
+			
 		}
 		
 	}
@@ -619,7 +654,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		GltfNodeData nodeData = getGltfNodes();
 		mDebugRootNode = nodeData.rootNode;
 		mDebugNodeList = std::move(nodeData.nodeList);
-		
+		calculateBindPose();
 	}
 
 

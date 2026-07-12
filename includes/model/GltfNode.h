@@ -42,7 +42,7 @@ class GltfNode : public std::enable_shared_from_this<GltfNode> {
 	void setWorldRotation(glm::vec3 rot);
 
 	void updateNodeAndChildMatrices();
-
+	int meshIndex = -1; // default for no mesh yet
 	void setMeshIndex(int i) { meshIndex = i; }
 	bool hasMesh() const { return meshIndex >= 0; }
 	int getMeshIndex() const { return meshIndex; }
@@ -52,7 +52,7 @@ class GltfNode : public std::enable_shared_from_this<GltfNode> {
 	int getSkinIndex() const { return skinIndex; }
 
 private:
-	int meshIndex = -1; // default for no mesh yet
+
 	int skinIndex = -1;
 	glm::vec3 mBlendScale = glm::vec3(1.0f);
 	glm::vec3 mBlendTranslation = glm::vec3(0.0f);

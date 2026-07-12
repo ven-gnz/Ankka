@@ -251,7 +251,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	useMeshPrimitiveApproach = true;
 	modelTexFilename = "tex/Woman2.png"; // change to texture 2 for verifying the result later
 	mGltfModel1 = std::make_shared<GltfModel>();
-	if (!mGltfModel1->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, true)) {
+	if (!mGltfModel1->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
 		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
@@ -529,7 +529,13 @@ void OGLRenderer::draw() {
 	mUniformBuffer.uploadUboData(matrixData, 0);
 	matrixData.clear();
 	
-	mGltfModel2->drawNodeApproach(mChangedShader); 
+	mGltfModel2->drawNodeApproach(mChangedShader);
+
+	matrixData.push_back(mViewMatrix);
+	matrixData.push_back(mProjectionMatrix);
+	mUniformBuffer.uploadUboData(matrixData, 0);
+	matrixData.clear();
+	mGltfModel1->drawNodeApproach(mChangedShader);
 	mFramebuffer.unbind();
 
 	/* blit color buffer to screen */
