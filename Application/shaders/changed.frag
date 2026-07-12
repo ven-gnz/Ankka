@@ -13,11 +13,12 @@ if (x <= 0.0031308)
     else
         return 1.055 * pow(x, (1.0/2.4)) - 0.055;
 }
+// manual conversion in shader should work for linear textures.
 vec3 sRGB(vec3 c) {
     return vec3(toSRGB(c.x), toSRGB(c.y), toSRGB(c.z));
 }
 
 void main() {
   FragColor = texture(Tex,uv);
-  
+  FragColor.rgb = sRGB(FragColor.rgb);
 }
