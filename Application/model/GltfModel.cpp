@@ -94,6 +94,17 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 			Logger::log(1, "Uploaded width = %d", w);
 		}
 	}
+	if (mTex.mTexture >= 0)
+	{
+		primitive.tex = mTex.mTexture;
+		Logger::log(1, "\nCopying texture id :%zu\n", mTex.mTexture);
+
+		Logger::log(1,
+			"createPrimitive: GltfModel %p  mTex=%p  texture=%u",
+			this,
+			&mTex,
+			mTex.mTexture);
+	}
 
 	for (const auto& attrib : tinyPrimitive.attributes)
 	{
@@ -111,8 +122,34 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 			Logger::log(1, "%s: skipping attribute type %s\n", __FUNCTION__, attribType.c_str());
 			continue;
 		}
-
-		if (attribType == "POSITION") primitive.vertexCount = accessor.count;
+		//CPU copies for CPU skin
+		const uint8_t* data =
+			buffer.data.data()
+			+ bufferView.byteOffset
+			+ accessor.byteOffset;
+		if (attribType == "POSITION")
+		{
+			primitive.vertexCount = accessor.count;
+			const glm::vec3* src =
+				reinterpret_cast<const glm::vec3*>(data);
+			primitive.positions.assign(src, src + accessor.count);
+		}
+		if (attribType == "NORMAL")
+		{
+			primitive.vertexCount = accessor.count;
+			const glm::vec3* src =
+				reinterpret_cast<const glm::vec3*>(data);
+			primitive.normals.assign(src, src + accessor.count);
+		}
+		if (attribType == "JOINTS_0"){
+			const glm::u16vec4* src = reinterpret_cast<const glm::u16vec4*>(data);
+			primitive.joints.assign(src, src + accessor.count);
+		}
+		if (attribType == "WEIGHTS_0")
+		{
+			const glm::vec4* src = reinterpret_cast<const glm::vec4*>(data);
+			primitive.weights.assign(src, src + accessor.count);
+		}
 
 		int location = attributes.at(attribType);
 		primitive.accessors[location] = accessorNum;
@@ -128,6 +165,11 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 			bufferView.byteStride,
 			(void*)0
 		);
+
+		Logger::log(1,
+			"%s stride=%d",
+			attribType.c_str(),
+			bufferView.byteStride);
 
 		glEnableVertexAttribArray(location);
 
@@ -410,8 +452,16 @@ int GltfModel::getTriangleCount()
 
 void GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode)
 {
+	//Logger::log(1,
+	//	"getNodeData: treeNode->getNodeNum() = %d\n",
+	//	treeNode->getNodeNum());
 	int nodeNum = treeNode->getNodeNum();
 	const tinygltf::Node& node = mModel->nodes.at(nodeNum);
+	//Logger::log(1,
+	//	"tiny node '%s' mesh=%d skin=%d\n",
+	//	node.name.c_str(),
+	//	node.mesh,
+	//	node.skin);
 	treeNode->setNodeName(node.name);
 
 	if (node.translation.size()) {
@@ -439,22 +489,26 @@ void GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode)
 		treeNode->setMeshIndex(node.mesh);
 		if (node.skin >= 0) {
 			treeNode->setSkinIndex(node.skin);
-			Logger::log(1,
-				"Node %d '%s' mesh=%d skin=%d children=%zu",
-				nodeNum,
-				node.name.c_str(),
-				node.mesh,
-				node.skin,
-				node.children.size());
+			//Logger::log(1,
+			//	"Node %d '%s' mesh=%d skin=%d children=%zu",
+			//	nodeNum,
+			//	node.name.c_str(),
+			//	node.mesh,
+			//	node.skin,
+			//	node.children.size());
+
+			//Logger::log(1,
+			//	"Stored mesh index = %d",
+			//	treeNode->getMeshIndex());
 		}
 		else {
-			Logger::log(
-				1,
-				"Node %d '%s': mesh=%d children=%zu",
-				nodeNum,
-				node.name.c_str(),
-				node.mesh,
-				node.children.size());
+			//Logger::log(
+			//	1,
+			//	"Node %d '%s': mesh=%d children=%zu",
+			//	nodeNum,
+			//	node.name.c_str(),
+			//	node.mesh,
+			//	node.children.size());
 		}
 	}
 
@@ -462,15 +516,22 @@ void GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode)
 
 }
 
+// 14.07. retired the removal of the skinned nodes to favor the less-hardcoded path.
+// In the book the mesh and skin were loaded as separate efforts(as they should be), 
+// but in the new intermediate model the idea is to shoot for a simple but correct architecture that does not hardcode the tree to end on the skinned mesh
+// Further yet the mesh on the model was actually placed as the child so the descent not leading to leaves left the mesh index of the node to not update to point to the mesh.
+// This is of course a temporary solution until I can figure out a way to unify the paths.
+
 void GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
 {
 	int nodeNum = treeNode->getNodeNum();
 	std::vector<int> childNodes = mModel->nodes.at(nodeNum).children;
 
-	auto removeIt = std::remove_if(childNodes.begin(), childNodes.end(),
-		[&](int num) { return mModel->nodes.at(num).skin != -1; });
+	// This was the hardcoded approach 
+	//auto removeIt = std::remove_if(childNodes.begin(), childNodes.end(),
+	//	[&](int num) { return mModel->nodes.at(num).skin != -1; });
 
-	childNodes.erase(removeIt, childNodes.end());
+	//childNodes.erase(removeIt, childNodes.end());
 
 	treeNode->addChilds(childNodes);
 	glm::mat4 treeNodeMatrix = treeNode->getNodeMatrix();
@@ -490,15 +551,36 @@ void GltfModel::calculateBindPose()
 	for (auto& skin : mSkins)
 	{
 		skin.jointMatrices.resize(skin.joints.size());
-		for (size_t i = 0; i < skin.joints.size(); ++i)
-		{
+
+		for (size_t i = 0; i < skin.joints.size(); ++i) {
 			int nodeIndex = skin.joints[i];
 			skin.jointMatrices[i] = 
 				mDebugNodeList[nodeIndex]->getNodeMatrix() * skin.inverseBindMatrices[i];
 
 		}
+		for (auto& mesh : mMeshes) {
+			for (auto& primitive : mesh.primitives) {
+				for (size_t v = 0; v < primitive.positions.size(); ++v)
+				{
+					const glm::u16vec4& joints = primitive.joints[v];
+					const glm::vec4& weights = primitive.weights[v];
+
+					glm::mat4 skinMatrix =
+						weights.x * skin.jointMatrices[joints.x]
+						+ weights.y * skin.jointMatrices[joints.y]
+						+ weights.z * skin.jointMatrices[joints.z]
+						+ weights.w * skin.jointMatrices[joints.w];
+
+					glm::vec4 p = glm::vec4(primitive.positions[v], 1.0f);
+
+					primitive.positions[v] = glm::vec3(skinMatrix * p);
+				}
+			}
+		}
 	}
+
 }
+
 
 void GltfModel::loadSkins()
 {
@@ -514,24 +596,17 @@ void GltfModel::loadSkins()
 
 		if (source.inverseBindMatrices >= 0)
 		{
-			const tinygltf::Accessor& accessor =
-				mModel->accessors[source.inverseBindMatrices];
-
-			const tinygltf::BufferView& view =
-				mModel->bufferViews[accessor.bufferView];
-
-			const tinygltf::Buffer& buffer =
-				mModel->buffers[view.buffer];
+			const tinygltf::Accessor& accessor = mModel->accessors[source.inverseBindMatrices];
+			const tinygltf::BufferView& view = mModel->bufferViews[accessor.bufferView];
+			const tinygltf::Buffer& buffer = mModel->buffers[view.buffer];
 
 			destination.inverseBindMatrices.resize(accessor.count);
-
 			std::memcpy(
 				destination.inverseBindMatrices.data(),
 				buffer.data.data() +
 				view.byteOffset +
 				accessor.byteOffset,
 				accessor.count * sizeof(glm::mat4));
-
 		}
 		destination.jointMatrices.resize(destination.joints.size());
 	}
@@ -561,8 +636,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 			return false;
 		}
 	}
-	
-	
+
 	mModel = std::make_shared<tinygltf::Model>();
 
 	tinygltf::TinyGLTF gltfLoader;
@@ -612,8 +686,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		}
 	}
 
-	
-	
+
 	mModelFilename = modelFilename;
 	if (!useMeshPrimitiveApproach)
 	{
@@ -630,31 +703,37 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		loadSkins();
 	}
 
-	if (mModel->skins.empty())
+	if (!useMeshPrimitiveApproach)
 	{
-		Logger::log(1, "%s: model contains no skins\n", __FUNCTION__);
+		getJointData();
+		getWeightData();
+		getInvBindMatrices();
 	}
-	else
-	{
-		if (!useMeshPrimitiveApproach)
-		{
-			getJointData(); //TODO : change all these to get all the information from all meshes
-			getWeightData();
-			getInvBindMatrices();
-		}
-		else
-		{
-			
-		}
+
 		
-	}
+	
 	mNodeCount = mModel->nodes.size();
-	if (!isInstanced)
+	if (useMeshPrimitiveApproach)
 	{
 		GltfNodeData nodeData = getGltfNodes();
 		mDebugRootNode = nodeData.rootNode;
+
 		mDebugNodeList = std::move(nodeData.nodeList);
-		calculateBindPose();
+
+		//calculateBindPose();
+		//for (auto& mesh : mMeshes)
+		//{
+		//	for (auto& primitive : mesh.primitives){
+		//		glBindVertexArray(primitive.vao);
+		//		glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[0]);
+		//		glBufferSubData(
+		//			GL_ARRAY_BUFFER,
+		//			0,
+		//			primitive.positions.size() * sizeof(glm::vec3),
+		//			primitive.positions.data());
+		//		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		//	}
+		//}
 	}
 
 
@@ -684,24 +763,34 @@ void GltfModel::getAnimations() {
 	}
 }
 
-void GltfModel::drawNodeApproach(Shader& s)
+void GltfModel::drawNodeApproach(Shader& s, bool log)
 {
-	drawNode(mDebugRootNode, s);
+	drawNode(mDebugRootNode, s, log);
 }
 
 
-void GltfModel::drawNode(std::shared_ptr<GltfNode> node, Shader& s)
+void GltfModel::drawNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 {
 
 	s.setM4_Uniform("model", node->getNodeMatrix());
+	if (log){
+		Logger::log(1,
+			"drawNode %d hasMesh=%d meshIndex=%d",
+			node->getNodeNum(),
+			node->hasMesh(),
+			node->getMeshIndex());
+		glm::mat4 M = node->getNodeMatrix();
+		Logger::logm4(1, M);
+	}
+
 	if (node->hasMesh())
 	{
-		
+	
 		mMeshes[node->getMeshIndex()].render();
 	}
 	for (auto& child : node->getChilds())
 	{
-		drawNode(child, s);
+		drawNode(child, s, log);
 	}
 }
 
@@ -769,7 +858,7 @@ void GltfModel::resetNodeData(
 	getNodeData(treeNode);
 	for (auto& childNode : treeNode->getChilds())
 	{
-		
+
 		resetNodeData(childNode);
 	}
 }

@@ -255,17 +255,19 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
 		return false;
 	}
+	mFirstLogRender = true;
 
 	
 
-	mGltfModel2 = std::make_shared<GltfModel>();
-	modelFilename = "assets/CesiumMilkTruck.glb";
-	modelTexFilename = "";
-	if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
-		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
-		return false;
-	}
+	//mGltfModel2 = std::make_shared<GltfModel>();
+	//modelFilename = "assets/CesiumMilkTruck.glb";
+	//modelTexFilename = "";
+	//if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
+	//	Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+	//	return false;
+	//}
 	
+
 	
 
 	int numTriangles = 0;
@@ -522,25 +524,32 @@ void OGLRenderer::draw() {
 		mVertexBuffer.bindAndDraw(GL_LINES, 0, mSkeletonLineIndexCount);
 		glEnable(GL_DEPTH_TEST);
 	}
+	glDisable(GL_CULL_FACE);
 	mChangedShader.use();
 	
-	matrixData.push_back(mViewMatrix);
-	matrixData.push_back(mProjectionMatrix);
-	mUniformBuffer.uploadUboData(matrixData, 0);
-	matrixData.clear();
-	
-	mGltfModel2->drawNodeApproach(mChangedShader);
+	//matrixData.push_back(mViewMatrix);
+	//matrixData.push_back(mProjectionMatrix);
+	//mUniformBuffer.uploadUboData(matrixData, 0);
+	//matrixData.clear();
+	// CAR CODE, commented out for easy comparison
+	//mGltfModel2->drawNodeApproach(mChangedShader);
 
 	matrixData.push_back(mViewMatrix);
 	matrixData.push_back(mProjectionMatrix);
 	mUniformBuffer.uploadUboData(matrixData, 0);
 	matrixData.clear();
-	mGltfModel1->drawNodeApproach(mChangedShader);
-	mFramebuffer.unbind();
+	if (mFirstLogRender)
+	{
+		mGltfModel1->drawNodeApproach(mChangedShader, true);
+		mFirstLogRender = false;
+	}
+	else mGltfModel1->drawNodeApproach(mChangedShader, false);
+	
+	
 
 	/* blit color buffer to screen */
 	mFramebuffer.drawToScreen();
-
+	mFramebuffer.unbind();
 	mUIGenerateTimer.start();
 
 	ModelSettings settings = mGltfInstances.at(selectedInstance)->getInstanceSettings();

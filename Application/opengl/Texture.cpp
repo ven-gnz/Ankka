@@ -32,6 +32,7 @@ bool Texture::loadTexture(std::string textureFilename, bool flipImage)
 	}
 	Logger::log(1, " channel count: %d", mNumberOfChannels);
 	glGenTextures(1, &mTexture);
+	Logger::log(1, "Generated texture %u", mTexture);
 	glBindTexture(GL_TEXTURE_2D, mTexture);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);

@@ -14,11 +14,11 @@ public:
 	void cleanup();
 
 	Texture() : mTexture(0) {};
-
-private:
 	GLuint mTexture = 0;
 	int mTexWidth = 0;
 	int mTexHeight = 0;
 	int mNumberOfChannels = 0;
 	std::string mTextureName;
+	
+	
 };

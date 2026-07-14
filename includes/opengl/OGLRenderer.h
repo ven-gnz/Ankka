@@ -102,6 +102,7 @@ private:
 	Timer mUIDrawTimer{};
 
 	//Debug drawing stuffs
+	bool mFirstLogRender = true;
 	Shader mLineShader{};
 	CoordArrowsModel mCoordArrowsModel{};
 	OGLMesh mCoordArrowsMesh{};

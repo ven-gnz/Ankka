@@ -37,8 +37,8 @@ public:
         bool isInstanced);
     void draw();
     void drawInstanced(int instanceCount);
-    void drawNodeApproach(Shader& s);
-    void drawNode(std::shared_ptr<GltfNode> node, Shader& s);
+    void drawNodeApproach(Shader& s, bool log);
+    void drawNode(std::shared_ptr<GltfNode> node, Shader& s, bool log);
    
     std::shared_ptr<GltfNode> mDebugRootNode;
     std::vector<std::shared_ptr<GltfNode>> mDebugNodeList{};
