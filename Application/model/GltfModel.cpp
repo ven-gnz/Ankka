@@ -94,7 +94,7 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 			Logger::log(1, "Uploaded width = %d", w);
 		}
 	}
-	if (mTex.mTexture >= 0)
+	if (mTex.mTexture > 0)
 	{
 		primitive.tex = mTex.mTexture;
 		Logger::log(1, "\nCopying texture id :%zu\n", mTex.mTexture);
@@ -184,18 +184,10 @@ void GltfModel::uploadPrimitiveBuffers(GltfPrimitive& primitive)
 	for (size_t i = 0; i < primitive.vbos.size(); ++i)
 	{
 		if (primitive.vbos[i] == 0) continue;
-
-		const tinygltf::Accessor& accessor =
-			mModel->accessors.at(primitive.accessors[i]);
-
-		const tinygltf::BufferView& bufferView =
-			mModel->bufferViews.at(accessor.bufferView);
-
-		const tinygltf::Buffer& buffer =
-			mModel->buffers.at(bufferView.buffer);
-
+		const tinygltf::Accessor& accessor = mModel->accessors.at(primitive.accessors[i]);
+		const tinygltf::BufferView& bufferView = mModel->bufferViews.at(accessor.bufferView);
+		const tinygltf::Buffer& buffer = mModel->buffers.at(bufferView.buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[i]);
-
 		// the accessors bytestride itself is handled by the vertex attrib pointer
 		glBufferData(
 			GL_ARRAY_BUFFER,
@@ -720,20 +712,24 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 		mDebugNodeList = std::move(nodeData.nodeList);
 
-		//calculateBindPose();
-		//for (auto& mesh : mMeshes)
-		//{
-		//	for (auto& primitive : mesh.primitives){
-		//		glBindVertexArray(primitive.vao);
-		//		glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[0]);
-		//		glBufferSubData(
-		//			GL_ARRAY_BUFFER,
-		//			0,
-		//			primitive.positions.size() * sizeof(glm::vec3),
-		//			primitive.positions.data());
-		//		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		//	}
-		//}
+		calculateBindPose();
+		// Just throwaway for inspecting the nodebased approach CPU skinning
+		for (auto& mesh : mMeshes) {
+			for (auto& primitive : mesh.primitives) {
+				glBindVertexArray(primitive.vao);
+				int positionLocation = attributes.at("POSITION");
+				if (primitive.vbos[positionLocation] == 0) continue;
+				glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[positionLocation]);
+
+				glBufferData(GL_ARRAY_BUFFER,
+					primitive.positions.size() * sizeof(glm::vec3),
+					primitive.positions.data(),
+					GL_STATIC_DRAW);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+			}
+
+		}
+		
 	}
 
 
@@ -775,7 +771,7 @@ void GltfModel::drawNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 	s.setM4_Uniform("model", node->getNodeMatrix());
 	if (log){
 		Logger::log(1,
-			"drawNode %d hasMesh=%d meshIndex=%d",
+			"drawNode %d hasMesh=%d meshIndex=%d\n",
 			node->getNodeNum(),
 			node->hasMesh(),
 			node->getMeshIndex());
@@ -785,7 +781,6 @@ void GltfModel::drawNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 
 	if (node->hasMesh())
 	{
-	
 		mMeshes[node->getMeshIndex()].render();
 	}
 	for (auto& child : node->getChilds())
@@ -802,7 +797,6 @@ void GltfModel::draw() {
 
 	if (primitives.indices >= 0)
 	{
-		//std::cout << " debug ";
 		const tinygltf::Accessor& indexAccessor = mModel->accessors.at(primitives.indices);
 
 		GLuint drawMode = GL_TRIANGLES;
@@ -893,7 +887,7 @@ GltfNodeData GltfModel::getGltfNodes()
 	int rootNodeNum = mModel->scenes.at(0).nodes.at(0);
 
 	nodeData.rootNode = GltfNode::createRoot(rootNodeNum);
-
+	
 	getNodeData(nodeData.rootNode);
 	getNodes(nodeData.rootNode);
 

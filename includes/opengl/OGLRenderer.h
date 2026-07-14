@@ -61,7 +61,8 @@ private:
 	void handleMovementKeys();
 
 	Shader mGltfGPUShader{};
-	Shader mChangedShader{};
+	Shader mCarShader{};
+	Shader mDebugShader{};
 	Framebuffer mFramebuffer{};
 	VertexBuffer mVertexBuffer{};
 	UniformBuffer mUniformBuffer{};

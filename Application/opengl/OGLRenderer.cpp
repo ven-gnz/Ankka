@@ -148,15 +148,19 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mUniformBuffer.init(uniformMatrixBufferSize);
 	Logger::log(1, "%s: matrix uniform buffer (size %i bytes) successfully created\n", __FUNCTION__, uniformMatrixBufferSize);
 
-	if (!mGltfGPUShader.loadShaders("shaders/gltf_gpu.vert", "shaders/gltf_gpu.frag"))
-	{
+	if (!mGltfGPUShader.loadShaders("shaders/gltf_gpu.vert", "shaders/gltf_gpu.frag")){
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);
 		return false;
 	}
 
-	if (!mChangedShader.loadShaders("shaders/changed.vert", "shaders/changed.frag"))
-	{
+	if (!mCarShader.loadShaders("shaders/changed.vert", "shaders/changed.frag")){
+		Logger::log(1, "%s: cannot find shaders\n",
+			__FUNCTION__);
+		return false;
+	}
+
+	if (!mDebugShader.loadShaders("shaders/debug.vert", "shaders/debug.frag")) {
 		Logger::log(1, "%s: cannot find shaders\n",
 			__FUNCTION__);
 		return false;
@@ -259,13 +263,13 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	
 
-	//mGltfModel2 = std::make_shared<GltfModel>();
-	//modelFilename = "assets/CesiumMilkTruck.glb";
-	//modelTexFilename = "";
-	//if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
-	//	Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
-	//	return false;
-	//}
+	mGltfModel2 = std::make_shared<GltfModel>();
+	modelFilename = "assets/CesiumMilkTruck.glb";
+	modelTexFilename = "";
+	if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
+		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+		return false;
+	}
 	
 
 	
@@ -525,14 +529,15 @@ void OGLRenderer::draw() {
 		glEnable(GL_DEPTH_TEST);
 	}
 	glDisable(GL_CULL_FACE);
-	mChangedShader.use();
-	
+	//mCarShader.use();
+	//
 	//matrixData.push_back(mViewMatrix);
 	//matrixData.push_back(mProjectionMatrix);
 	//mUniformBuffer.uploadUboData(matrixData, 0);
 	//matrixData.clear();
-	// CAR CODE, commented out for easy comparison
-	//mGltfModel2->drawNodeApproach(mChangedShader);
+	//mGltfModel2->drawNodeApproach(mCarShader, false);
+
+	mDebugShader.use();
 
 	matrixData.push_back(mViewMatrix);
 	matrixData.push_back(mProjectionMatrix);
@@ -540,10 +545,10 @@ void OGLRenderer::draw() {
 	matrixData.clear();
 	if (mFirstLogRender)
 	{
-		mGltfModel1->drawNodeApproach(mChangedShader, true);
+		mGltfModel1->drawNodeApproach(mDebugShader, true);
 		mFirstLogRender = false;
 	}
-	else mGltfModel1->drawNodeApproach(mChangedShader, false);
+	else mGltfModel1->drawNodeApproach(mDebugShader, false);
 	
 	
 
@@ -570,7 +575,7 @@ void OGLRenderer::cleanup()
 {
 	mUserInterface.cleanup();
 	
-	mChangedShader.cleanup();
+	mCarShader.cleanup();
 
 	mGltfGPUDualQuatShader.cleanup();
 
