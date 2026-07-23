@@ -48,7 +48,7 @@ class GltfNode : public std::enable_shared_from_this<GltfNode> {
 	int getMeshIndex() const { return meshIndex; }
 
 	void setSkinIndex(int i) { skinIndex = i; }
-	bool hasSking() const { return skinIndex >= 0; }
+	bool hasSkin() const { return skinIndex >= 0; }
 	int getSkinIndex() const { return skinIndex; }
 
 private:

@@ -260,10 +260,11 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 	mFirstLogRender = true;
-	mGltfModel1->setWorldPosition(glm::vec3(0.0, 0.0, 0.0));
-	mGltfModel1->setWorldRotation(glm::vec3(0.0));
+	
 	mGltfModel1->setDebugModelScale(100.0f);
-
+	mGltfModel1->setWorldPosition(glm::vec3(1.0f / 100.0f, 0.0, 0.0)); // lol, to combat the hack we introduce another hack hehe.
+	mGltfModel1->setWorldRotation(glm::vec3(0.0));
+	mGltfModel1->updateToBindPose(); // next fix this
 	
 
 	mGltfModel2 = std::make_shared<GltfModel>();
@@ -279,7 +280,7 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 
 	int numTriangles = 0;
 
-	for (int i = 0; i < 2; ++i) {
+	for (int i = 0; i < 5; ++i) {
 		int xPos = std::rand() % 40 - 20;
 		int zPos = std::rand() % 40 - 20;
 		mGltfInstances.emplace_back(std::make_shared<GltfInstance>(mGltfModel, glm::vec2(static_cast<float>(xPos),
@@ -532,26 +533,26 @@ void OGLRenderer::draw() {
 		glEnable(GL_DEPTH_TEST);
 	}
 	glDisable(GL_CULL_FACE);
-	//mCarShader.use();
-	//
-	//matrixData.push_back(mViewMatrix);
-	//matrixData.push_back(mProjectionMatrix);
-	//mUniformBuffer.uploadUboData(matrixData, 0);
-	//matrixData.clear();
-	//mGltfModel2->drawNodeApproach(mCarShader, false);
-
-	mDebugShader.use();
-
+	mCarShader.use();
+	
 	matrixData.push_back(mViewMatrix);
 	matrixData.push_back(mProjectionMatrix);
 	mUniformBuffer.uploadUboData(matrixData, 0);
 	matrixData.clear();
-	if (mFirstLogRender)
-	{
-		mGltfModel1->drawNodeApproach(mDebugShader, true);
-		mFirstLogRender = false;
-	}
-	else mGltfModel1->drawNodeApproach(mDebugShader, false);
+	mGltfModel2->drawSceneGraph(mCarShader, false);
+
+	//mDebugShader.use();
+
+	//matrixData.push_back(mViewMatrix);
+	//matrixData.push_back(mProjectionMatrix);
+	//mUniformBuffer.uploadUboData(matrixData, 0);
+	//matrixData.clear();
+	//if (mFirstLogRender)
+	//{
+	//	mGltfModel1->drawSceneGraph(mDebugShader, true);
+	//	mFirstLogRender = false;
+	//}
+	//else mGltfModel1->drawSceneGraph(mDebugShader, false);
 	
 	
 

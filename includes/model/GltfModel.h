@@ -37,8 +37,11 @@ public:
         bool isInstanced);
     void draw();
     void drawInstanced(int instanceCount);
-    void drawNodeApproach(Shader& s, bool log);
-    void drawNode(std::shared_ptr<GltfNode> node, Shader& s, bool log);
+    void drawSceneGraph(Shader& s, bool log);
+    void visitNode(std::shared_ptr <GltfNode> node, Shader& s, bool log);
+    void drawMeshNode(std::shared_ptr<GltfNode> node, Shader& s, bool log);
+    void drawStaticMesh(std::shared_ptr<GltfNode> node, Shader& s, bool log);
+    void drawSkinnedMesh(std::shared_ptr<GltfNode> node, Shader& s, bool log);
    
     std::shared_ptr<GltfNode> mDebugRootNode;
     std::vector<std::shared_ptr<GltfNode>> mDebugNodeList{};

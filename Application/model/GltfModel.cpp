@@ -545,9 +545,36 @@ void GltfModel::calculateBindPose()
 		skin.jointMatrices.resize(skin.joints.size());
 
 		for (size_t i = 0; i < skin.joints.size(); ++i) {
+
 			int nodeIndex = skin.joints[i];
-			skin.jointMatrices[i] = 
+			skin.jointMatrices[i] =
 				mDebugNodeList[nodeIndex]->getNodeMatrix() * skin.inverseBindMatrices[i];
+			if (i == 0)
+			{
+				Logger::log(1,"Joint %d (%s)\n",
+					nodeIndex,
+					mDebugNodeList[nodeIndex]->getNodeName().c_str());
+
+				Logger::logm4(1,mDebugNodeList[nodeIndex]->getNodeMatrix());
+
+				Logger::log(1, "Inverse bind\n");
+				Logger::logm4(1, skin.inverseBindMatrices[i]);
+
+				Logger::log(1,"Joint matrix\n");
+				Logger::logm4(1, skin.jointMatrices[i]);
+			}
+
+			//int nodeIndex = skin.joints[i];
+			
+
+			glm::mat4 M =
+				mDebugNodeList[nodeIndex]->getNodeMatrix() *
+				skin.inverseBindMatrices[i];
+
+			Logger::log(1, "Direct multiply");
+			Logger::logm4(1, M);
+
+			skin.jointMatrices[i] = M;
 
 		}
 		for (auto& mesh : mMeshes) {
@@ -764,45 +791,59 @@ void GltfModel::getAnimations() {
 	}
 }
 
-void GltfModel::drawNodeApproach(Shader& s, bool log)
-{
-	drawNode(mDebugRootNode, s, log);
-}
+
 void GltfModel::setDebugModelScale(float s)
 {
 	mDebugModelScale = s;
 }
 
-void GltfModel::drawNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
+void GltfModel::drawSceneGraph(Shader& s, bool log)
 {
+	visitNode(mDebugRootNode, s, log);
+}
 
 
-
-	glm::mat4 debugScale =
-		glm::scale(glm::mat4(1.0f), glm::vec3(mDebugModelScale));
-
-	glm::mat4 model =
-		debugScale * node->getNodeMatrix();
-
-	s.setM4_Uniform("model", model);
-	if (log){
-		Logger::log(1,
-			"drawNode %d hasMesh=%d meshIndex=%d\n",
-			node->getNodeNum(),
-			node->hasMesh(),
-			node->getMeshIndex());
-		glm::mat4 M = node->getNodeMatrix();
-		Logger::logm4(1, M);
-	}
-
+void GltfModel::visitNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
+{
 	if (node->hasMesh())
 	{
-		mMeshes[node->getMeshIndex()].render();
+		drawMeshNode(node, s, log);
 	}
-	for (auto& child : node->getChilds())
+
+	for (const auto& child : node->getChilds())
 	{
-		drawNode(child, s, log);
+		visitNode(child, s, log);
 	}
+}
+
+
+void GltfModel::drawMeshNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
+{
+	if (node->hasSkin()) drawSkinnedMesh(node, s, log);
+	else drawStaticMesh(node, s, log);
+}
+
+
+
+
+void GltfModel::drawStaticMesh(std::shared_ptr<GltfNode> node, Shader& s, bool log)
+{
+	// lets first try with this to see if this is really needed anymore
+	glm::mat4 model =
+		glm::scale(glm::mat4(1.0f),
+			glm::vec3(mDebugModelScale))
+		* node->getNodeMatrix();
+
+	s.setM4_Uniform("model", model);
+
+	mMeshes[node->getMeshIndex()].render();
+}
+//TODO : 23.7. This was introduced to get an inch closer to an actual solution.
+// Part of the problem was handling the static meshes the same as skinned meshes.
+// From the earlier commit it was obvious, that the node matrices that are used in skinning lend poorly to the static approach, ie the abstraction was not there
+void GltfModel::drawSkinnedMesh(std::shared_ptr<GltfNode> node, Shader& s, bool log)
+{
+
 }
 
 
