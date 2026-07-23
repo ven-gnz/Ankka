@@ -58,8 +58,17 @@ public:
     std::vector<std::shared_ptr<GltfAnimationClip>> getAnimClips();
 
     void resetNodeData(std::shared_ptr<GltfNode> treeNode);
-
+    // bring back the TR stuff to model gather intel on whether missing TR is the reason nothing is visible
+    void setWorldPosition(const glm::vec3& pos); 
+    void setWorldRotation(const glm::vec3& rot);
+    
+    void updateToBindPose();
+    void setDebugModelScale(float s);
 private:
+    glm::vec3 worldPos = glm::vec3(1.0f);
+    glm::vec3 worldRot = glm::vec3(1.0f);
+    float mDebugModelScale = 2.0f;
+
     void createVertexBuffers();
     void createIndexBuffer();
 

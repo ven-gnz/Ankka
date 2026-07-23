@@ -18,7 +18,8 @@ uniform mat4 model;
 void main() 
 {
 
-	gl_Position = projection * view * model *vec4(aPos, 1.0);
-	//gl_Position = vec4(aPos * 0.05, 1.0);
+	
+	
+	gl_Position = projection * view * model *vec4(aPos, 1.0); //this now works! T-pose for no bindpose, crumpled up when in bindpose.
 	uv = aTexCoord;
 }

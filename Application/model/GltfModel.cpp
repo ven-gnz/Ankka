@@ -712,23 +712,7 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 		mDebugNodeList = std::move(nodeData.nodeList);
 
-		calculateBindPose();
-		// Just throwaway for inspecting the nodebased approach CPU skinning
-		for (auto& mesh : mMeshes) {
-			for (auto& primitive : mesh.primitives) {
-				glBindVertexArray(primitive.vao);
-				int positionLocation = attributes.at("POSITION");
-				if (primitive.vbos[positionLocation] == 0) continue;
-				glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[positionLocation]);
-
-				glBufferData(GL_ARRAY_BUFFER,
-					primitive.positions.size() * sizeof(glm::vec3),
-					primitive.positions.data(),
-					GL_STATIC_DRAW);
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-			}
-
-		}
+		
 		
 	}
 
@@ -737,6 +721,27 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	getAnimations();
 
 	return true;
+}
+
+void GltfModel::updateToBindPose()
+{
+	calculateBindPose();
+	// Just throwaway for inspecting the nodebased approach CPU skinning
+	for (auto& mesh : mMeshes) {
+		for (auto& primitive : mesh.primitives) {
+			glBindVertexArray(primitive.vao);
+			int positionLocation = attributes.at("POSITION");
+			if (primitive.vbos[positionLocation] == 0) continue;
+			glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[positionLocation]);
+
+			glBufferData(GL_ARRAY_BUFFER,
+				primitive.positions.size() * sizeof(glm::vec3),
+				primitive.positions.data(),
+				GL_STATIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+
+	}
 }
 
 void GltfModel::cleanup()
@@ -763,12 +768,23 @@ void GltfModel::drawNodeApproach(Shader& s, bool log)
 {
 	drawNode(mDebugRootNode, s, log);
 }
-
+void GltfModel::setDebugModelScale(float s)
+{
+	mDebugModelScale = s;
+}
 
 void GltfModel::drawNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 {
 
-	s.setM4_Uniform("model", node->getNodeMatrix());
+
+
+	glm::mat4 debugScale =
+		glm::scale(glm::mat4(1.0f), glm::vec3(mDebugModelScale));
+
+	glm::mat4 model =
+		debugScale * node->getNodeMatrix();
+
+	s.setM4_Uniform("model", model);
 	if (log){
 		Logger::log(1,
 			"drawNode %d hasMesh=%d meshIndex=%d\n",
@@ -887,6 +903,16 @@ GltfNodeData GltfModel::getGltfNodes()
 	int rootNodeNum = mModel->scenes.at(0).nodes.at(0);
 
 	nodeData.rootNode = GltfNode::createRoot(rootNodeNum);
+
+	const auto& node = mModel->nodes[rootNodeNum];
+
+	if (node.scale.size())
+	{
+		Logger::log(1, "gltf root scale = %f %f %f\n",
+			node.scale[0],
+			node.scale[1],
+			node.scale[2]);
+	}
 	
 	getNodeData(nodeData.rootNode);
 	getNodes(nodeData.rootNode);
@@ -909,3 +935,16 @@ std::vector<std::shared_ptr<GltfAnimationClip>> GltfModel::getAnimClips()
 {
 	return mAnimClips;
 }
+
+void GltfModel::setWorldPosition(const glm::vec3& pos)
+{
+	if (mDebugRootNode)
+		mDebugRootNode->setWorldPosition(pos);
+}
+
+void GltfModel::setWorldRotation(const glm::vec3& rot)
+{
+	if (mDebugRootNode)
+		mDebugRootNode->setWorldRotation(rot);
+}
+

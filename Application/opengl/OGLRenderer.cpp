@@ -260,6 +260,9 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 	mFirstLogRender = true;
+	mGltfModel1->setWorldPosition(glm::vec3(0.0, 0.0, 0.0));
+	mGltfModel1->setWorldRotation(glm::vec3(0.0));
+	mGltfModel1->setDebugModelScale(100.0f);
 
 	
 
