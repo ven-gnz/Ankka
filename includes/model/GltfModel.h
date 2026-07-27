@@ -76,6 +76,9 @@ private:
     void createIndexBuffer();
 
     void getJointData();
+    void loadJoints();
+    void loadWeights();
+    void loadinverseBindMatrices(const tinygltf::Skin& source, GltfSkin& destination);
     void getWeightData();
     void getInvBindMatrices();
     void getAnimations();

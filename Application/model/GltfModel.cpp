@@ -580,6 +580,115 @@ void GltfModel::calculateBindPose(const GltfNode& skinnedNode)
 
 }
 
+// 27.07. These methods are kinda wasteful in that they share a mapping that could be generated earlier - I will look into that after provind the joints and weights loading are what's holding
+// the bindpose from working correctly. It does seem like they are not loaded in any form so a simple smoke test will tell us a lot...
+void GltfModel::loadJoints()
+{
+	for (size_t meshIndex = 0; meshIndex < mModel->meshes.size(); ++meshIndex)
+	{
+
+		GltfMesh& mesh = mMeshes[meshIndex];
+
+		const tinygltf::Mesh& sourceMesh = mModel->meshes[meshIndex];
+
+
+		for (size_t primitiveIndex = 0; primitiveIndex < sourceMesh.primitives.size(); ++primitiveIndex)
+		{
+			GltfPrimitive& destination = mesh.primitives[primitiveIndex];
+			const tinygltf::Primitive& source = sourceMesh.primitives[primitiveIndex];
+
+			auto it = source.attributes.find("JOINTS_0");
+			if (it == source.attributes.end()) continue;
+
+			int accessorIndex = it->second;
+
+			const tinygltf::Accessor& accessor =
+				mModel->accessors[accessorIndex];
+			const tinygltf::BufferView& view =
+				mModel->bufferViews[accessor.bufferView];
+			const tinygltf::Buffer& buffer =
+				mModel->buffers[view.buffer];
+
+			destination.joints.resize(accessor.count);
+
+			std::memcpy(
+				destination.joints.data(),
+				buffer.data.data() +
+				view.byteOffset +
+				accessor.byteOffset,
+				accessor.count * sizeof(glm::u16vec4));
+
+
+		}
+	}
+}
+
+void GltfModel::loadWeights()
+{
+	for (size_t meshIndex = 0; meshIndex < mModel->meshes.size(); ++meshIndex)
+	{
+		GltfMesh& mesh = mMeshes[meshIndex];
+		const tinygltf::Mesh& sourceMesh = mModel->meshes[meshIndex];
+
+		for (size_t primitiveIndex = 0;
+			primitiveIndex < sourceMesh.primitives.size();
+			++primitiveIndex)
+		{
+			GltfPrimitive& destination = mesh.primitives[primitiveIndex];
+			const tinygltf::Primitive& source = sourceMesh.primitives[primitiveIndex];
+
+			auto it = source.attributes.find("WEIGHTS_0");
+			if (it == source.attributes.end())
+				continue;
+
+			int accessorIndex = it->second;
+
+			const tinygltf::Accessor& accessor =
+				mModel->accessors[accessorIndex];
+			const tinygltf::BufferView& view =
+				mModel->bufferViews[accessor.bufferView];
+			const tinygltf::Buffer& buffer =
+				mModel->buffers[view.buffer];
+
+			destination.weights.resize(accessor.count);
+
+			std::memcpy(
+				destination.weights.data(),
+				buffer.data.data() +
+				view.byteOffset +
+				accessor.byteOffset,
+				accessor.count * sizeof(glm::vec4));
+
+		}
+	}
+}
+
+void GltfModel::loadinverseBindMatrices(
+const tinygltf::Skin& source, GltfSkin& destination)
+{
+
+	if (source.inverseBindMatrices < 0)
+		return;
+
+	const tinygltf::Accessor& accessor =
+		mModel->accessors[source.inverseBindMatrices];
+	const tinygltf::BufferView& view =
+		mModel->bufferViews[accessor.bufferView];
+	const tinygltf::Buffer& buffer =
+		mModel->buffers[view.buffer];
+
+	destination.inverseBindMatrices.resize(accessor.count);
+
+	std::memcpy(
+		destination.inverseBindMatrices.data(),
+		buffer.data.data() +
+		view.byteOffset +
+		accessor.byteOffset,
+		accessor.count * sizeof(glm::mat4));
+}
+
+
+
 
 void GltfModel::loadSkins()
 {
@@ -593,23 +702,11 @@ void GltfModel::loadSkins()
 		destination.name = source.name;
 		destination.joints = source.joints;
 
-		if (source.inverseBindMatrices >= 0)
-		{
-			const tinygltf::Accessor& accessor = mModel->accessors[source.inverseBindMatrices];
-			const tinygltf::BufferView& view = mModel->bufferViews[accessor.bufferView];
-			const tinygltf::Buffer& buffer = mModel->buffers[view.buffer];
-
-			destination.inverseBindMatrices.resize(accessor.count);
-			std::memcpy(
-				destination.inverseBindMatrices.data(),
-				buffer.data.data() +
-				view.byteOffset +
-				accessor.byteOffset,
-				accessor.count * sizeof(glm::mat4));
-		}
+		loadinverseBindMatrices(source, destination);
 		destination.jointMatrices.resize(destination.joints.size());
 	}
-
+	loadJoints();
+	loadWeights();
 }
 
 

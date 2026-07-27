@@ -261,19 +261,25 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	}
 	mFirstLogRender = true;
 	
-	mGltfModel1->setDebugModelScale(100.0f);
-	mGltfModel1->setWorldPosition(glm::vec3(0.0f, 0.0, 0.0));
+	float mDebugModelScale1 = 100.0f;
+	mGltfModel1->setDebugModelScale(mDebugModelScale1);
+	mGltfModel1->setWorldPosition(glm::vec3(-1.0f / mDebugModelScale1, 0.0, -0.5 / mDebugModelScale1));
 	mGltfModel1->setWorldRotation(glm::vec3(0.0));
-	// mGltfModel1->updateToBindPose(); // next fix this UPDATE : the skinning moved to rendering, I know... But proof of concept first
+	
 	
 
-	mGltfModel2 = std::make_shared<GltfModel>();
-	modelFilename = "assets/CesiumMilkTruck.glb";
-	modelTexFilename = "";
-	if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
-		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
-		return false;
-	}
+	//mGltfModel2 = std::make_shared<GltfModel>();
+	//modelFilename = "assets/CesiumMilkTruck.glb";
+	//modelTexFilename = "";
+	//if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
+	//	Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+	//	return false;
+	//}
+
+	//float mDebugModelScale = 0.75f;
+	//mGltfModel2->setDebugModelScale(mDebugModelScale);
+	//mGltfModel2->setWorldPosition(glm::vec3(5.0 / mDebugModelScale, 0.0, 3.0));
+	//mGltfModel2->setWorldRotation(glm::vec3(0.0f, -90.0f, 90.0f));
 
 
 	
