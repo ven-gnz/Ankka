@@ -65,7 +65,7 @@ public:
     void setWorldPosition(const glm::vec3& pos); 
     void setWorldRotation(const glm::vec3& rot);
     
-    void updateToBindPose();
+   
     void setDebugModelScale(float s);
 private:
     glm::vec3 worldPos = glm::vec3(1.0f);
@@ -107,7 +107,8 @@ private:
     void uploadPrimitiveBuffers(GltfPrimitive& primitive);
     void createIndexBuffer(const tinygltf::Primitive& tinyPrimitive, GltfPrimitive& primitive);
     void createMeshes();
-    void calculateBindPose();
+    void calculateBindPose(const GltfNode& skinnedNode);
+    void upstreamBindPose(const GltfNode& meshNode);
     void loadSkins();
 
     GLuint mVAO = 0;

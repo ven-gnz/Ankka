@@ -537,66 +537,46 @@ void GltfModel::getNodes(std::shared_ptr<GltfNode> treeNode)
 }
 
 
-// debug method
-void GltfModel::calculateBindPose()
+// Less of a debug method now in that this takes some stance (albeit the simple approach) on how to handle multiple skinned meshes per model
+void GltfModel::calculateBindPose(const GltfNode& skinnedNode)
 {
-	for (auto& skin : mSkins)
-	{
-		skin.jointMatrices.resize(skin.joints.size());
 
-		for (size_t i = 0; i < skin.joints.size(); ++i) {
+	int skinIndex = skinnedNode.getSkinIndex();
+	GltfSkin& skin = mSkins[skinIndex];
 
-			int nodeIndex = skin.joints[i];
-			skin.jointMatrices[i] =
-				mDebugNodeList[nodeIndex]->getNodeMatrix() * skin.inverseBindMatrices[i];
-			if (i == 0)
+	skin.jointMatrices.resize(skin.joints.size());
+
+		// Get the joints of the skin
+		for (size_t joint = 0; joint < skin.joints.size(); ++joint) {
+
+			int nodeIndex = skin.joints[joint];
+			skin.jointMatrices[joint] =
+				mDebugNodeList[nodeIndex]->getNodeMatrix() * skin.inverseBindMatrices[joint];
+
+		}
+
+		GltfMesh& mesh = mMeshes[skinnedNode.getMeshIndex()];
+		// skin the mesh by querying the weights and joints, and
+		for (auto& primitive : mesh.primitives)
+		{
+			for (size_t vertex = 0; vertex < primitive.positions.size(); ++vertex)
 			{
-				Logger::log(1,"Joint %d (%s)\n",
-					nodeIndex,
-					mDebugNodeList[nodeIndex]->getNodeName().c_str());
+				const glm::u16vec4& joints = primitive.joints[vertex];
+				const glm::vec4& weights = primitive.weights[vertex];
 
-				Logger::logm4(1,mDebugNodeList[nodeIndex]->getNodeMatrix());
+				glm::mat4 skinMatrix =
+					weights.x * skin.jointMatrices[joints.x]
+					+ weights.y * skin.jointMatrices[joints.y]
+					+ weights.z * skin.jointMatrices[joints.z]
+					+ weights.w * skin.jointMatrices[joints.w];
 
-				Logger::log(1, "Inverse bind\n");
-				Logger::logm4(1, skin.inverseBindMatrices[i]);
+				glm::vec4 p(primitive.positions[vertex], 1.0f);
+				primitive.positions[vertex] = glm::vec3(skinMatrix * p);
 
-				Logger::log(1,"Joint matrix\n");
-				Logger::logm4(1, skin.jointMatrices[i]);
-			}
-
-			//int nodeIndex = skin.joints[i];
-			
-
-			glm::mat4 M =
-				mDebugNodeList[nodeIndex]->getNodeMatrix() *
-				skin.inverseBindMatrices[i];
-
-			Logger::log(1, "Direct multiply");
-			Logger::logm4(1, M);
-
-			skin.jointMatrices[i] = M;
-
-		}
-		for (auto& mesh : mMeshes) {
-			for (auto& primitive : mesh.primitives) {
-				for (size_t v = 0; v < primitive.positions.size(); ++v)
-				{
-					const glm::u16vec4& joints = primitive.joints[v];
-					const glm::vec4& weights = primitive.weights[v];
-
-					glm::mat4 skinMatrix =
-						weights.x * skin.jointMatrices[joints.x]
-						+ weights.y * skin.jointMatrices[joints.y]
-						+ weights.z * skin.jointMatrices[joints.z]
-						+ weights.w * skin.jointMatrices[joints.w];
-
-					glm::vec4 p = glm::vec4(primitive.positions[v], 1.0f);
-
-					primitive.positions[v] = glm::vec3(skinMatrix * p);
-				}
 			}
 		}
-	}
+
+	
 
 }
 
@@ -739,7 +719,18 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 
 		mDebugNodeList = std::move(nodeData.nodeList);
 
-		
+
+		for (auto& node : mDebugNodeList)
+		{
+			if (node->hasMesh())
+			{
+				if (node->hasSkin())
+				{
+					calculateBindPose(*node);
+					upstreamBindPose(*node);
+				}
+			}
+		}
 		
 	}
 
@@ -750,24 +741,29 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	return true;
 }
 
-void GltfModel::updateToBindPose()
-{
-	calculateBindPose();
-	// Just throwaway for inspecting the nodebased approach CPU skinning
-	for (auto& mesh : mMeshes) {
-		for (auto& primitive : mesh.primitives) {
-			glBindVertexArray(primitive.vao);
-			int positionLocation = attributes.at("POSITION");
-			if (primitive.vbos[positionLocation] == 0) continue;
-			glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[positionLocation]);
+void GltfModel::upstreamBindPose(const GltfNode& meshNode)
+{	
 
-			glBufferData(GL_ARRAY_BUFFER,
-				primitive.positions.size() * sizeof(glm::vec3),
-				primitive.positions.data(),
-				GL_STATIC_DRAW);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
 
+	GltfMesh& mesh = mMeshes[meshNode.getMeshIndex()];
+
+	for (auto& primitive : mesh.primitives)
+	{
+		glBindVertexArray(primitive.vao);
+
+		int positLoc = attributes.at("POSITION");
+
+		if (primitive.vbos[positLoc] == 0) continue;
+
+		glBindBuffer(GL_ARRAY_BUFFER, primitive.vbos[positLoc]);
+
+		glBufferData(GL_ARRAY_BUFFER,
+			primitive.positions.size() * sizeof(glm::vec3),
+			primitive.positions.data(),
+			GL_STATIC_DRAW
+		);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
 
@@ -819,6 +815,13 @@ void GltfModel::visitNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 
 void GltfModel::drawMeshNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 {
+	glm::mat4 model =
+		glm::scale(glm::mat4(1.0f),
+			glm::vec3(mDebugModelScale))
+		* node->getNodeMatrix();
+
+	s.setM4_Uniform("model", model);
+
 	if (node->hasSkin()) drawSkinnedMesh(node, s, log);
 	else drawStaticMesh(node, s, log);
 }
@@ -829,13 +832,6 @@ void GltfModel::drawMeshNode(std::shared_ptr<GltfNode> node, Shader& s, bool log
 void GltfModel::drawStaticMesh(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 {
 	// lets first try with this to see if this is really needed anymore
-	glm::mat4 model =
-		glm::scale(glm::mat4(1.0f),
-			glm::vec3(mDebugModelScale))
-		* node->getNodeMatrix();
-
-	s.setM4_Uniform("model", model);
-
 	mMeshes[node->getMeshIndex()].render();
 }
 //TODO : 23.7. This was introduced to get an inch closer to an actual solution.
@@ -843,6 +839,8 @@ void GltfModel::drawStaticMesh(std::shared_ptr<GltfNode> node, Shader& s, bool l
 // From the earlier commit it was obvious, that the node matrices that are used in skinning lend poorly to the static approach, ie the abstraction was not there
 void GltfModel::drawSkinnedMesh(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 {
+	// An update/ upstream strategy is needed - exploring atm with single CPU bindtime pose
+	mMeshes[node->getMeshIndex()].render();
 
 }
 
