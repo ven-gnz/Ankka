@@ -260,10 +260,12 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 		return false;
 	}
 	mFirstLogRender = true;
-	
-	float mDebugModelScale1 = 100.0f;
-	mGltfModel1->setDebugModelScale(mDebugModelScale1);
-	mGltfModel1->setWorldPosition(glm::vec3(-1.0f / mDebugModelScale1, 0.0, -0.5 / mDebugModelScale1));
+	mGltfModel1->setModelScale(
+		glm::scale(
+			glm::mat4(1.0f), 
+			glm::vec3(100.0f))
+	);
+	mGltfModel1->setWorldPosition(glm::vec3(0.0f , 0.0, 0.0 ));
 	mGltfModel1->setWorldRotation(glm::vec3(0.0));
 	
 	

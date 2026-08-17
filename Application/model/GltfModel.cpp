@@ -813,8 +813,9 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	{
 		GltfNodeData nodeData = getGltfNodes();
 		mDebugRootNode = nodeData.rootNode;
-
+		auto root = mDebugRootNode;
 		mDebugNodeList = std::move(nodeData.nodeList);
+
 
 
 		for (auto& node : mDebugNodeList)
@@ -830,7 +831,6 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 		}
 		
 	}
-
 
 	
 	getAnimations();
@@ -885,9 +885,9 @@ void GltfModel::getAnimations() {
 }
 
 
-void GltfModel::setDebugModelScale(float s)
+void GltfModel::setModelScale(const glm::mat4& scale)
 {
-	mDebugModelScale = s;
+	mModelMatrix = scale;
 }
 
 void GltfModel::drawSceneGraph(Shader& s, bool log)
@@ -913,9 +913,8 @@ void GltfModel::visitNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 void GltfModel::drawMeshNode(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 {
 	glm::mat4 model =
-		glm::scale(glm::mat4(1.0f),
-			glm::vec3(mDebugModelScale))
-		* node->getNodeMatrix();
+		mModelMatrix *
+		 node->getNodeMatrix();
 
 	s.setM4_Uniform("model", model);
 

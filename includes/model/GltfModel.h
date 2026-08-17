@@ -64,13 +64,12 @@ public:
     // bring back the TR stuff to model gather intel on whether missing TR is the reason nothing is visible
     void setWorldPosition(const glm::vec3& pos); 
     void setWorldRotation(const glm::vec3& rot);
-    
+    void setModelScale(const glm::mat4& scale);
    
-    void setDebugModelScale(float s);
 private:
     glm::vec3 worldPos = glm::vec3(1.0f);
     glm::vec3 worldRot = glm::vec3(1.0f);
-    float mDebugModelScale = 2.0f;
+    glm::mat4 mModelMatrix = glm::mat4(1.0f);
 
     void createVertexBuffers();
     void createIndexBuffer();
