@@ -481,26 +481,6 @@ void GltfModel::getNodeData(std::shared_ptr<GltfNode> treeNode)
 		treeNode->setMeshIndex(node.mesh);
 		if (node.skin >= 0) {
 			treeNode->setSkinIndex(node.skin);
-			//Logger::log(1,
-			//	"Node %d '%s' mesh=%d skin=%d children=%zu",
-			//	nodeNum,
-			//	node.name.c_str(),
-			//	node.mesh,
-			//	node.skin,
-			//	node.children.size());
-
-			//Logger::log(1,
-			//	"Stored mesh index = %d",
-			//	treeNode->getMeshIndex());
-		}
-		else {
-			//Logger::log(
-			//	1,
-			//	"Node %d '%s': mesh=%d children=%zu",
-			//	nodeNum,
-			//	node.name.c_str(),
-			//	node.mesh,
-			//	node.children.size());
 		}
 	}
 
@@ -1038,7 +1018,7 @@ GltfNodeData GltfModel::getGltfNodes()
 	int rootNodeNum = mModel->scenes.at(0).nodes.at(0);
 
 	nodeData.rootNode = GltfNode::createRoot(rootNodeNum);
-
+	
 	const auto& node = mModel->nodes[rootNodeNum];
 
 	if (node.scale.size())

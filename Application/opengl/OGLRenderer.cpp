@@ -263,25 +263,29 @@ bool OGLRenderer::init(unsigned int width, unsigned int height)
 	mGltfModel1->setModelScale(
 		glm::scale(
 			glm::mat4(1.0f), 
-			glm::vec3(100.0f))
+			glm::vec3(200.0f))
 	);
 	mGltfModel1->setWorldPosition(glm::vec3(0.0f , 0.0, 0.0 ));
 	mGltfModel1->setWorldRotation(glm::vec3(0.0));
 	
 	
 
-	//mGltfModel2 = std::make_shared<GltfModel>();
-	//modelFilename = "assets/CesiumMilkTruck.glb";
-	//modelTexFilename = "";
-	//if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
-	//	Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
-	//	return false;
-	//}
+	mGltfModel2 = std::make_shared<GltfModel>();
+	modelFilename = "assets/CesiumMilkTruck.glb";
+	modelTexFilename = "";
+	if (!mGltfModel2->loadModel(mRenderData, modelFilename, modelTexFilename, useMeshPrimitiveApproach, false)) {
+		Logger::log(1, "%s: loading glTF model '%s' failed\n", __FUNCTION__, modelFilename.c_str());
+		return false;
+	}
 
-	//float mDebugModelScale = 0.75f;
-	//mGltfModel2->setDebugModelScale(mDebugModelScale);
-	//mGltfModel2->setWorldPosition(glm::vec3(5.0 / mDebugModelScale, 0.0, 3.0));
-	//mGltfModel2->setWorldRotation(glm::vec3(0.0f, -90.0f, 90.0f));
+
+	mGltfModel2->setModelScale(
+		glm::scale(
+			glm::mat4(1.0f),
+			glm::vec3(2.0f))
+	);
+	mGltfModel2->setWorldPosition(glm::vec3(5.0 , 0.0, 3.0));
+	mGltfModel2->setWorldRotation(glm::vec3(0.0f, -90.0f, 90.0f));
 
 
 	
@@ -543,13 +547,13 @@ void OGLRenderer::draw() {
 		glEnable(GL_DEPTH_TEST);
 	}
 	glDisable(GL_CULL_FACE);
-	//mCarShader.use();
-	//
-	//matrixData.push_back(mViewMatrix);
-	//matrixData.push_back(mProjectionMatrix);
-	//mUniformBuffer.uploadUboData(matrixData, 0);
-	//matrixData.clear();
-	//mGltfModel2->drawSceneGraph(mCarShader, false);
+	mCarShader.use();
+	
+	matrixData.push_back(mViewMatrix);
+	matrixData.push_back(mProjectionMatrix);
+	mUniformBuffer.uploadUboData(matrixData, 0);
+	matrixData.clear();
+	mGltfModel2->drawSceneGraph(mCarShader, false);
 
 	mDebugShader.use();
 
