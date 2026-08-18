@@ -166,11 +166,6 @@ void GltfModel::createPrimitive(const tinygltf::Primitive& tinyPrimitive, GltfPr
 			(void*)0
 		);
 
-		Logger::log(1,
-			"%s stride=%d",
-			attribType.c_str(),
-			bufferView.byteStride);
-
 		glEnableVertexAttribArray(location);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -536,7 +531,6 @@ void GltfModel::calculateBindPose(const GltfNode& skinnedNode)
 		}
 
 		GltfMesh& mesh = mMeshes[skinnedNode.getMeshIndex()];
-		// skin the mesh by querying the weights and joints, and
 		for (auto& primitive : mesh.primitives)
 		{
 			for (size_t vertex = 0; vertex < primitive.positions.size(); ++vertex)
@@ -658,7 +652,6 @@ const tinygltf::Skin& source, GltfSkin& destination)
 		mModel->buffers[view.buffer];
 
 	destination.inverseBindMatrices.resize(accessor.count);
-
 	std::memcpy(
 		destination.inverseBindMatrices.data(),
 		buffer.data.data() +
@@ -685,8 +678,7 @@ void GltfModel::loadSkins()
 		loadinverseBindMatrices(source, destination);
 		destination.jointMatrices.resize(destination.joints.size());
 	}
-	loadJoints();
-	loadWeights();
+	Logger::log(1, "loaded %zu skins \n" , mSkins.size(), __FUNCTION__);
 }
 
 
@@ -775,17 +767,25 @@ bool GltfModel::loadModel(OGLRenderData& renderData,
 	}
 	else
 	{
+		//TODO : compare the joint mapping between the primitive based approach and hard coded one
 		createMeshes();
 		loadSkins();
+		if (mSkins.size() != 0)
+		{
+			loadJoints();
+			loadWeights();
+			
+		}
+		
 	}
 
 	if (!useMeshPrimitiveApproach)
 	{
-		getJointData();
+		getJointData(); 
 		getWeightData();
 		getInvBindMatrices();
 	}
-
+	
 		
 	
 	mNodeCount = mModel->nodes.size();
@@ -839,7 +839,6 @@ void GltfModel::upstreamBindPose(const GltfNode& meshNode)
 			primitive.positions.data(),
 			GL_STATIC_DRAW
 		);
-
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -910,9 +909,7 @@ void GltfModel::drawStaticMesh(std::shared_ptr<GltfNode> node, Shader& s, bool l
 	// lets first try with this to see if this is really needed anymore
 	mMeshes[node->getMeshIndex()].render();
 }
-//TODO : 23.7. This was introduced to get an inch closer to an actual solution.
-// Part of the problem was handling the static meshes the same as skinned meshes.
-// From the earlier commit it was obvious, that the node matrices that are used in skinning lend poorly to the static approach, ie the abstraction was not there
+
 void GltfModel::drawSkinnedMesh(std::shared_ptr<GltfNode> node, Shader& s, bool log)
 {
 	// An update/ upstream strategy is needed - exploring atm with single CPU bindtime pose
